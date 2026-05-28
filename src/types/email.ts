@@ -21,6 +21,7 @@ export interface Attachment {
   name: string;
   size: number;
   contentType: string;
+  isInline?: boolean;
 }
 
 export interface EmailLink {

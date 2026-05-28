@@ -39,6 +39,8 @@ interface GraphAttachment {
   name: string;
   size: number;
   contentType: string;
+  isInline: boolean;
+  '@microsoft.graph.downloadUrl'?: string;
 }
 
 function mapMessage(msg: GraphMessage, attachments: Attachment[] = [], isSent = false): Email {
@@ -135,16 +137,41 @@ export async function getMessageDetail(
     graphFetch<{ value: GraphAttachment[] }>(
       instance,
       account,
-      `/me/messages/${messageId}/attachments?$select=id,name,size,contentType`,
+      `/me/messages/${messageId}/attachments`,
     ).catch(() => ({ value: [] })),
   ]);
 
-  const attachments: Attachment[] = attData.value.map(a => ({
-    id: a.id,
-    name: a.name,
-    size: a.size,
-    contentType: a.contentType,
-  }));
+  const attachments: Attachment[] = attData.value
+    .filter(a => !a.isInline)
+    .map(a => ({
+      id: a.id,
+      name: a.name,
+      size: a.size,
+      contentType: a.contentType,
+    }));
 
   return mapMessage(msg, attachments);
+}
+
+export async function downloadAttachment(
+  instance: IPublicClientApplication,
+  account: AccountInfo,
+  messageId: string,
+  attachmentId: string,
+  filename: string,
+): Promise<void> {
+  const token = await getToken(instance, account);
+  const res = await fetch(`${GRAPH_BASE}/me/messages/${messageId}/attachments/${attachmentId}/$value`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error(`Download fehlgeschlagen: ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }

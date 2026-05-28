@@ -60,11 +60,14 @@
 
 .app-compose-btn {
   color: var(--accent);
-  border-color: rgba(102, 217, 239, .3);
+  border-color: rgba(102, 217, 239, .35);
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 .app-compose-btn:hover {
-  background: rgba(102, 217, 239, .1);
+  background: rgba(102, 217, 239, .12);
   color: var(--accent);
+  border-color: rgba(102, 217, 239, .6);
 }
 
 .app-logout {

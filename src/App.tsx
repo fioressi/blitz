@@ -297,7 +297,7 @@ export default function App() {
           <div className="app-logo">⚡ BLITZ</div>
           <div className="app-header-right">
             {user && <span className="app-user" title={`id: ${userId}`}>{user.name}</span>}
-            <button className="app-compose-btn" onClick={() => setComposeState({ mode: 'new' })} title="Neue E-Mail">✉</button>
+            <button className="app-compose-btn" onClick={() => setComposeState({ mode: 'new' })}>✉ Neue E-Mail</button>
             <button className="app-refresh" onClick={loadEmails} title="Aktualisieren">↻</button>
             <button className="app-drawer-btn" onClick={() => setDrawerOpen(d => d === 'right' ? null : 'right')}>📋</button>
             <button className="app-logout" onClick={() => instance.logoutRedirect()}>Abmelden</button>
@@ -401,6 +401,8 @@ export default function App() {
         <EmailDetail
           email={selectedEmail}
           loading={loadingDetail}
+          instance={instance}
+          account={user}
           onClose={() => setSelectedEmail(null)}
           onSwipeLeft={handleSwipeLeft}
           onSwipeRight={handleSwipeRight}

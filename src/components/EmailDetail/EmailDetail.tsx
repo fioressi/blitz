@@ -1,12 +1,16 @@
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import type { Email, AttributeGroup, EmailLink } from '../../types/email';
+import type { IPublicClientApplication, AccountInfo } from '@azure/msal-browser';
+import type { Email, Attachment, AttributeGroup, EmailLink } from '../../types/email';
 import { askIgor, IGOR_PROMPTS, suggestEntityLinks, type EntitySuggestion } from '../../services/igorService';
+import { downloadAttachment } from '../../services/graphService';
 import './EmailDetail.css';
 
 interface Props {
   email: Email | null;
   loading?: boolean;
+  instance: IPublicClientApplication;
+  account: AccountInfo;
   onClose: () => void;
   onSwipeLeft: (id: string) => void;
   onSwipeRight: (id: string) => void;
@@ -15,7 +19,7 @@ interface Props {
   onLinkAdded?: (emailId: string, link: EmailLink) => void;
 }
 
-export function EmailDetail({ email, loading, onClose, onSwipeLeft, onSwipeRight, onReply, attributeGroups, onLinkAdded }: Props) {
+export function EmailDetail({ email, loading, instance, account, onClose, onSwipeLeft, onSwipeRight, onReply, attributeGroups, onLinkAdded }: Props) {
   const [aiOpen, setAiOpen] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiResponse, setAiResponse] = useState<string | null>(null);
@@ -24,6 +28,8 @@ export function EmailDetail({ email, loading, onClose, onSwipeLeft, onSwipeRight
   const [suggestionsLoading, setSuggestionsLoading] = useState(false);
   const [linkedIds, setLinkedIds] = useState<Set<string>>(new Set());
   const promptRef = useRef<HTMLInputElement>(null);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [pdmAttachment, setPdmAttachment] = useState<Attachment | null>(null);
 
   const formatDate = (iso: string) => new Date(iso).toLocaleString('de-AT', {
     day: '2-digit', month: '2-digit', year: 'numeric',
@@ -71,6 +77,38 @@ export function EmailDetail({ email, loading, onClose, onSwipeLeft, onSwipeRight
     setAiOpen(o => !o);
     setAiResponse(null);
     setSuggestions(null);
+  };
+
+  const handleDownload = async (att: Attachment) => {
+    if (!email) return;
+    setDownloadingId(att.id);
+    try {
+      await downloadAttachment(instance, account, email.id, att.id, att.name);
+    } catch (err) {
+      console.error('Download fehlgeschlagen:', err);
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
+  const handlePdmLink = (att: Attachment) => {
+    setPdmAttachment(att);
+  };
+
+  const handlePdmAttributeSelect = (attr: { type: string; id: string | number; label: string; entityType?: string; entityId?: number }) => {
+    if (!email || !onLinkAdded || !pdmAttachment) return;
+    const typeMap: Record<string, EmailLink['attributeType']> = {
+      project: 'project', 'purchase-order': 'purchase-order', task: 'task',
+    };
+    const link: EmailLink = {
+      attributeId: String(attr.id),
+      attributeType: typeMap[attr.type] ?? 'tag',
+      label: `${attr.label} ← ${pdmAttachment.name}`,
+      entityType: attr.entityType,
+      entityId: attr.entityId,
+    };
+    onLinkAdded(email.id, link);
+    setPdmAttachment(null);
   };
 
   const handleSuggestLinks = async () => {
@@ -189,16 +227,65 @@ export function EmailDetail({ email, loading, onClose, onSwipeLeft, onSwipeRight
               <div className="email-detail-body">{email.body || email.preview}</div>
             )}
 
-            {email.attachments.length > 0 && (
+            {(email.attachments.length > 0 || email.hasAttachment) && (
               <div className="email-detail-attachments">
-                <div className="attachments-title">Anhänge</div>
+                <div className="attachments-title">
+                  Anhänge {email.hasAttachment && email.attachments.length === 0 && loading && <span className="att-loading">wird geladen…</span>}
+                </div>
                 {email.attachments.map(att => (
                   <div key={att.id} className="attachment-item">
                     <span className="attachment-icon">📎</span>
                     <span className="attachment-name">{att.name}</span>
                     <span className="attachment-size">{formatSize(att.size)}</span>
+                    <div className="attachment-actions">
+                      <button
+                        className="att-btn att-btn-download"
+                        onClick={() => handleDownload(att)}
+                        disabled={downloadingId === att.id}
+                        title="Herunterladen"
+                      >
+                        {downloadingId === att.id ? '…' : '⬇'}
+                      </button>
+                      {attributeGroups && onLinkAdded && (
+                        <button
+                          className="att-btn att-btn-pdm"
+                          onClick={() => handlePdmLink(att)}
+                          title="Auf PDM ablegen"
+                        >
+                          PDM
+                        </button>
+                      )}
+                    </div>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {/* ── PDM Attachment Picker ── */}
+            {pdmAttachment && attributeGroups && (
+              <div className="att-pdm-overlay" onClick={() => setPdmAttachment(null)}>
+                <div className="att-pdm-panel" onClick={e => e.stopPropagation()}>
+                  <div className="att-pdm-title">📎 {pdmAttachment.name}</div>
+                  <div className="att-pdm-subtitle">Welche PDM-Entität gehört zu diesem Anhang?</div>
+                  {attributeGroups.map(group => (
+                    <div key={group.id} className="att-pdm-group">
+                      <div className="att-pdm-group-title">{group.icon} {group.title}</div>
+                      <div className="att-pdm-items">
+                        {group.items.map(item => (
+                          <button
+                            key={item.id}
+                            className="att-pdm-item"
+                            onClick={() => handlePdmAttributeSelect(item)}
+                          >
+                            <span className="att-pdm-item-label">{item.label}</span>
+                            {item.subLabel && <span className="att-pdm-item-sub">{item.subLabel}</span>}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                  <button className="att-pdm-cancel" onClick={() => setPdmAttachment(null)}>Abbrechen</button>
+                </div>
               </div>
             )}
 
