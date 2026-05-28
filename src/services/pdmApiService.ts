@@ -478,6 +478,7 @@ export async function loadBrettInvoices(filter?: {
 }
 
 const ATT_TYPE_LABELS: Record<string, string> = {
+  CAD:           'CAD-Datei',
   DRAWING:       'Zeichnung',
   SPEC:          'Spezifikation',
   QUOTE:         'Angebot',
@@ -493,6 +494,7 @@ const ATT_TYPE_LABELS: Record<string, string> = {
 function fileIcon(name: string): string {
   const ext = (name.split('.').pop() || '').toLowerCase();
   if (ext === 'pdf') return '📄';
+  if (['sldprt', 'sldasm', 'slddrw'].includes(ext)) return '🔩';
   if (['stp', 'step', 'stl', 'igs', 'iges', 'obj', 'sat'].includes(ext)) return '🔩';
   if (['dxf', 'dwg'].includes(ext)) return '📐';
   if (['jpg', 'jpeg', 'png', 'bmp', 'gif', 'svg', 'tif', 'tiff'].includes(ext)) return '🖼️';
@@ -506,7 +508,7 @@ function fileIcon(name: string): string {
 export async function loadAttachmentsForEntity(entityType: string, entityId: number): Promise<BrettItem[]> {
   try {
     const data = await pdmFetch<Array<{
-      AttachmentId: number;
+      AttachmentId: number | null;
       FileName: string;
       FileSize?: number;
       MimeType?: string;
@@ -518,13 +520,14 @@ export async function loadAttachmentsForEntity(entityType: string, entityId: num
       const icon = fileIcon(r.FileName);
       const typeLabel = r.AttachmentType ? (ATT_TYPE_LABELS[r.AttachmentType] ?? r.AttachmentType) : undefined;
       const sizeLabel = r.FileSize != null ? `${Math.round(r.FileSize / 1024)} KB` : undefined;
+      const attId = r.AttachmentId ?? 0;
       return {
-        id: `FILE:${r.AttachmentId}`,
+        id: attId > 0 ? `FILE:${attId}` : `FILE:CAD:${entityId}`,
         title: `${icon} ${r.FileName}`,
         subtitle: typeLabel,
         meta: sizeLabel,
         entityType: 'FILE',
-        entityId: r.AttachmentId,
+        entityId: attId,
       };
     });
   } catch { return []; }
