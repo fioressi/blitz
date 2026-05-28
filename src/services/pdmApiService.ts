@@ -201,7 +201,7 @@ export async function clearEmailState(messageId: string, userEmail: string): Pro
   });
 }
 
-export async function saveEmailRecord(email: Email): Promise<void> {
+export async function saveEmailRecord(email: Email, userId: string): Promise<void> {
   await pdmFetch('/emails', {
     method: 'POST',
     body: JSON.stringify({
@@ -212,9 +212,46 @@ export async function saveEmailRecord(email: Email): Promise<void> {
       sentAt: email.receivedAt,
       hasAttachments: email.hasAttachment,
       kind: 'COMMUNICATION',
+      user: userId,
       targets: [],
     }),
   });
+}
+
+interface DbEmailRow {
+  MessageId: string;
+  Subject: string;
+  FromAddr: string;
+  ToAddr: string | null;
+  SentAt: string;
+  Kind: string;
+  LinkedAt: string;
+}
+
+export async function loadBlitzSentEmails(userId: string): Promise<Email[]> {
+  try {
+    const rows = await pdmFetch<DbEmailRow[]>(
+      `/emails?user=${encodeURIComponent(userId)}`,
+    );
+    return rows.map(r => ({
+      id: r.MessageId,
+      from: r.FromAddr,
+      fromEmail: r.FromAddr,
+      to: r.ToAddr || undefined,
+      toEmail: r.ToAddr || undefined,
+      subject: r.Subject,
+      preview: '',
+      body: '',
+      receivedAt: r.LinkedAt || r.SentAt,
+      hasAttachment: false,
+      attachments: [],
+      links: [],
+      status: 'read' as const,
+      isSent: true,
+    }));
+  } catch {
+    return [];
+  }
 }
 
 export async function loadEmailLinks(messageId: string): Promise<EmailLink[]> {

@@ -5,8 +5,8 @@ import type { Attribute } from './types/email';
 import { useMsal } from '@azure/msal-react';
 import type { Email, EmailLink, AttributeGroup } from './types/email';
 import { mockAttributeGroups } from './data/mockData';
-import { getInboxMessages, getMessageDetail, getSentMessages } from './services/graphService';
-import { loadAttributeGroups, saveEmailWithLink, loadEmailLinks, loadEmailUserStates, setEmailState, clearEmailState, saveEmailRecord } from './services/pdmApiService';
+import { getInboxMessages, getMessageDetail } from './services/graphService';
+import { loadAttributeGroups, saveEmailWithLink, loadEmailLinks, loadEmailUserStates, setEmailState, clearEmailState, saveEmailRecord, loadBlitzSentEmails } from './services/pdmApiService';
 import { AttributePanel } from './components/AttributePanel/AttributePanel';
 import { EmailCard } from './components/EmailCard/EmailCard';
 import { ReplyTray } from './components/ReplyTray/ReplyTray';
@@ -103,9 +103,9 @@ export default function App() {
 
   const handleSelectTab = (tab: Tab) => {
     setActiveTab(tab);
-    if (tab === 'sent' && !sentLoaded && user) {
+    if (tab === 'sent' && !sentLoaded && userId) {
       setSentLoading(true);
-      getSentMessages(instance, user)
+      loadBlitzSentEmails(userId)
         .then(msgs => { setSentEmails(msgs); setSentLoaded(true); })
         .catch(err => console.error('Sent load failed:', err))
         .finally(() => setSentLoading(false));
@@ -428,13 +428,13 @@ export default function App() {
                 addStoredId(LS_REPLY, original.id);
                 if (userId) setEmailState(original.id, 'REPLY', userId).catch(console.error);
                 setEmails(prev => prev.map(e => e.id === original.id ? { ...e, status: 'to-reply' } : e));
-                // Save original email to PDM_db
-                saveEmailRecord(original).catch(e => console.error('[blitz] saveEmailRecord failed:', e));
+                // Save original email to PDM_db (LinkedBy = userId)
+                if (userId) saveEmailRecord(original, userId).catch(e => console.error('[blitz] saveEmailRecord failed:', e));
               }
               setComposeState(null);
-              // Reload sent tab if it's open
+              // Reload sent tab if currently open
+              setSentLoaded(false);
               if (activeTab === 'sent') {
-                setSentLoaded(false);
                 setSentEmails([]);
                 handleSelectTab('sent');
               }
