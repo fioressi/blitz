@@ -28,7 +28,9 @@ interface GraphMessage {
   bodyPreview: string;
   body: { content: string; contentType: string };
   from: { emailAddress: { name: string; address: string } };
-  receivedDateTime: string;
+  toRecipients?: { emailAddress: { name: string; address: string } }[];
+  receivedDateTime?: string;
+  sentDateTime?: string;
   hasAttachments: boolean;
 }
 
@@ -39,20 +41,24 @@ interface GraphAttachment {
   contentType: string;
 }
 
-function mapMessage(msg: GraphMessage, attachments: Attachment[] = []): Email {
+function mapMessage(msg: GraphMessage, attachments: Attachment[] = [], isSent = false): Email {
+  const firstTo = msg.toRecipients?.[0]?.emailAddress;
   return {
     id: msg.id,
     from: msg.from?.emailAddress?.name || msg.from?.emailAddress?.address || 'Unbekannt',
     fromEmail: msg.from?.emailAddress?.address || '',
+    to: firstTo?.name || firstTo?.address,
+    toEmail: firstTo?.address,
     subject: msg.subject || '(kein Betreff)',
     preview: msg.bodyPreview || '',
     body: msg.body?.content || '',
     bodyIsHtml: msg.body?.contentType === 'html',
-    receivedAt: msg.receivedDateTime,
+    receivedAt: (msg.sentDateTime || msg.receivedDateTime) ?? '',
     hasAttachment: msg.hasAttachments,
     attachments,
     links: [],
     status: 'unread',
+    isSent,
   };
 }
 
@@ -67,6 +73,19 @@ export async function getInboxMessages(
     `/me/mailFolders/inbox/messages?$top=${top}&$orderby=receivedDateTime desc&$select=id,subject,bodyPreview,from,receivedDateTime,hasAttachments`,
   );
   return data.value.map(msg => mapMessage(msg));
+}
+
+export async function getSentMessages(
+  instance: IPublicClientApplication,
+  account: AccountInfo,
+  top = 25,
+): Promise<Email[]> {
+  const data = await graphFetch<{ value: GraphMessage[] }>(
+    instance,
+    account,
+    `/me/mailFolders/SentItems/messages?$top=${top}&$orderby=sentDateTime desc&$select=id,subject,bodyPreview,from,toRecipients,sentDateTime,hasAttachments`,
+  );
+  return data.value.map(msg => mapMessage(msg, [], true));
 }
 
 export async function sendMail(

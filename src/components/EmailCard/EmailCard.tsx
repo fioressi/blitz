@@ -79,9 +79,14 @@ export function EmailCard({ email, onSwipeLeft, onSwipeRight, onClick, onDragSta
         whileTap={{ scale: 0.98 }}
       >
         <div className="email-card-header">
-          <div className="email-from-avatar">{email.from[0]}</div>
+          <div className="email-from-avatar">
+            {email.isSent ? (email.to?.[0] ?? '?') : email.from[0]}
+          </div>
           <div className="email-meta">
-            <span className="email-from">{email.from}</span>
+            {email.isSent
+              ? <span className="email-from email-from--sent">An: {email.to || email.toEmail || '?'}</span>
+              : <span className="email-from">{email.from}</span>
+            }
             <span className="email-time">{formatTime(email.receivedAt)}</span>
           </div>
           {email.hasAttachment && <span className="attachment-icon">📎</span>}

@@ -201,6 +201,22 @@ export async function clearEmailState(messageId: string, userEmail: string): Pro
   });
 }
 
+export async function saveEmailRecord(email: Email): Promise<void> {
+  await pdmFetch('/emails', {
+    method: 'POST',
+    body: JSON.stringify({
+      messageId: email.id,
+      subject: email.subject,
+      from: email.fromEmail || email.from,
+      to: email.toEmail || '',
+      sentAt: email.receivedAt,
+      hasAttachments: email.hasAttachment,
+      kind: 'COMMUNICATION',
+      targets: [],
+    }),
+  });
+}
+
 export async function loadEmailLinks(messageId: string): Promise<EmailLink[]> {
   try {
     const data = await pdmFetch<{

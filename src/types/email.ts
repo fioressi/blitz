@@ -2,6 +2,8 @@ export interface Email {
   id: string;
   from: string;
   fromEmail: string;
+  to?: string;
+  toEmail?: string;
   subject: string;
   preview: string;
   body: string;
@@ -11,6 +13,7 @@ export interface Email {
   attachments: Attachment[];
   links: EmailLink[];
   status: 'unread' | 'read' | 'deleted' | 'to-reply' | 'saved';
+  isSent?: boolean;
 }
 
 export interface Attachment {

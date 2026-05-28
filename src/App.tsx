@@ -5,8 +5,8 @@ import type { Attribute } from './types/email';
 import { useMsal } from '@azure/msal-react';
 import type { Email, EmailLink, AttributeGroup } from './types/email';
 import { mockAttributeGroups } from './data/mockData';
-import { getInboxMessages, getMessageDetail } from './services/graphService';
-import { loadAttributeGroups, saveEmailWithLink, loadEmailLinks, loadEmailUserStates, setEmailState, clearEmailState } from './services/pdmApiService';
+import { getInboxMessages, getMessageDetail, getSentMessages } from './services/graphService';
+import { loadAttributeGroups, saveEmailWithLink, loadEmailLinks, loadEmailUserStates, setEmailState, clearEmailState, saveEmailRecord } from './services/pdmApiService';
 import { AttributePanel } from './components/AttributePanel/AttributePanel';
 import { EmailCard } from './components/EmailCard/EmailCard';
 import { ReplyTray } from './components/ReplyTray/ReplyTray';
@@ -55,7 +55,7 @@ function addStoredLink(messageId: string, link: EmailLink) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-type Tab = 'inbox' | 'read' | 'reply' | 'saved';
+type Tab = 'inbox' | 'read' | 'reply' | 'saved' | 'sent';
 
 export default function App() {
   const { instance, accounts } = useMsal();
@@ -80,6 +80,9 @@ export default function App() {
   const [createModal, setCreateModal] = useState<'task' | 'project' | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>('inbox');
   const [selectedAttribute, setSelectedAttribute] = useState<Attribute | null>(null);
+  const [sentEmails, setSentEmails] = useState<Email[]>([]);
+  const [sentLoading, setSentLoading] = useState(false);
+  const [sentLoaded, setSentLoaded] = useState(false);
   const [composeState, setComposeState] = useState<
     { mode: 'new' } | { mode: 'reply'; email: Email } | null
   >(null);
@@ -95,7 +98,19 @@ export default function App() {
   const tabEmails = activeTab === 'inbox' ? inboxEmails
     : activeTab === 'read'  ? readEmails
     : activeTab === 'reply' ? toReply
-    : savedEmails;
+    : activeTab === 'saved' ? savedEmails
+    : sentEmails;
+
+  const handleSelectTab = (tab: Tab) => {
+    setActiveTab(tab);
+    if (tab === 'sent' && !sentLoaded && user) {
+      setSentLoading(true);
+      getSentMessages(instance, user)
+        .then(msgs => { setSentEmails(msgs); setSentLoaded(true); })
+        .catch(err => console.error('Sent load failed:', err))
+        .finally(() => setSentLoading(false));
+    }
+  };
 
   const loadEmails = useCallback(async () => {
     if (!user) return;
@@ -299,53 +314,60 @@ export default function App() {
             <div className="inbox-tabs">
               <button
                 className={`inbox-tab ${activeTab === 'inbox' ? 'active' : ''}`}
-                onClick={() => setActiveTab('inbox')}
+                onClick={() => handleSelectTab('inbox')}
               >
                 Posteingang
                 {inboxEmails.length > 0 && <span className="inbox-tab-count">{inboxEmails.length}</span>}
               </button>
               <button
                 className={`inbox-tab ${activeTab === 'read' ? 'active' : ''}`}
-                onClick={() => setActiveTab('read')}
+                onClick={() => handleSelectTab('read')}
               >
                 Gelesen
                 {readEmails.length > 0 && <span className="inbox-tab-count inbox-tab-count--muted">{readEmails.length}</span>}
               </button>
               <button
                 className={`inbox-tab ${activeTab === 'reply' ? 'active' : ''}`}
-                onClick={() => setActiveTab('reply')}
+                onClick={() => handleSelectTab('reply')}
               >
                 Beantworten
                 {toReply.length > 0 && <span className="inbox-tab-count inbox-tab-count--reply">{toReply.length}</span>}
               </button>
               <button
                 className={`inbox-tab ${activeTab === 'saved' ? 'active' : ''}`}
-                onClick={() => setActiveTab('saved')}
+                onClick={() => handleSelectTab('saved')}
               >
                 Merken
                 {savedEmails.length > 0 && <span className="inbox-tab-count inbox-tab-count--saved">{savedEmails.length}</span>}
               </button>
+              <button
+                className={`inbox-tab ${activeTab === 'sent' ? 'active' : ''}`}
+                onClick={() => handleSelectTab('sent')}
+              >
+                Gesendet
+              </button>
             </div>
 
             <div className="inbox-list">
-              {loading ? (
+              {(loading && activeTab !== 'sent') || (sentLoading && activeTab === 'sent') ? (
                 <div className="inbox-loading">Emails werden geladen…</div>
-              ) : loadError ? (
+              ) : loadError && activeTab !== 'sent' ? (
                 <div className="inbox-error">Fehler: {loadError}</div>
               ) : tabEmails.length === 0 ? (
                 <div className="inbox-empty">
                   {activeTab === 'inbox' ? 'Posteingang leer ✓'
                     : activeTab === 'read'  ? 'Keine gelesenen Emails'
                     : activeTab === 'reply' ? 'Keine offenen Antworten'
-                    : 'Keine gemerkten Emails'}
+                    : activeTab === 'saved' ? 'Keine gemerkten Emails'
+                    : 'Keine gesendeten Emails'}
                 </div>
               ) : (
                 tabEmails.map(email => (
                   <EmailCard
                     key={email.id}
                     email={email}
-                    onSwipeLeft={handleSwipeLeft}
-                    onSwipeRight={handleSwipeRight}
+                    onSwipeLeft={activeTab !== 'sent' ? handleSwipeLeft : () => {}}
+                    onSwipeRight={activeTab !== 'sent' ? handleSwipeRight : () => {}}
                     onClick={handleOpenEmail}
                     onDragStart={() => setIsDraggingCard(true)}
                     onDragEnd={() => setIsDraggingCard(false)}
@@ -400,13 +422,21 @@ export default function App() {
             account={user}
             onClose={() => setComposeState(null)}
             onSent={() => {
-              setComposeState(null);
-              // Mark as replied if it was a reply
               if (composeState.mode === 'reply') {
-                const id = composeState.email.id;
-                addStoredId(LS_REPLY, id);
-                if (userId) setEmailState(id, 'REPLY', userId).catch(console.error);
-                setEmails(prev => prev.map(e => e.id === id ? { ...e, status: 'to-reply' } : e));
+                const original = composeState.email;
+                // Mark as replied in state + DB
+                addStoredId(LS_REPLY, original.id);
+                if (userId) setEmailState(original.id, 'REPLY', userId).catch(console.error);
+                setEmails(prev => prev.map(e => e.id === original.id ? { ...e, status: 'to-reply' } : e));
+                // Save original email to PDM_db
+                saveEmailRecord(original).catch(e => console.error('[blitz] saveEmailRecord failed:', e));
+              }
+              setComposeState(null);
+              // Reload sent tab if it's open
+              if (activeTab === 'sent') {
+                setSentLoaded(false);
+                setSentEmails([]);
+                handleSelectTab('sent');
               }
             }}
           />
