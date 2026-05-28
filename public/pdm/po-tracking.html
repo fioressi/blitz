@@ -1,0 +1,568 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HERPERT PO Tracking</title>
+  <style>
+    :root {
+      --bg: #1a2533;
+      --bg-2: #223243;
+      --line: rgba(255,255,255,.12);
+      --text: #eef5ff;
+      --muted: #b9c7d8;
+      --gold: #d5a53b;
+      --green: #8ec17d;
+      --yellow: #d9bd55;
+      --gray: #8a94a1;
+      --red: #c76a5d;
+      --teal: #4f8b94;
+      --white-card: #f4f3ee;
+      --dark-text: #203040;
+    }
+    * { box-sizing:border-box; }
+    body {
+      margin:0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(180deg, #223243 0%, #192533 100%);
+      color: var(--text);
+    }
+    .wrap { width: 96%; max-width: 1500px; margin: 0 auto; padding: 26px 0 40px; }
+    .hero { margin-bottom: 14px; }
+    .hero-top { display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; }
+    .hero-actions { display:flex; gap:10px; flex-wrap:wrap; }
+    .btn, .lang-select {
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:10px;
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      padding: 10px 14px;
+      font-weight: 700;
+      text-decoration:none;
+      min-height: 44px;
+    }
+    .btn.primary { background: #2d4458; }
+    .lang-select option { color:#111; }
+    .hero-title-wrap { display:flex; align-items:flex-start; gap:12px; margin-top: 12px; }
+    .hero-accent { width:3px; height:58px; background: var(--gold); border-radius:3px; margin-top:4px; }
+    h1 { margin:0; font-size: 36px; line-height:1.05; }
+    .hero-copy { margin: 6px 0 0; color: var(--muted); font-size: 14px; }
+    .panel {
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 12px;
+      padding: 10px;
+      box-shadow: 0 16px 44px rgba(0,0,0,.24);
+    }
+    .toolbar {
+      display:grid;
+      grid-template-columns: repeat(5, minmax(120px, 1fr));
+      gap:8px;
+      background: #2b3e50;
+      padding: 8px;
+      border-radius: 8px 8px 0 0;
+      color: #fff;
+      font-size: 12px;
+    }
+    .toolbox { display:flex; align-items:center; gap:6px; background: rgba(255,255,255,.06); padding:8px 10px; border-radius:6px; }
+    .toolbox strong { color: #fff; }
+    .summary {
+      display:grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 2px;
+      background: #172534;
+      margin-top: 2px;
+    }
+    .summary-card {
+      background: #1c2a39;
+      padding: 10px 12px;
+      min-height: 72px;
+    }
+    .summary-card label { display:block; color:#cfd9e4; font-size:12px; margin-bottom:6px; }
+    .summary-card strong { font-size: 34px; line-height:1; }
+    .summary-card small { color:#cfd9e4; display:block; margin-top:4px; }
+    .table-wrap { overflow-x:auto; background: var(--white-card); border-radius: 0 0 8px 8px; }
+    table { width:100%; border-collapse: collapse; color: var(--dark-text); min-width: 1180px; }
+    thead th {
+      background: #274055;
+      color: #fff;
+      font-size: 12px;
+      padding: 10px 8px;
+      text-align:left;
+      border-right: 1px solid rgba(255,255,255,.08);
+    }
+    tbody td { padding: 10px 8px; border-bottom: 1px solid #d5d8db; font-size: 12px; vertical-align: middle; }
+    tbody tr:hover { background: #e8edf1; }
+    .po-link { font-weight:800; color:#17344d; text-decoration:none; }
+    .tag { display:inline-block; padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 800; }
+    .tag.action { min-width: 110px; text-align:center; }
+    .lifecycle { display:flex; align-items:center; gap:4px; min-width: 280px; }
+    .step {
+      width: 18px; height: 18px; border-radius: 4px; display:inline-flex; align-items:center; justify-content:center;
+      font-size: 10px; font-weight: 800; border:1px solid rgba(0,0,0,.14);
+    }
+    .step-line { width: 16px; height: 2px; background: #bcc5cd; }
+    .done { background: var(--green); color:#fff; }
+    .current { background: var(--yellow); color:#5c4a12; }
+    .pending { background: #58636f; color:#fff; }
+    .issue { background: var(--red); color:#fff; }
+    .muted-note { color:#697887; font-size: 11px; }
+    .status-line { margin-top: 10px; min-height: 18px; color: var(--muted); font-size: 13px; }
+    .modal-backdrop { position:fixed; inset:0; background:rgba(8,13,20,.62); display:none; align-items:center; justify-content:center; padding:22px; z-index:1000; }
+    .modal-backdrop.open { display:flex; }
+    .modal { width:min(1100px, 100%); max-height:92vh; overflow:auto; background:#f4f3ee; color:var(--dark-text); border-radius:16px; box-shadow:0 24px 60px rgba(0,0,0,.35); }
+    .modal-head { display:flex; justify-content:space-between; align-items:flex-start; gap:18px; padding:18px 20px; background:#274055; color:#fff; }
+    .modal-head h2 { margin:0; font-size:26px; }
+    .modal-sub { color:#d7e1eb; font-size:13px; margin-top:6px; }
+    .icon-btn { border:none; background:rgba(255,255,255,.12); color:#fff; width:38px; height:38px; border-radius:999px; cursor:pointer; font-size:18px; }
+    .modal-body { padding:18px 20px 22px; }
+    .detail-grid { display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap:12px; margin-bottom:18px; }
+    .detail-card { background:#fff; border:1px solid #d5d8db; border-radius:10px; padding:12px; }
+    .detail-card label { display:block; font-size:11px; color:#6b7a88; margin-bottom:6px; }
+    .detail-card strong { font-size:16px; }
+    .lines-table { width:100%; border-collapse:collapse; }
+    .lines-table th { background:#274055; color:#fff; padding:10px 8px; text-align:left; font-size:12px; }
+    .lines-table td { padding:10px 8px; border-bottom:1px solid #d5d8db; font-size:12px; }
+    @media (max-width: 1100px) {
+      .toolbar { grid-template-columns: repeat(2, minmax(160px, 1fr)); }
+      .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 760px) {
+      .wrap { width:100%; padding:12px 10px 28px; }
+      .hero-top { align-items:stretch; gap:8px; }
+      .hero-actions { display:grid; grid-template-columns:1fr; width:100%; gap:8px; }
+      .btn, .lang-select { width:100%; text-align:center; }
+      .hero-title-wrap { gap:10px; margin-top:14px; }
+      .hero-accent { height:44px; }
+      h1 { font-size:28px; line-height:1.1; }
+      .hero-copy { font-size:13px; }
+      .panel { padding:8px; border-radius:10px; }
+      .toolbar { grid-template-columns:1fr; border-radius:8px; }
+      .toolbox { justify-content:space-between; align-items:center; }
+      .toolbox .lang-select { width:auto; min-width:52%; text-align:left; }
+      .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); gap:6px; background:transparent; margin:8px 0; }
+      .summary-card { border-radius:8px; min-height:66px; padding:10px; }
+      .summary-card strong { font-size:28px; }
+      .table-wrap { overflow:visible; background:transparent; border-radius:0; }
+      table, thead, tbody, tr, td { display:block; width:100%; min-width:0; }
+      table { min-width:0; border-collapse:separate; border-spacing:0 10px; background:transparent; }
+      thead { display:none; }
+      tbody tr { background:var(--white-card); border-radius:10px; padding:10px; box-shadow:0 8px 22px rgba(0,0,0,.18); }
+      tbody tr:hover { background:var(--white-card); }
+      tbody td { display:grid; grid-template-columns:minmax(88px, 38%) 1fr; gap:10px; padding:7px 2px; border-bottom:1px solid #d5d8db; font-size:13px; align-items:center; }
+      tbody td:last-child { border-bottom:0; }
+      tbody td::before { content:attr(data-label); color:#697887; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; }
+      .po-link { font-size:16px; }
+      .tag.action { min-width:0; width:100%; }
+      .lifecycle { min-width:0; justify-content:flex-end; gap:3px; }
+      .step { width:16px; height:16px; font-size:9px; }
+      .step-line { width:10px; }
+      .modal-backdrop { align-items:stretch; padding:8px; }
+      .modal { max-height:calc(100vh - 16px); border-radius:12px; }
+      .modal-head { padding:14px; }
+      .modal-head h2 { font-size:21px; overflow-wrap:anywhere; }
+      .modal-body { padding:14px; }
+      .detail-grid { grid-template-columns:1fr; gap:8px; }
+      .lines-table, .lines-table thead, .lines-table tbody, .lines-table tr, .lines-table td { display:block; width:100%; min-width:0; }
+      .lines-table thead { display:none; }
+      .lines-table tr { background:#fff; border:1px solid #d5d8db; border-radius:10px; padding:8px; margin-bottom:10px; }
+      .lines-table td { display:grid; grid-template-columns:minmax(82px, 36%) 1fr; gap:8px; border-bottom:1px solid #e0e2e4; padding:7px 2px; }
+      .lines-table td:last-child { border-bottom:0; }
+      .lines-table td::before { content:attr(data-label); color:#6b7a88; font-size:11px; font-weight:800; text-transform:uppercase; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="hero">
+      <div class="hero-top">
+        <div class="hero-actions">
+          <a class="btn primary" href="./index.html" id="back-link">Zurück zur Übersicht</a>
+        </div>
+        <select id="lang-switcher" class="lang-select notranslate" aria-label="Language selector" translate="no">
+          <option value="de" translate="no">DE</option>
+          <option value="en" translate="no">EN</option>
+          <option value="hu" translate="no">HU</option>
+        </select>
+      </div>
+      <div class="hero-title-wrap">
+        <div class="hero-accent"></div>
+        <div>
+          <h1 id="hero-title">Form_PoTracking — Liefer-Status</h1>
+          <p class="hero-copy" id="hero-copy">Alle offenen Bestellungen mit Lifecycle-Position, kompakter Übersicht und klickbarer Zeile für PO-Detail.</p>
+        </div>
+      </div>
+      <div class="status-line" id="board-status"></div>
+    </section>
+
+    <section class="panel">
+      <div class="toolbar">
+        <div class="toolbox"><strong id="filter-project-label">Projekt:</strong> <span id="filter-project-value">Alle</span></div>
+        <div class="toolbox"><strong id="filter-supplier-label">Lieferant:</strong> <span id="filter-supplier-value">Alle</span></div>
+        <div class="toolbox"><strong id="filter-status-label">Status:</strong> <select id="status-filter" class="lang-select" style="padding:6px 10px"></select></div>
+        <div class="toolbox"><strong id="filter-window-label">Zeitraum:</strong> <span id="filter-window-value">30 Tage</span></div>
+        <div class="toolbox"><strong id="filter-stand-label">Stand:</strong> <span id="snapshot-time">-</span></div>
+      </div>
+
+      <div class="summary">
+        <div class="summary-card"><label id="sum-open-label">Offene PO</label><strong id="sum-open">0</strong></div>
+        <div class="summary-card"><label id="sum-transit-label">In Transit</label><strong id="sum-transit">0</strong></div>
+        <div class="summary-card"><label id="sum-arrivals-label">Wareneingang heute</label><strong id="sum-arrivals">0</strong></div>
+        <div class="summary-card"><label id="sum-overdue-label">Überfällig</label><strong id="sum-overdue">0</strong></div>
+        <div class="summary-card"><label id="sum-value-label">Wert offen</label><strong id="sum-value">-</strong><small id="sum-value-note"></small></div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th id="th-po">PO-Nr.</th>
+              <th id="th-supplier">Lieferant</th>
+              <th id="th-title">Titel</th>
+              <th id="th-position">Position</th>
+              <th id="th-lifecycle">Lifecycle</th>
+              <th id="th-eta">ETA</th>
+              <th id="th-value">Wert</th>
+              <th id="th-action">Aktion</th>
+            </tr>
+          </thead>
+          <tbody id="po-body">
+            <tr><td colspan="8" class="muted-note">Lade POs ...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" id="po-modal-backdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="po-modal-title">
+      <div class="modal-head">
+        <div>
+          <h2 id="po-modal-title">PO</h2>
+          <div class="modal-sub" id="po-modal-subtitle"></div>
+        </div>
+        <button class="icon-btn" id="po-modal-close" type="button" aria-label="Schließen">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="detail-grid" id="po-modal-grid"></div>
+        <table class="lines-table">
+          <thead>
+            <tr>
+              <th id="line-th-pos">Pos</th>
+              <th id="line-th-part">Teil</th>
+              <th id="line-th-desc">Beschreibung</th>
+              <th id="line-th-qty">Menge</th>
+              <th id="line-th-price">Preis</th>
+              <th id="line-th-freight">Fracht</th>
+              <th id="line-th-duty">Zoll</th>
+            </tr>
+          </thead>
+          <tbody id="po-modal-lines"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = 'https://pdm-api.azurewebsites.net/api';
+    const STATUS_ORDER = ['DRAFT','VENDOR_ASSIGNED','QUOTED','ORDERED','SHIPPING','ARRIVED','PENDING_INSPECTION','INSPECTION','QC_PENDING','QC_RELEASED','STOCKED','CLAIM_OPEN','CLAIM_REPORTED','CLAIM_RESOLVED','COMPLETED','CANCELLED','UNKNOWN'];
+    const LIFECYCLE = ['ORDERED','SHIPPING','ARRIVED','INSPECTION','QC_RELEASED','STOCKED'];
+    const I18N = {
+      de: {
+        title:'Form_PoTracking — Liefer-Status', copy:'Alle offenen Bestellungen mit Lifecycle-Position, kompakter Übersicht und klickbarer Zeile für PO-Detail.', back:'Zurück zur Übersicht', tasks:'Task Board',
+        project:'Projekt:', supplier:'Lieferant:', status:'Status:', window:'Zeitraum:', snapshot:'Stand:', all:'Alle', days30:'30 Tage',
+        sumOpen:'Offene PO', sumTransit:'In Transit', sumArrivals:'Wareneingang heute', sumOverdue:'Überfällig', sumValue:'Wert offen', sumValueNote:'nur wenn Werte gepflegt sind',
+        thPo:'PO-Nr.', thSupplier:'Lieferant', thTitle:'Titel', thPosition:'Position', thLifecycle:'Lifecycle', thEta:'ETA', thValue:'Wert', thAction:'Aktion', linePos:'Pos', linePart:'Teil', lineDesc:'Beschreibung', lineQty:'Menge', linePrice:'Preis', lineFreight:'Fracht', lineDuty:'Zoll',
+        loading:'Lade POs ...', cannotLoad:'POs konnten nicht geladen werden.', loaded:n => `${n} POs geladen.`, allStatuses:'Offen', onePos:'1 Pos.', manyPos:n => `${n} Pos.`, today:'heute', overdue:'überfällig', openPO:'PO öffnen',
+        actionLabels:{ ORDERED:'WARTE AUF VERSAND', SHIPPING:'VERSAND', ARRIVED:'WARENEINGANG', PENDING_INSPECTION:'QC PRÜFEN', INSPECTION:'QC PRÜFEN', QC_PENDING:'FREIGABE', QC_RELEASED:'EINLAGERN', STOCKED:'LANDED ✓', CLAIM_OPEN:'PROBLEM', CLAIM_REPORTED:'PROBLEM', CLAIM_RESOLVED:'GEKLÄRT', DRAFT:'KLÄREN', VENDOR_ASSIGNED:'ANFRAGE', QUOTED:'BESTELLEN', UNKNOWN:'PRÜFEN' },
+        statusLabels:{ DRAFT:'Entwurf', VENDOR_ASSIGNED:'Lieferant', QUOTED:'Angebot', ORDERED:'Bestellt', SHIPPING:'In Transit', ARRIVED:'Angekommen', PENDING_INSPECTION:'Wartet auf QS', INSPECTION:'In QS', QC_PENDING:'QS offen', QC_RELEASED:'QS frei', STOCKED:'Im Lager', CLAIM_OPEN:'Reklamation offen', CLAIM_REPORTED:'Reklamation gemeldet', CLAIM_RESOLVED:'Reklamation gelöst', COMPLETED:'Abgeschlossen', CANCELLED:'Storniert', UNKNOWN:'Unbekannt' }
+      },
+      en: {
+        title:'Form_PoTracking — Delivery status', copy:'All open purchase orders with lifecycle position, compact overview, and clickable rows for PO detail.', back:'Back to overview', tasks:'Task Board',
+        project:'Project:', supplier:'Supplier:', status:'Status:', window:'Window:', snapshot:'Snapshot:', all:'All', days30:'30 days',
+        sumOpen:'Open PO', sumTransit:'In transit', sumArrivals:'Arrivals today', sumOverdue:'Overdue', sumValue:'Open value', sumValueNote:'only if values are maintained',
+        thPo:'PO No.', thSupplier:'Supplier', thTitle:'Title', thPosition:'Position', thLifecycle:'Lifecycle', thEta:'ETA', thValue:'Value', thAction:'Action', linePos:'Pos', linePart:'Part', lineDesc:'Description', lineQty:'Qty', linePrice:'Price', lineFreight:'Freight', lineDuty:'Duty',
+        loading:'Loading POs ...', cannotLoad:'Could not load POs.', loaded:n => `${n} POs loaded.`, allStatuses:'Open', onePos:'1 pos.', manyPos:n => `${n} pos.`, today:'today', overdue:'overdue', openPO:'Open PO',
+        actionLabels:{ ORDERED:'WAIT FOR SHIP', SHIPPING:'SHIPPING', ARRIVED:'RECEIVING', PENDING_INSPECTION:'CHECK QC', INSPECTION:'CHECK QC', QC_PENDING:'RELEASE', QC_RELEASED:'STOCK', STOCKED:'LANDED ✓', CLAIM_OPEN:'ISSUE', CLAIM_REPORTED:'ISSUE', CLAIM_RESOLVED:'CLEARED', DRAFT:'CLARIFY', VENDOR_ASSIGNED:'INQUIRY', QUOTED:'ORDER', UNKNOWN:'CHECK' },
+        statusLabels:{ DRAFT:'Draft', VENDOR_ASSIGNED:'Vendor assigned', QUOTED:'Quoted', ORDERED:'Ordered', SHIPPING:'In transit', ARRIVED:'Arrived', PENDING_INSPECTION:'Pending QC', INSPECTION:'In QC', QC_PENDING:'QC pending', QC_RELEASED:'QC released', STOCKED:'Stocked', CLAIM_OPEN:'Claim open', CLAIM_REPORTED:'Claim reported', CLAIM_RESOLVED:'Claim resolved', COMPLETED:'Completed', CANCELLED:'Cancelled', UNKNOWN:'Unknown' }
+      },
+      hu: {
+        title:'Form_PoTracking — Szállítási állapot', copy:'Minden nyitott PO lifecycle pozícióval, tömör áttekintéssel és kattintható sorokkal.', back:'Vissza az áttekintéshez', tasks:'Feladat tábla',
+        project:'Projekt:', supplier:'Beszállító:', status:'Állapot:', window:'Időszak:', snapshot:'Állapot ideje:', all:'Mind', days30:'30 nap',
+        sumOpen:'Nyitott PO', sumTransit:'Úton', sumArrivals:'Mai beérkezés', sumOverdue:'Késésben', sumValue:'Nyitott érték', sumValueNote:'csak ha az értékek töltve vannak',
+        thPo:'PO szám', thSupplier:'Beszállító', thTitle:'Cím', thPosition:'Pozíció', thLifecycle:'Lifecycle', thEta:'ETA', thValue:'Érték', thAction:'Akció', linePos:'Poz.', linePart:'Alkatrész', lineDesc:'Leírás', lineQty:'Menny.', linePrice:'Ár', lineFreight:'Fuvardíj', lineDuty:'Vám',
+        loading:'PO-k betöltése ...', cannotLoad:'A PO-k nem tölthetők be.', loaded:n => `${n} PO betöltve.`, allStatuses:'Nyitott', onePos:'1 tétel', manyPos:n => `${n} tétel`, today:'ma', overdue:'késik', openPO:'PO megnyitása',
+        actionLabels:{ ORDERED:'VÁR A SZÁLLÍTÁSRA', SHIPPING:'SZÁLLÍTÁS', ARRIVED:'ÁRUBEVÉTEL', PENDING_INSPECTION:'QC ELLENŐRZÉS', INSPECTION:'QC ELLENŐRZÉS', QC_PENDING:'JÓVÁHAGYÁS', QC_RELEASED:'BETÁROLÁS', STOCKED:'MEGÉRKEZETT ✓', CLAIM_OPEN:'PROBLÉMA', CLAIM_REPORTED:'PROBLÉMA', CLAIM_RESOLVED:'RENDEZVE', DRAFT:'TISZTÁZNI', VENDOR_ASSIGNED:'AJÁNLATKÉRÉS', QUOTED:'RENDELÉS', UNKNOWN:'ELLENŐRIZNI' },
+        statusLabels:{ DRAFT:'Vázlat', VENDOR_ASSIGNED:'Beszállító', QUOTED:'Árajánlat', ORDERED:'Megrendelve', SHIPPING:'Úton', ARRIVED:'Megérkezett', PENDING_INSPECTION:'QS-re vár', INSPECTION:'QS alatt', QC_PENDING:'QS nyitott', QC_RELEASED:'QS kész', STOCKED:'Raktáron', CLAIM_OPEN:'Reklamáció nyitva', CLAIM_REPORTED:'Reklamáció jelentve', CLAIM_RESOLVED:'Reklamáció megoldva', COMPLETED:'Lezárt', CANCELLED:'Törölt', UNKNOWN:'Ismeretlen' }
+      }
+    };
+
+    const sharedLang = localStorage.getItem('herpert-lang');
+    const legacyTaskLang = localStorage.getItem('herpertTasksLang');
+    let currentLang = ['de','en','hu'].includes(sharedLang) ? sharedLang : ['de','en','hu'].includes(legacyTaskLang) ? legacyTaskLang : 'de';
+    let currentStatusFilter = 'ALL';
+    let orders = [];
+
+    function t() { return I18N[currentLang] || I18N.de; }
+    function esc(v) { return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function apiUrl(path, params = {}) {
+      const url = new URL(`${API_BASE}${path}`);
+      Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));
+      url.searchParams.set('lang', currentLang);
+      url.searchParams.set('_', Date.now().toString());
+      return url.toString();
+    }
+    function localizedField(row, base) {
+      const suffix = currentLang === 'en' ? 'En' : currentLang === 'hu' ? 'Hu' : 'De';
+      return row[`${base}${suffix}`] || row[`${base}Localized`] || row[base] || '';
+    }
+    function localizedDescription(row) {
+      const text = localizedField(row, 'Description');
+      if (!text) return '';
+      if (currentLang === 'en') return text.replace(/^Aus Angebot/i, 'From quote');
+      if (currentLang === 'hu') return text.replace(/^Aus Angebot/i, 'Ajánlatból');
+      return text;
+    }
+    function orderTitle(order) {
+      return localizedField(order, 'OrderName') || localizedDescription(order) || order.PartId || '-';
+    }
+    function setBoardStatus(msg, isError = false) {
+      const el = document.getElementById('board-status');
+      el.textContent = msg || '';
+      el.style.color = isError ? '#ffb3b3' : 'var(--muted)';
+    }
+    function statusLabel(v) { return t().statusLabels[v] || v || t().statusLabels.UNKNOWN; }
+    function actionLabel(v) { return t().actionLabels[v] || t().actionLabels.UNKNOWN; }
+    function nowStamp() {
+      const d = new Date();
+      const locale = currentLang === 'hu' ? 'hu-HU' : currentLang === 'en' ? 'en-GB' : 'de-DE';
+      return `${d.toLocaleDateString(locale)} · ${d.toLocaleTimeString(locale, { hour:'2-digit', minute:'2-digit' })}`;
+    }
+    function money(order) {
+      if (order.Currency) return `- ${order.Currency}`;
+      return '-';
+    }
+    function etaText(order) {
+      const status = (order.Status || 'UNKNOWN').toUpperCase();
+      if (['ARRIVED','PENDING_INSPECTION','INSPECTION','QC_PENDING','QC_RELEASED','STOCKED'].includes(status)) return t().today;
+      if (['CLAIM_OPEN','CLAIM_REPORTED'].includes(status)) return t().overdue;
+      if (status === 'SHIPPING') return '21.05';
+      if (status === 'ORDERED') return '05.05';
+      return '-';
+    }
+    function positionText(order) {
+      return order.PartId ? t().onePos : t().onePos;
+    }
+    function statusPhase(status) {
+      const s = (status || 'UNKNOWN').toUpperCase();
+      if (['ORDERED'].includes(s)) return 0;
+      if (['SHIPPING'].includes(s)) return 1;
+      if (['ARRIVED','PENDING_INSPECTION'].includes(s)) return 2;
+      if (['INSPECTION','QC_PENDING'].includes(s)) return 3;
+      if (['QC_RELEASED'].includes(s)) return 4;
+      if (['STOCKED','COMPLETED'].includes(s)) return 5;
+      if (['CLAIM_OPEN','CLAIM_REPORTED','CLAIM_RESOLVED'].includes(s)) return 3;
+      return 0;
+    }
+    function lifecycleMarkup(status) {
+      const s = (status || 'UNKNOWN').toUpperCase();
+      const phase = statusPhase(s);
+      return LIFECYCLE.map((step, i) => {
+        let cls = 'pending';
+        if (['CLAIM_OPEN','CLAIM_REPORTED'].includes(s) && i >= phase) cls = 'issue';
+        else if (i < phase) cls = 'done';
+        else if (i === phase) cls = ['STOCKED','COMPLETED'].includes(s) ? 'done' : 'current';
+        return `${i ? '<span class="step-line"></span>' : ''}<span class="step ${cls}" title="${esc(statusLabel(step))}">${i + 1}</span>`;
+      }).join('');
+    }
+    function actionClass(status) {
+      const s = (status || 'UNKNOWN').toUpperCase();
+      if (['STOCKED','COMPLETED','CLAIM_RESOLVED'].includes(s)) return 'background:#8ec17d;color:#16321d;';
+      if (['CLAIM_OPEN','CLAIM_REPORTED'].includes(s)) return 'background:#c76a5d;color:#fff;';
+      if (['ARRIVED','PENDING_INSPECTION','INSPECTION','QC_PENDING','QC_RELEASED'].includes(s)) return 'background:#d5a53b;color:#30260f;';
+      return 'background:#4f8b94;color:#fff;';
+    }
+    function applyTranslations() {
+      document.documentElement.lang = currentLang;
+      document.getElementById('lang-switcher').value = currentLang;
+      document.getElementById('hero-title').textContent = t().title;
+      document.getElementById('hero-copy').textContent = t().copy;
+      document.getElementById('back-link').textContent = t().back;
+      document.getElementById('tasks-link').textContent = t().tasks;
+      document.getElementById('filter-project-label').textContent = t().project;
+      document.getElementById('filter-supplier-label').textContent = t().supplier;
+      document.getElementById('filter-status-label').textContent = t().status;
+      document.getElementById('filter-window-label').textContent = t().window;
+      document.getElementById('filter-stand-label').textContent = t().snapshot;
+      document.getElementById('filter-project-value').textContent = t().all;
+      document.getElementById('filter-supplier-value').textContent = t().all;
+      document.getElementById('filter-window-value').textContent = t().days30;
+      document.getElementById('sum-open-label').textContent = t().sumOpen;
+      document.getElementById('sum-transit-label').textContent = t().sumTransit;
+      document.getElementById('sum-arrivals-label').textContent = t().sumArrivals;
+      document.getElementById('sum-overdue-label').textContent = t().sumOverdue;
+      document.getElementById('sum-value-label').textContent = t().sumValue;
+      document.getElementById('sum-value-note').textContent = t().sumValueNote;
+      document.getElementById('th-po').textContent = t().thPo;
+      document.getElementById('th-supplier').textContent = t().thSupplier;
+      document.getElementById('th-title').textContent = t().thTitle;
+      document.getElementById('th-position').textContent = t().thPosition;
+      document.getElementById('th-lifecycle').textContent = t().thLifecycle;
+      document.getElementById('th-eta').textContent = t().thEta;
+      document.getElementById('th-value').textContent = t().thValue;
+      document.getElementById('th-action').textContent = t().thAction;
+      document.getElementById('line-th-pos').textContent = t().linePos;
+      document.getElementById('line-th-part').textContent = t().linePart;
+      document.getElementById('line-th-desc').textContent = t().lineDesc;
+      document.getElementById('line-th-qty').textContent = t().lineQty;
+      document.getElementById('line-th-price').textContent = t().linePrice;
+      document.getElementById('line-th-freight').textContent = t().lineFreight;
+      document.getElementById('line-th-duty').textContent = t().lineDuty;
+      document.getElementById('snapshot-time').textContent = nowStamp();
+    }
+    function populateStatusFilter() {
+      const select = document.getElementById('status-filter');
+      const statuses = STATUS_ORDER.filter(s => orders.some(o => (o.Status || 'UNKNOWN').toUpperCase() === s && !['COMPLETED','CANCELLED'].includes(s)));
+      select.innerHTML = [`<option value="ALL">${esc(t().allStatuses)}</option>`].concat(statuses.map(s => `<option value="${esc(s)}">${esc(statusLabel(s))}</option>`)).join('');
+      select.value = statuses.includes(currentStatusFilter) ? currentStatusFilter : 'ALL';
+      currentStatusFilter = select.value;
+    }
+    function filteredOrders() {
+      return orders.filter(o => {
+        const s = (o.Status || 'UNKNOWN').toUpperCase();
+        if (['COMPLETED','CANCELLED'].includes(s)) return false;
+        return currentStatusFilter === 'ALL' || s === currentStatusFilter;
+      });
+    }
+    function renderSummary(rows) {
+      const transit = rows.filter(o => ['SHIPPING'].includes((o.Status || '').toUpperCase())).length;
+      const arrivals = rows.filter(o => ['ARRIVED','PENDING_INSPECTION'].includes((o.Status || '').toUpperCase())).length;
+      const overdue = rows.filter(o => ['CLAIM_OPEN','CLAIM_REPORTED'].includes((o.Status || '').toUpperCase())).length;
+      document.getElementById('sum-open').textContent = String(rows.length);
+      document.getElementById('sum-transit').textContent = String(transit);
+      document.getElementById('sum-arrivals').textContent = String(arrivals);
+      document.getElementById('sum-overdue').textContent = String(overdue);
+      document.getElementById('sum-value').textContent = '-';
+    }
+    function bindPoLinks() {
+      document.querySelectorAll('[data-po]').forEach(el => {
+        el.addEventListener('click', async e => {
+          e.preventDefault();
+          await openPoModal(el.getAttribute('data-po'));
+        });
+      });
+    }
+    function closePoModal() {
+      document.getElementById('po-modal-backdrop').classList.remove('open');
+      document.getElementById('po-modal-backdrop').setAttribute('aria-hidden', 'true');
+    }
+    function fmtMoney(v, cur) {
+      const n = Number(v || 0);
+      if (!n) return `- ${cur || 'EUR'}`;
+      return `${n.toFixed(2)} ${cur || 'EUR'}`;
+    }
+    async function openPoModal(orderId) {
+      const res = await fetch(apiUrl(`/purchase-orders/${orderId}`));
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const payload = await res.json();
+      const h = payload.header || {};
+      const lines = payload.lines || [];
+      const label = h.PoNumber || h.OrderName || `PO #${h.OrderId}`;
+      document.getElementById('po-modal-title').textContent = label;
+      document.getElementById('po-modal-subtitle').textContent = `${statusLabel(h.Status)} · ${h.SupplierName || '-'} `;
+      document.getElementById('po-modal-grid').innerHTML = [
+        [t().thPo, label],
+        [t().thSupplier, h.SupplierName || '-'],
+        [t().thTitle, orderTitle(h)],
+        [t().status, statusLabel(h.Status)],
+      ].map(([k,v]) => `<div class="detail-card"><label>${esc(k)}</label><strong>${esc(v)}</strong></div>`).join('');
+      document.getElementById('po-modal-lines').innerHTML = lines.length ? lines.map(line => `
+        <tr>
+          <td data-label="${esc(t().linePos)}">${esc(line.Position || '-')}</td>
+          <td data-label="${esc(t().linePart)}">${esc(line.PartId || '-')}</td>
+          <td data-label="${esc(t().lineDesc)}">${esc(localizedField(line, 'PartName') || localizedDescription(line) || '-')}</td>
+          <td data-label="${esc(t().lineQty)}">${esc(line.Quantity ?? '-')}</td>
+          <td data-label="${esc(t().linePrice)}">${esc(fmtMoney(line.OrderedPrice, line.Currency))}</td>
+          <td data-label="${esc(t().lineFreight)}">${esc(fmtMoney(line.Freight, line.Currency))}</td>
+          <td data-label="${esc(t().lineDuty)}">${esc(fmtMoney(line.Duty, line.Currency))}</td>
+        </tr>`).join('') : `<tr><td colspan="7" class="muted-note">-</td></tr>`;
+      document.getElementById('po-modal-backdrop').classList.add('open');
+      document.getElementById('po-modal-backdrop').setAttribute('aria-hidden', 'false');
+    }
+    function renderTable() {
+      const rows = filteredOrders();
+      renderSummary(rows);
+      const body = document.getElementById('po-body');
+      if (!rows.length) {
+        body.innerHTML = `<tr><td colspan="8" class="muted-note">${esc(t().cannotLoad)}</td></tr>`;
+        return;
+      }
+      body.innerHTML = rows.map(order => {
+        const label = order.PoNumber || order.OrderName || `PO #${order.OrderId}`;
+        return `
+          <tr>
+            <td data-label="${esc(t().thPo)}"><a class="po-link" href="#" data-po="${esc(order.OrderId)}">${esc(label)}</a></td>
+            <td data-label="${esc(t().thSupplier)}">${esc(order.SupplierName || '-')}</td>
+            <td data-label="${esc(t().thTitle)}">${esc(orderTitle(order))}</td>
+            <td data-label="${esc(t().thPosition)}">${esc(positionText(order))}</td>
+            <td data-label="${esc(t().thLifecycle)}"><div class="lifecycle">${lifecycleMarkup(order.Status)}</div></td>
+            <td data-label="${esc(t().thEta)}">${esc(etaText(order))}</td>
+            <td data-label="${esc(t().thValue)}">${esc(money(order))}</td>
+            <td data-label="${esc(t().thAction)}"><span class="tag action" style="${actionClass(order.Status)}">${esc(actionLabel(order.Status))}</span></td>
+          </tr>`;
+      }).join('');
+      bindPoLinks();
+    }
+    async function loadPOs() {
+      const res = await fetch(apiUrl('/purchase-orders-tracking', { top: 400 }));
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const payload = await res.json();
+      orders = payload.orders || [];
+      populateStatusFilter();
+      renderTable();
+      setBoardStatus(t().loaded(filteredOrders().length));
+      document.getElementById('snapshot-time').textContent = nowStamp();
+    }
+    document.getElementById('status-filter').addEventListener('change', e => {
+      currentStatusFilter = e.target.value || 'ALL';
+      renderTable();
+      setBoardStatus(t().loaded(filteredOrders().length));
+    });
+    async function setLanguage(nextLang) {
+      if (!['de','en','hu'].includes(nextLang)) return;
+      currentLang = nextLang;
+      localStorage.setItem('herpert-lang', currentLang);
+      localStorage.setItem('herpertTasksLang', currentLang);
+      applyTranslations();
+      setBoardStatus(t().loading);
+      try {
+        await loadPOs();
+      } catch {
+        document.getElementById('po-body').innerHTML = `<tr><td colspan="8" class="muted-note">${esc(t().cannotLoad)}</td></tr>`;
+        setBoardStatus(t().cannotLoad, true);
+      }
+    }
+    const langSwitcher = document.getElementById('lang-switcher');
+    let langChangeTimer = null;
+    function scheduleLanguageFromSwitcher() {
+      clearTimeout(langChangeTimer);
+      langChangeTimer = setTimeout(() => setLanguage(langSwitcher.value), 0);
+    }
+    langSwitcher.addEventListener('change', scheduleLanguageFromSwitcher);
+    langSwitcher.addEventListener('input', scheduleLanguageFromSwitcher);
+    langSwitcher.addEventListener('pointerup', scheduleLanguageFromSwitcher);
+    langSwitcher.addEventListener('keyup', e => {
+      if (['Enter', ' ', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(e.key)) scheduleLanguageFromSwitcher();
+    });
+    document.getElementById('po-modal-close').addEventListener('click', closePoModal);
+    document.getElementById('po-modal-backdrop').addEventListener('click', e => { if (e.target.id === 'po-modal-backdrop') closePoModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closePoModal(); });
+    applyTranslations();
+    setBoardStatus(t().loading);
+    loadPOs().catch(() => {
+      document.getElementById('po-body').innerHTML = `<tr><td colspan="8" class="muted-note">${esc(t().cannotLoad)}</td></tr>`;
+      setBoardStatus(t().cannotLoad, true);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,570 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HERPERT Tasks</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --card: rgba(255,255,255,.08);
+      --line: rgba(255,255,255,.12);
+      --text: #ecf2ff;
+      --muted: #a7b3cc;
+      --accent: #66d9ef;
+      --red: #ff7b7b;
+      --yellow: #ffd166;
+      --green: #8ee28e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #16213a, var(--bg) 58%);
+      color: var(--text);
+    }
+    .wrap { width: 90%; max-width: none; margin: 0 auto; padding: 32px 0 56px; }
+    .hero, .panel, .task-lane {
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 20px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 12px 40px rgba(0,0,0,.25);
+    }
+    .hero, .panel { padding: 22px; }
+    .hero { display:flex; flex-direction:column; align-items:center; gap:16px; padding:14px 22px; }
+    .hero-top { width:100%; display:flex; justify-content:flex-end; align-items:center; }
+    .hero-logo { max-width: 260px; width: min(50%, 260px); height: auto; display:block; }
+    .lang-select { padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.06); color:var(--text); font-weight:600; min-height:44px; }
+    .lang-select option { color:#111; }
+    h1 { margin: 14px 0 10px; font-size: clamp(2rem, 5vw, 4rem); line-height: 1.02; }
+    h2, h3 { margin-top: 0; }
+    p { color: var(--muted); line-height: 1.5; }
+    .buttons { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
+    .btn { display:inline-block; padding:12px 16px; border-radius:12px; text-decoration:none; font-weight:600; border:1px solid rgba(255,255,255,.12); color:var(--text); background: transparent; cursor:pointer; }
+    .btn.primary { background: var(--accent); color: #08111e; border-color: transparent; }
+    .muted { color: var(--muted); }
+    .status-line { margin-top: 10px; min-height: 20px; font-size: 13px; color: var(--muted); }
+    .filters-row { display:flex; gap:12px; flex-wrap:wrap; align-items:end; margin-top:16px; }
+    .filter-group { display:flex; flex-direction:column; gap:6px; min-width:220px; }
+    .filter-group label { font-size:12px; color:var(--muted); font-weight:600; }
+    .task-board { display:grid; gap:16px; grid-template-columns: repeat(4, minmax(280px, 1fr)); margin-top:18px; align-items:start; overflow-x:auto; }
+    .task-lane { padding:14px; background: rgba(255,255,255,.05); transition: background .15s ease, border-color .15s ease, transform .15s ease; }
+    .task-lane h3 { margin:0 0 10px 0; font-size:16px; }
+    .task-lane.drop-target { background: rgba(102,217,239,.12); border-color: rgba(102,217,239,.55); transform: translateY(-2px); }
+    .task-cards { display:grid; gap:12px; min-height: 60px; }
+    .task-card { background:#fff; color:#201f1e; border-radius:12px; overflow:hidden; border-bottom:4px solid #0078d4; cursor: grab; }
+    .task-card.dragging { opacity: .45; transform: rotate(1deg); }
+    .task-content { padding:10px 14px 12px 14px; display:flex; flex-direction:column; gap:8px; }
+    .task-title-row { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
+    .task-title { font-size:14px; font-weight:700; line-height:1.3; flex:1; }
+    .task-pill { display:inline-block; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:700; letter-spacing:.3px; white-space:nowrap; }
+    .task-meta-row { display:flex; flex-wrap:wrap; gap:6px; }
+    .task-chip { display:inline-flex; align-items:center; gap:4px; padding:2px 7px; border-radius:4px; font-size:10px; font-weight:600; }
+    .task-due { display:inline-flex; align-items:center; gap:5px; padding:3px 8px; border-radius:4px; font-size:11px; align-self:flex-start; }
+    .task-desc { font-size:12px; color:#444; line-height:1.35; }
+    .modal-backdrop { position:fixed; inset:0; background:rgba(3,8,18,.7); display:none; align-items:center; justify-content:center; padding:20px; z-index:1000; }
+    .modal-backdrop.open { display:flex; }
+    .modal { width:min(760px, 100%); max-height:90vh; overflow:auto; background:#101a2f; color:var(--text); border:1px solid rgba(255,255,255,.12); border-radius:22px; box-shadow:0 20px 60px rgba(0,0,0,.45); padding:22px; }
+    .modal-head { display:flex; justify-content:space-between; gap:16px; align-items:flex-start; margin-bottom:16px; }
+    .modal-title { margin:0; font-size:28px; line-height:1.15; }
+    .icon-btn { border:none; background:rgba(255,255,255,.08); color:var(--text); width:38px; height:38px; border-radius:999px; cursor:pointer; font-size:18px; }
+    .detail-grid { display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:12px; margin-top:16px; }
+    .detail-card { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:12px 14px; }
+    .detail-card label { display:block; font-size:12px; color:var(--muted); margin-bottom:6px; }
+    .detail-card strong, .detail-card div { color:#fff; }
+    .detail-description { margin-top:16px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:14px; white-space:pre-wrap; }
+    .modal-actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; }
+    .modal-grid-1 { display:grid; gap:12px; margin-top:16px; }
+    .field-block { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:12px 14px; }
+    .field-block label { display:block; font-size:12px; color:var(--muted); margin-bottom:8px; }
+    .field-block textarea { width:100%; min-height:84px; resize:vertical; border-radius:12px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.06); color:var(--text); padding:10px 12px; font:inherit; }
+    @media (max-width: 1100px) { .task-board { grid-template-columns: repeat(4, minmax(280px, 1fr)); } }
+    @media (max-width: 700px) {
+      .wrap { width:100%; padding: 12px 10px 28px; }
+      .hero, .panel { padding:14px; border-radius:14px; }
+      .hero { gap:12px; padding:12px 14px; }
+      .hero-top { justify-content:stretch; }
+      .hero-logo { width:min(132px, 38vw); }
+      .hero-top .lang-select { width:100%; }
+      h1 { font-size: 30px; }
+      h2 { font-size: 20px; }
+      p { font-size: 14px; }
+      .buttons { display:grid; grid-template-columns: 1fr; gap:8px; }
+      .btn { width:100%; text-align:center; min-height:44px; padding:11px 12px; }
+      .filters-row { display:grid; grid-template-columns: 1fr; gap:10px; }
+      .filter-group { min-width:0; width:100%; }
+      .filter-group select, .lang-select { width:100%; }
+      .task-board { grid-template-columns: 1fr; overflow-x:visible; gap:12px; }
+      .task-lane { padding:12px; border-radius:14px; }
+      .task-lane h3 { font-size:14px; }
+      .task-title-row { flex-direction:column; align-items:stretch; }
+      .task-pill { align-self:flex-start; }
+      .detail-grid { grid-template-columns: 1fr; }
+      .modal-backdrop { align-items:stretch; padding:8px; }
+      .modal { padding:16px; max-height:calc(100vh - 16px); border-radius:14px; }
+      .modal-title { font-size:22px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="hero">
+      <div class="hero-top">
+        <select id="lang-switcher" class="lang-select notranslate" aria-label="Language selector" translate="no">
+          <option value="de" translate="no">DE</option>
+          <option value="en" translate="no">EN</option>
+          <option value="hu" translate="no">HU</option>
+        </select>
+      </div>
+      <img class="hero-logo" src="./herpert-logo-final-white-erp.png" alt="HERPERT Logo">
+      <div class="buttons">
+        <a class="btn primary" href="./index.html" id="back-link">Zurück zur Übersicht</a>
+        <a class="btn" href="./po-tracking.html" id="po-tracking-link">PO Tracking</a>
+      </div>
+      <div class="status-line" id="board-status"></div>
+    </section>
+
+    <section id="tasks" class="panel" style="margin-top:18px;">
+      <h2 id="section-title">PDM Tasks</h2>
+      <p id="section-copy">Die Tasks bleiben fachlich in der SharePoint-Liste zuhause, die Oberfläche hier übernimmt Darstellung, Gruppierung, Verschieben und jetzt auch die Detailansicht per Klick.</p>
+      <div class="filters-row">
+        <div class="filter-group">
+          <label for="task-type-filter" id="task-type-filter-label">Typ filtern</label>
+          <select id="task-type-filter" class="lang-select" aria-label="Task type filter"></select>
+        </div>
+        <div class="filter-group">
+          <label for="assigned-to-filter" id="assigned-to-filter-label">Zuständig</label>
+          <select id="assigned-to-filter" class="lang-select" aria-label="Assigned to filter"></select>
+        </div>
+        <div class="filter-group">
+          <label for="completion-filter" id="completion-filter-label">Statusgruppe</label>
+          <select id="completion-filter" class="lang-select" aria-label="Completion filter"></select>
+        </div>
+      </div>
+      <div class="task-board">
+        <section class="task-lane" data-status="NEW"><h3 data-lane="NEW">NEW</h3><div class="task-cards" id="tasks-new"><div class="muted" data-empty="loading">Lade…</div></div></section>
+        <section class="task-lane" data-status="IN_PROGRESS"><h3 data-lane="IN_PROGRESS">IN_PROGRESS</h3><div class="task-cards" id="tasks-inprogress"><div class="muted" data-empty="loading">Lade…</div></div></section>
+        <section class="task-lane" data-status="BLOCKED"><h3 data-lane="BLOCKED">BLOCKED</h3><div class="task-cards" id="tasks-blocked"><div class="muted" data-empty="loading">Lade…</div></div></section>
+        <section class="task-lane" data-status="DONE"><h3 data-lane="DONE">DONE</h3><div class="task-cards" id="tasks-done"><div class="muted" data-empty="loading">Lade…</div></div></section>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" id="task-modal-backdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="task-modal-title">
+      <div class="modal-head">
+        <div>
+          <div class="eyebrow" id="task-modal-type">TASK</div>
+          <h2 class="modal-title" id="task-modal-title">Task</h2>
+        </div>
+        <button class="icon-btn" id="task-modal-close" type="button" aria-label="Schließen">×</button>
+      </div>
+      <div class="task-meta-row" id="task-modal-badges"></div>
+      <div class="detail-grid" id="task-modal-grid"></div>
+      <div class="detail-description" id="task-modal-description">Keine Beschreibung</div>
+      <div class="modal-actions">
+        <button class="btn" id="task-modal-retranslate" type="button">Neu übersetzen</button>
+        <button class="btn primary" id="task-modal-save-translations" type="button">Sprachfelder speichern</button>
+      </div>
+      <div class="modal-grid-1" id="task-modal-translation-fields">
+        <div class="field-block"><label for="task-title-de">Title DE</label><textarea id="task-title-de"></textarea></div>
+        <div class="field-block"><label for="task-title-en">Title EN</label><textarea id="task-title-en"></textarea></div>
+        <div class="field-block"><label for="task-title-hu">Title HU</label><textarea id="task-title-hu"></textarea></div>
+        <div class="field-block"><label for="task-description-de">Description DE</label><textarea id="task-description-de"></textarea></div>
+        <div class="field-block"><label for="task-description-en">Description EN</label><textarea id="task-description-en"></textarea></div>
+        <div class="field-block"><label for="task-description-hu">Description HU</label><textarea id="task-description-hu"></textarea></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = 'https://pdm-api.azurewebsites.net/api';
+    const BOARD_IDS = { NEW: 'tasks-new', IN_PROGRESS: 'tasks-inprogress', BLOCKED: 'tasks-blocked', DONE: 'tasks-done' };
+    const I18N = {
+      de: {
+        heroEyebrow: 'HERPERT / Tasks', heroTitle: 'Task Board', heroCopy: 'Eigene Seite für die PDM Tasks im SharePoint-Stil, aber sauber als Web-App.', back: 'Zurück zur Übersicht', poTracking:'PO Tracking',
+        sectionTitle: 'PDM Tasks', sectionCopy: 'Die Tasks bleiben fachlich in der SharePoint-Liste zuhause, die Oberfläche hier übernimmt Darstellung, Gruppierung, Verschieben und jetzt auch die Detailansicht per Klick.',
+        loading: 'Lade…', noTasks: 'Keine Tasks', cannotLoad: 'Tasks konnten gerade nicht geladen werden.', dragHint: 'Ziehe eine Task in eine andere Spalte oder klicke sie für Details an.',
+        saving: id => `Speichere Status für Task ${id} ...`, saved: (id, st) => `Task ${id} ist jetzt ${st}.`, saveFailed: id => `Statuswechsel für Task ${id} fehlgeschlagen.`,
+        modalNoDesc: 'Keine Beschreibung', modalLoadFail: id => `Task ${id} konnte nicht geladen werden.`, retranslate: 'Neu übersetzen', saveTranslations: 'Sprachfelder speichern',
+        retranslateQueued: id => `Neuübersetzung für Task ${id} wurde angestoßen.`, translationsSaved: id => `Sprachfelder für Task ${id} gespeichert.`, translationsSaveFailed: id => `Sprachfelder für Task ${id} konnten nicht gespeichert werden.`,
+        taskTypeFilterLabel: 'Typ filtern', taskTypeAll: 'Alle Typen', assignedToFilterLabel: 'Zuständig', assignedToAll: 'Alle Personen', unassigned: 'Nicht zugewiesen', completionFilterLabel: 'Statusgruppe', completionAll: 'Alle Tasks', completionOpen: 'Nur offene', completionDone: 'Nur erledigte',
+        taskTypeLabels: { FOLLOW_UP:'Follow-Up', ISSUE:'Issue / Problem', PROCUREMENT:'Procurement', ECN:'ECN — Engineering Change', QUALITY:'Quality', PRODUCTION:'Production', APPROVAL:'Approval', CHANGE_OBJECT:'Change Object', CREATE_OBJECT:'Create Object', DOCUMENTATION:'Documentation', OTHER:'Other' },
+        labels: { taskId: 'Task ID', assignedTo: 'Assigned To', due: 'Fällig', sharepoint: 'SharePoint Item', createdAt: 'Erstellt am', createdBy: 'Erstellt von' },
+        taskTypeFallback: 'SONSTIGES'
+      },
+      en: {
+        heroEyebrow: 'HERPERT / Tasks', heroTitle: 'Task Board', heroCopy: 'Dedicated page for PDM tasks in the SharePoint style, but built cleanly as a web app.', back: 'Back to overview', poTracking:'PO Tracking',
+        sectionTitle: 'PDM Tasks', sectionCopy: 'The tasks remain at home in the SharePoint list, while this interface handles presentation, grouping, moving, and the click detail view.',
+        loading: 'Loading…', noTasks: 'No tasks', cannotLoad: 'Tasks could not be loaded right now.', dragHint: 'Drag a task to another lane or click it for details.',
+        saving: id => `Saving status for task ${id} ...`, saved: (id, st) => `Task ${id} is now ${st}.`, saveFailed: id => `Status change for task ${id} failed.`,
+        modalNoDesc: 'No description', modalLoadFail: id => `Task ${id} could not be loaded.`, retranslate: 'Retranslate', saveTranslations: 'Save language fields',
+        retranslateQueued: id => `Retranslation for task ${id} was queued.`, translationsSaved: id => `Language fields for task ${id} saved.`, translationsSaveFailed: id => `Language fields for task ${id} could not be saved.`,
+        taskTypeFilterLabel: 'Filter by type', taskTypeAll: 'All types', assignedToFilterLabel: 'Assigned to', assignedToAll: 'All people', unassigned: 'Unassigned', completionFilterLabel: 'Completion', completionAll: 'All tasks', completionOpen: 'Open only', completionDone: 'Done only',
+        taskTypeLabels: { FOLLOW_UP:'Follow-Up', ISSUE:'Issue / Problem', PROCUREMENT:'Procurement', ECN:'ECN — Engineering Change', QUALITY:'Quality', PRODUCTION:'Production', APPROVAL:'Approval', CHANGE_OBJECT:'Change Object', CREATE_OBJECT:'Create Object', DOCUMENTATION:'Documentation', OTHER:'Other' },
+        labels: { taskId: 'Task ID', assignedTo: 'Assigned To', due: 'Due date', sharepoint: 'SharePoint item', createdAt: 'Created at', createdBy: 'Created by' },
+        taskTypeFallback: 'OTHER'
+      },
+      hu: {
+        heroEyebrow: 'HERPERT / Feladatok', heroTitle: 'Feladat tábla', heroCopy: 'Külön oldal a PDM feladatokhoz SharePoint stílusban, de rendesen webalkalmazásként megépítve.', back: 'Vissza az áttekintéshez', poTracking:'PO Tracking',
+        sectionTitle: 'PDM Feladatok', sectionCopy: 'A feladatok szakmailag továbbra is a SharePoint listában maradnak, ez a felület pedig a megjelenítést, csoportosítást, áthúzást és a részletek megnyitását kezeli.',
+        loading: 'Betöltés…', noTasks: 'Nincs feladat', cannotLoad: 'A feladatokat most nem sikerült betölteni.', dragHint: 'Húzd át a feladatot egy másik sávba, vagy kattints rá a részletekhez.',
+        saving: id => `A ${id} feladat állapotának mentése ...`, saved: (id, st) => `A ${id} feladat új állapota: ${st}.`, saveFailed: id => `A ${id} feladat állapotváltása nem sikerült.`,
+        modalNoDesc: 'Nincs leírás', modalLoadFail: id => `A ${id} feladatot nem sikerült betölteni.`, retranslate: 'Újrafordítás', saveTranslations: 'Nyelvi mezők mentése',
+        retranslateQueued: id => `A ${id} feladat újrafordítása elindult.`, translationsSaved: id => `A ${id} feladat nyelvi mezői mentve.`, translationsSaveFailed: id => `A ${id} feladat nyelvi mezőit nem sikerült menteni.`,
+        taskTypeFilterLabel: 'Szűrés típus szerint', taskTypeAll: 'Minden típus', assignedToFilterLabel: 'Felelős', assignedToAll: 'Mindenki', unassigned: 'Nincs hozzárendelve', completionFilterLabel: 'Állapotcsoport', completionAll: 'Minden feladat', completionOpen: 'Csak nyitott', completionDone: 'Csak kész',
+        taskTypeLabels: { FOLLOW_UP:'Follow-Up', ISSUE:'Hiba / Probléma', PROCUREMENT:'Beszerzés', ECN:'ECN — Műszaki változás', QUALITY:'Minőség', PRODUCTION:'Gyártás', APPROVAL:'Jóváhagyás', CHANGE_OBJECT:'Objektum módosítása', CREATE_OBJECT:'Objektum létrehozása', DOCUMENTATION:'Dokumentáció', OTHER:'Egyéb' },
+        labels: { taskId: 'Feladat ID', assignedTo: 'Felelős', due: 'Határidő', sharepoint: 'SharePoint elem', createdAt: 'Létrehozva', createdBy: 'Létrehozta' },
+        taskTypeFallback: 'EGYÉB'
+      }
+    };
+    const sharedLang = localStorage.getItem('herpert-lang');
+    const legacyTaskLang = localStorage.getItem('herpertTasksLang');
+    let currentLang = ['de','en','hu'].includes(sharedLang) ? sharedLang : ['de','en','hu'].includes(legacyTaskLang) ? legacyTaskLang : 'de';
+    let currentTaskTypeFilter = localStorage.getItem('herpertTaskTypeFilter') || 'ALL';
+    let currentAssignedToFilter = localStorage.getItem('herpertAssignedToFilter') || 'ALL';
+    let currentCompletionFilter = localStorage.getItem('herpertCompletionFilter') || 'ALL';
+    let boardTasks = [];
+    let dragTaskId = null;
+    let suppressClickUntil = 0;
+    let currentModalTaskId = null;
+
+    function t() { return I18N[currentLang] || I18N.de; }
+    function esc(v) { return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function localizedField(row, base) {
+      const suffix = currentLang === 'en' ? 'En' : currentLang === 'hu' ? 'Hu' : 'De';
+      return row[`${base}${suffix}`] || row[`${base}Localized`] || row[base] || '';
+    }
+    function apiUrl(path, params = {}) {
+      const url = new URL(`${API_BASE}${path}`);
+      Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));
+      url.searchParams.set('_', Date.now().toString());
+      return url.toString();
+    }
+    function fmtDate(v) {
+      if (!v) return '';
+      const d = new Date(v);
+      if (Number.isNaN(d.getTime())) return esc(v);
+      const locale = currentLang === 'hu' ? 'hu-HU' : currentLang === 'en' ? 'en-GB' : 'de-DE';
+      return d.toLocaleDateString(locale);
+    }
+    function setBoardStatus(msg, isError = false) {
+      const el = document.getElementById('board-status');
+      el.textContent = msg || '';
+      el.style.color = isError ? '#ffb3b3' : 'var(--muted)';
+    }
+    function statusStyle(status) {
+      const s = (status || '').toUpperCase();
+      if (s === 'NEW') return { color:'#0b5cad', bg:'#deecf9', border:'#0b5cad' };
+      if (s === 'IN_PROGRESS') return { color:'#8a5a00', bg:'#fff4ce', border:'#d29200' };
+      if (s === 'DONE') return { color:'#0f6b3c', bg:'#dff6dd', border:'#107c41' };
+      if (s === 'BLOCKED') return { color:'#a4262c', bg:'#fde7e9', border:'#a4262c' };
+      return { color:'#605e5c', bg:'#f3f2f1', border:'#c8c6c4' };
+    }
+    function priorityStyle(priority) {
+      const p = (priority || '').toUpperCase();
+      if (p === 'URGENT') return { color:'#a4262c', bg:'#fde7e9', border:'#d13438', icon:'❗' };
+      if (p === 'HIGH') return { color:'#b85c00', bg:'#fff4ce', border:'#ea8c00', icon:'↑' };
+      if (p === 'LOW') return { color:'#0f6b3c', bg:'#dff6dd', border:'#107c41', icon:'↓' };
+      return { color:'#605e5c', bg:'#f3f2f1', border:'#0078d4', icon:'•' };
+    }
+    function taskTypeStyle(type) {
+      const tt = (type || '').toUpperCase();
+      if (tt === 'FOLLOW_UP') return { color:'#5c2e91', bg:'#eee6f7', border:'#5c2e91' };
+      if (tt === 'APPROVAL') return { color:'#107c41', bg:'#dff6dd', border:'#107c41' };
+      return { color:'#605e5c', bg:'#f3f2f1', border:'#c8c6c4' };
+    }
+    function dueStyle(dueAt) {
+      if (!dueAt) return null;
+      const due = new Date(dueAt);
+      const now = new Date();
+      const diff = due.getTime() - now.getTime();
+      if (diff < 0) return { color:'#a4262c', bg:'#fde7e9', border:'#d13438', icon:'⚠', text:fmtDate(dueAt) };
+      if (diff < 86400000) return { color:'#8a5a00', bg:'#fff4ce', border:'#ea8c00', icon:'⏰', text:fmtDate(dueAt) };
+      return { color:'#605e5c', bg:'#f3f2f1', border:'#c8c6c4', icon:'🗓', text:fmtDate(dueAt) };
+    }
+    function taskTypeLabel(type) {
+      const key = (type || '').toUpperCase();
+      return t().taskTypeLabels?.[key] || key || t().taskTypeFallback;
+    }
+    function populateTaskTypeFilter() {
+      const select = document.getElementById('task-type-filter');
+      const values = [...new Set(boardTasks.map(task => (task.TaskType || 'OTHER').toUpperCase()).filter(Boolean))].sort();
+      select.innerHTML = [`<option value="ALL">${esc(t().taskTypeAll)}</option>`].concat(values.map(v => `<option value="${esc(v)}">${esc(taskTypeLabel(v))}</option>`)).join('');
+      select.value = values.includes(currentTaskTypeFilter) || currentTaskTypeFilter === 'ALL' ? currentTaskTypeFilter : 'ALL';
+      currentTaskTypeFilter = select.value;
+      localStorage.setItem('herpertTaskTypeFilter', currentTaskTypeFilter);
+    }
+    function populateAssignedToFilter() {
+      const select = document.getElementById('assigned-to-filter');
+      const values = [...new Set(boardTasks.map(task => (task.AssignedTo || '').trim() || '__UNASSIGNED__'))].sort((a,b) => a.localeCompare(b));
+      const labelFor = v => v === '__UNASSIGNED__' ? t().unassigned : v;
+      select.innerHTML = [`<option value="ALL">${esc(t().assignedToAll)}</option>`].concat(values.map(v => `<option value="${esc(v)}">${esc(labelFor(v))}</option>`)).join('');
+      select.value = values.includes(currentAssignedToFilter) || currentAssignedToFilter === 'ALL' ? currentAssignedToFilter : 'ALL';
+      currentAssignedToFilter = select.value;
+      localStorage.setItem('herpertAssignedToFilter', currentAssignedToFilter);
+    }
+    function populateCompletionFilter() {
+      const select = document.getElementById('completion-filter');
+      select.innerHTML = [
+        `<option value="ALL">${esc(t().completionAll)}</option>`,
+        `<option value="OPEN">${esc(t().completionOpen)}</option>`,
+        `<option value="DONE">${esc(t().completionDone)}</option>`
+      ].join('');
+      select.value = ['ALL','OPEN','DONE'].includes(currentCompletionFilter) ? currentCompletionFilter : 'ALL';
+      currentCompletionFilter = select.value;
+      localStorage.setItem('herpertCompletionFilter', currentCompletionFilter);
+    }
+    function applyTranslations() {
+      document.documentElement.lang = currentLang;
+      document.getElementById('lang-switcher').value = currentLang;
+      document.getElementById('back-link').textContent = t().back;
+      document.getElementById('po-tracking-link').textContent = t().poTracking;
+      document.getElementById('section-title').textContent = t().sectionTitle;
+      document.getElementById('section-copy').textContent = t().sectionCopy;
+      document.getElementById('task-type-filter-label').textContent = t().taskTypeFilterLabel;
+      document.getElementById('assigned-to-filter-label').textContent = t().assignedToFilterLabel;
+      document.getElementById('completion-filter-label').textContent = t().completionFilterLabel;
+      document.querySelectorAll('[data-empty="loading"]').forEach(el => el.textContent = t().loading);
+      document.getElementById('task-modal-retranslate').textContent = t().retranslate;
+      document.getElementById('task-modal-save-translations').textContent = t().saveTranslations;
+    }
+    function renderTaskCard(task) {
+      const ss = statusStyle(task.Status);
+      const ps = priorityStyle(task.Priority);
+      const ts = taskTypeStyle(task.TaskType);
+      const ds = dueStyle(task.DueAt);
+      return `
+        <article class="task-card" draggable="true" data-task-id="${esc(task.TaskId)}" style="border-bottom-color:${ps.border || '#0078d4'}">
+          <div class="task-content">
+            <div class="task-title-row">
+              <div class="task-title">${esc(localizedField(task, 'Title') || '(ohne Titel)')}</div>
+              <div class="task-pill" style="color:${ss.color};background:${ss.bg};border:1px solid ${ss.border}">${esc(task.Status)}</div>
+            </div>
+            <div class="task-meta-row">
+              <div class="task-chip" style="color:${ts.color};background:${ts.bg};border:1px solid ${ts.border}">${esc(taskTypeLabel(task.TaskType || 'OTHER'))}</div>
+              <div class="task-chip" style="color:${ps.color};background:${ps.bg}">${ps.icon} ${esc(task.Priority || 'NORMAL')}</div>
+            </div>
+            ${ds ? `<div class="task-due" style="color:${ds.color};background:${ds.bg};border:1px solid ${ds.border}">${ds.icon} ${esc(ds.text)}</div>` : ''}
+            ${task.AssignedTo ? `<div style="font-size:11px;color:#605e5c;font-weight:600">${esc(task.AssignedTo)}</div>` : ''}
+            ${localizedField(task, 'Description') ? `<div class="task-desc">${esc(localizedField(task, 'Description'))}</div>` : ''}
+          </div>
+        </article>`;
+    }
+    function renderBoard() {
+      const buckets = { NEW: [], IN_PROGRESS: [], BLOCKED: [], DONE: [] };
+      const filteredTasks = boardTasks.filter(task => {
+        const taskTypeOk = currentTaskTypeFilter === 'ALL' || (task.TaskType || 'OTHER').toUpperCase() === currentTaskTypeFilter;
+        const assignedKey = (task.AssignedTo || '').trim() || '__UNASSIGNED__';
+        const assignedOk = currentAssignedToFilter === 'ALL' || assignedKey === currentAssignedToFilter;
+        const completionOk = currentCompletionFilter === 'ALL' || (currentCompletionFilter === 'DONE' ? (task.Status || '').toUpperCase() === 'DONE' : (task.Status || '').toUpperCase() !== 'DONE');
+        return taskTypeOk && assignedOk && completionOk;
+      });
+      filteredTasks.forEach(task => {
+        const key = (task.Status || '').toUpperCase();
+        if (buckets[key]) buckets[key].push(task);
+      });
+      Object.entries(BOARD_IDS).forEach(([status, id]) => {
+        const arr = buckets[status] || [];
+        document.getElementById(id).innerHTML = arr.length ? arr.map(renderTaskCard).join('') : `<div class="muted">${t().noTasks}</div>`;
+      });
+      bindInteractions();
+    }
+    function bindInteractions() {
+      document.querySelectorAll('.task-card').forEach(card => {
+        card.addEventListener('dragstart', e => {
+          dragTaskId = Number(card.dataset.taskId);
+          suppressClickUntil = Date.now() + 400;
+          card.classList.add('dragging');
+          if (e.dataTransfer) {
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.dropEffect = 'move';
+            e.dataTransfer.setData('text/plain', String(dragTaskId));
+          }
+        });
+        card.addEventListener('dragend', () => {
+          card.classList.remove('dragging');
+          dragTaskId = null;
+          document.querySelectorAll('.task-lane').forEach(l => l.classList.remove('drop-target'));
+        });
+        card.addEventListener('click', async () => {
+          if (Date.now() < suppressClickUntil) return;
+          await openTaskModal(Number(card.dataset.taskId));
+        });
+      });
+      document.querySelectorAll('.task-lane, .task-cards').forEach(zone => {
+        zone.addEventListener('dragover', e => {
+          e.preventDefault();
+          const lane = e.currentTarget.classList.contains('task-lane') ? e.currentTarget : e.currentTarget.closest('.task-lane');
+          if (lane) lane.classList.add('drop-target');
+          if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+        });
+        zone.addEventListener('dragleave', e => {
+          const lane = e.currentTarget.classList.contains('task-lane') ? e.currentTarget : e.currentTarget.closest('.task-lane');
+          if (lane && !lane.contains(e.relatedTarget)) lane.classList.remove('drop-target');
+        });
+        zone.addEventListener('drop', async e => {
+          e.preventDefault();
+          const lane = e.currentTarget.classList.contains('task-lane') ? e.currentTarget : e.currentTarget.closest('.task-lane');
+          if (!lane) return;
+          lane.classList.remove('drop-target');
+          const newStatus = lane.dataset.status;
+          const taskId = dragTaskId || Number(e.dataTransfer?.getData('text/plain'));
+          if (!taskId || !newStatus) return;
+          suppressClickUntil = Date.now() + 500;
+          await moveTask(taskId, newStatus);
+        });
+      });
+    }
+    async function moveTask(taskId, newStatus) {
+      const task = boardTasks.find(x => Number(x.TaskId) === Number(taskId));
+      if (!task) return;
+      const oldStatus = (task.Status || '').toUpperCase();
+      if (oldStatus === newStatus) return;
+      task.Status = newStatus;
+      renderBoard();
+      setBoardStatus(t().saving(taskId));
+      try {
+        const res = await fetch(`${API_BASE}/tasks/${taskId}`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ status: newStatus }) });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        setBoardStatus(t().saved(taskId, newStatus));
+      } catch {
+        task.Status = oldStatus;
+        renderBoard();
+        setBoardStatus(t().saveFailed(taskId), true);
+      }
+    }
+    function fillTranslationFields(task) {
+      document.getElementById('task-title-de').value = task.TitleDe || '';
+      document.getElementById('task-title-en').value = task.TitleEn || '';
+      document.getElementById('task-title-hu').value = task.TitleHu || '';
+      document.getElementById('task-description-de').value = task.DescriptionDe || '';
+      document.getElementById('task-description-en').value = task.DescriptionEn || '';
+      document.getElementById('task-description-hu').value = task.DescriptionHu || '';
+    }
+    function closeTaskModal() {
+      currentModalTaskId = null;
+      document.getElementById('task-modal-backdrop').classList.remove('open');
+      document.getElementById('task-modal-backdrop').setAttribute('aria-hidden', 'true');
+    }
+    async function openTaskModal(taskId) {
+      const res = await fetch(apiUrl(`/tasks/${taskId}`, { lang: currentLang }), { cache: 'no-store' });
+      if (!res.ok) {
+        setBoardStatus(t().modalLoadFail(taskId), true);
+        return;
+      }
+      const task = await res.json();
+      currentModalTaskId = Number(taskId);
+      const ss = statusStyle(task.Status);
+      const ps = priorityStyle(task.Priority);
+      const ts = taskTypeStyle(task.TaskType);
+      const ds = dueStyle(task.DueAt);
+      document.getElementById('task-modal-type').textContent = task.TaskType || 'TASK';
+      document.getElementById('task-modal-title').textContent = localizedField(task, 'Title') || '(ohne Titel)';
+      document.getElementById('task-modal-badges').innerHTML = `
+        <div class="task-pill" style="color:${ss.color};background:${ss.bg};border:1px solid ${ss.border}">${esc(task.Status || '')}</div>
+        <div class="task-chip" style="color:${ps.color};background:${ps.bg}">${ps.icon} ${esc(task.Priority || 'NORMAL')}</div>
+        ${ds ? `<div class="task-due" style="color:${ds.color};background:${ds.bg};border:1px solid ${ds.border}">${ds.icon} ${esc(ds.text)}</div>` : ''}
+        <div class="task-chip" style="color:${ts.color};background:${ts.bg};border:1px solid ${ts.border}">${esc(taskTypeLabel(task.TaskType || 'OTHER'))}</div>`;
+      document.getElementById('task-modal-grid').innerHTML = [
+        [t().labels.taskId, task.TaskId], [t().labels.assignedTo, task.AssignedTo || ''], [t().labels.due, fmtDate(task.DueAt) || ''],
+        [t().labels.sharepoint, task.SharePointListItemId || ''], [t().labels.createdAt, fmtDate(task.CreatedAt) || ''], [t().labels.createdBy, task.CreatedBy || '']
+      ].map(([label, value]) => `<div class="detail-card"><label>${esc(label)}</label><div>${esc(value || '-')}</div></div>`).join('');
+      document.getElementById('task-modal-description').textContent = localizedField(task, 'Description') || t().modalNoDesc;
+      fillTranslationFields(task);
+      const backdrop = document.getElementById('task-modal-backdrop');
+      backdrop.classList.add('open');
+      backdrop.setAttribute('aria-hidden', 'false');
+    }
+    async function retranslateCurrentTask() {
+      if (!currentModalTaskId) return;
+      const res = await fetch(`${API_BASE}/tasks/${currentModalTaskId}/retranslate`, { method:'POST' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setBoardStatus(t().retranslateQueued(currentModalTaskId));
+    }
+    async function saveCurrentTranslations() {
+      if (!currentModalTaskId) return;
+      const body = {
+        titleDe: document.getElementById('task-title-de').value,
+        titleEn: document.getElementById('task-title-en').value,
+        titleHu: document.getElementById('task-title-hu').value,
+        descriptionDe: document.getElementById('task-description-de').value,
+        descriptionEn: document.getElementById('task-description-en').value,
+        descriptionHu: document.getElementById('task-description-hu').value,
+      };
+      const res = await fetch(`${API_BASE}/tasks/${currentModalTaskId}`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setBoardStatus(t().translationsSaved(currentModalTaskId));
+      await loadTasksBoard();
+      await openTaskModal(currentModalTaskId);
+    }
+    async function loadTasksBoard() {
+      const res = await fetch(apiUrl('/tasks', { top: '80', lang: currentLang }), { cache: 'no-store' });
+      if (!res.ok) throw new Error('Tasks');
+      boardTasks = await res.json();
+      populateTaskTypeFilter();
+      populateAssignedToFilter();
+      populateCompletionFilter();
+      renderBoard();
+      setBoardStatus(t().dragHint);
+    }
+    document.getElementById('task-type-filter').addEventListener('change', e => {
+      currentTaskTypeFilter = e.target.value || 'ALL';
+      localStorage.setItem('herpertTaskTypeFilter', currentTaskTypeFilter);
+      renderBoard();
+      setBoardStatus(t().dragHint);
+    });
+    document.getElementById('assigned-to-filter').addEventListener('change', e => {
+      currentAssignedToFilter = e.target.value || 'ALL';
+      localStorage.setItem('herpertAssignedToFilter', currentAssignedToFilter);
+      renderBoard();
+      setBoardStatus(t().dragHint);
+    });
+    document.getElementById('completion-filter').addEventListener('change', e => {
+      currentCompletionFilter = e.target.value || 'ALL';
+      localStorage.setItem('herpertCompletionFilter', currentCompletionFilter);
+      renderBoard();
+      setBoardStatus(t().dragHint);
+    });
+    async function setLanguage(nextLang) {
+      if (!['de','en','hu'].includes(nextLang)) return;
+      currentLang = nextLang;
+      localStorage.setItem('herpert-lang', currentLang);
+      localStorage.setItem('herpertTasksLang', currentLang);
+      applyTranslations();
+      try {
+        await loadTasksBoard();
+        if (document.getElementById('task-modal-backdrop').classList.contains('open') && currentModalTaskId) {
+          await openTaskModal(currentModalTaskId);
+        }
+      } catch {
+        Object.values(BOARD_IDS).forEach(id => { document.getElementById(id).innerHTML = `<div class="muted">${t().cannotLoad}</div>`; });
+        setBoardStatus(t().cannotLoad, true);
+      }
+    }
+    document.getElementById('task-modal-retranslate').addEventListener('click', () => retranslateCurrentTask().catch(() => setBoardStatus(t().saveFailed(currentModalTaskId || ''), true)));
+    document.getElementById('task-modal-save-translations').addEventListener('click', () => saveCurrentTranslations().catch(() => setBoardStatus(t().translationsSaveFailed(currentModalTaskId || ''), true)));
+    document.getElementById('task-modal-close').addEventListener('click', closeTaskModal);
+    document.getElementById('task-modal-backdrop').addEventListener('click', e => { if (e.target.id === 'task-modal-backdrop') closeTaskModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeTaskModal(); });
+    const langSwitcher = document.getElementById('lang-switcher');
+    let langChangeTimer = null;
+    function scheduleLanguageFromSwitcher() {
+      clearTimeout(langChangeTimer);
+      langChangeTimer = setTimeout(() => setLanguage(langSwitcher.value), 0);
+    }
+    langSwitcher.addEventListener('change', scheduleLanguageFromSwitcher);
+    langSwitcher.addEventListener('input', scheduleLanguageFromSwitcher);
+    langSwitcher.addEventListener('pointerup', scheduleLanguageFromSwitcher);
+    langSwitcher.addEventListener('keyup', e => {
+      if (e.key === 'Enter' || e.key === ' ') scheduleLanguageFromSwitcher();
+    });
+    applyTranslations();
+    loadTasksBoard().catch(() => {
+      Object.values(BOARD_IDS).forEach(id => { document.getElementById(id).innerHTML = `<div class="muted">${t().cannotLoad}</div>`; });
+      setBoardStatus(t().cannotLoad, true);
+    });
+  </script>
+</body>
+</html>

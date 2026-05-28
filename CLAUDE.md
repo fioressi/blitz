@@ -27,6 +27,15 @@ geräteübergreifende State-Sync via DB.
 | Datenbank | Azure SQL `neutronzenker.database.windows.net / PDM_db` |
 | Hosting | Azure Static Web Apps (Free Tier) |
 
+## PDM-Seiten (ehemals web-probe)
+
+- Die migrierten HERPERT-Seiten liegen unter `public/pdm/`.
+- Routing-Strategie: Blitz bleibt die React-SPA, während `/pdm/*` als statische Assets aus `public/pdm/` ausgeliefert wird.
+- Die Top-Level-Navigation in `src/App.tsx` schaltet zwischen `✉ Emails` und der PDM-Sektion um.
+- Die PDM-Sektion nutzt eine React-Shell mit HERPERT Header/Topnav; die eigentlichen Seiten laufen zunächst im `iframe`.
+- `public/staticwebapp.config.json` schließt `/pdm/*` bewusst vom SPA-Fallback aus.
+- Das separate web-probe-Deployment ist eingestellt; der alte Ordner in `group-pdm/web-probe/` dient nur noch als Übergabe-/Referenzbestand.
+
 ## Azure AD App Registration
 
 - **Client ID:** `a1627a40-18ee-4461-a75a-cca6a4608fd4`

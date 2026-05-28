@@ -57,6 +57,23 @@ function addStoredLink(messageId: string, link: EmailLink) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 type Tab = 'inbox' | 'read' | 'reply' | 'saved' | 'sent';
+type WorkspaceView = 'emails' | 'pdm';
+type PdmSection = 'overview' | 'engineering' | 'planung' | 'einkauf' | 'lager' | 'admin';
+
+type PdmNavItem = {
+  label: string;
+  path: string;
+  section: PdmSection;
+};
+
+const PDM_NAV_ITEMS: PdmNavItem[] = [
+  { label: 'Hauptmenü', path: '/pdm/index.html', section: 'overview' },
+  { label: 'Entwicklung', path: '/pdm/bom.html', section: 'engineering' },
+  { label: 'Planung', path: '/pdm/production-order.html', section: 'planung' },
+  { label: 'Einkauf', path: '/pdm/po-tracking.html', section: 'einkauf' },
+  { label: 'Lager', path: '/pdm/receiving.html', section: 'lager' },
+  { label: 'Admin', path: '/pdm/projects.html', section: 'admin' },
+];
 
 export default function App() {
   const { instance, accounts } = useMsal();
@@ -94,9 +111,12 @@ export default function App() {
     emails: Email[];
     loading: boolean;
   } | null>(null);
+  const [workspaceView, setWorkspaceView] = useState<WorkspaceView>('emails');
+  const [pdmPath, setPdmPath] = useState('/pdm/index.html');
 
   const leftGroups = attributeGroups.filter(g => g.side === 'left');
   const rightGroups = attributeGroups.filter(g => g.side === 'right');
+  const activePdmItem = PDM_NAV_ITEMS.find(item => item.path === pdmPath) || PDM_NAV_ITEMS[0];
 
   const inboxEmails = emails.filter(e => e.status === 'unread');
   const readEmails  = emails.filter(e => e.status === 'read');
@@ -321,28 +341,58 @@ export default function App() {
     <AuthGuard>
       <DndContext sensors={sensors} onDragStart={handleDndDragStart} onDragEnd={handleDndDragEnd}>
       <div className="app">
-        <header className="app-header">
-          <button className="app-drawer-btn" onClick={() => setDrawerOpen(d => d === 'left' ? null : 'left')}>📁</button>
-          <div className="app-logo">⚡ BLITZ</div>
-          <div className="app-header-right">
-            {user && <span className="app-user" title={`id: ${userId}`}>{user.name}</span>}
-            <button
-              className={`app-nav-btn ${view === 'brett' ? 'active' : ''}`}
-              onClick={() => setView(v => v === 'brett' ? 'inbox' : 'brett')}
-            >
-              BlitzBrett
-            </button>
-            <button className="app-compose-btn" onClick={() => setComposeState({ mode: 'new' })}>✉ Neue E-Mail</button>
-            <button className="app-refresh" onClick={loadEmails} title="Aktualisieren">↻</button>
-            <button className="app-drawer-btn" onClick={() => setDrawerOpen(d => d === 'right' ? null : 'right')}>📋</button>
-            <button className="app-logout" onClick={() => instance.logoutRedirect()}>Abmelden</button>
+        <header className="app-header app-header--stacked">
+          <div className="app-header-main">
+            <button className="app-drawer-btn" onClick={() => setDrawerOpen(d => d === 'left' ? null : 'left')}>📁</button>
+            <div className="app-logo-wrap">
+              <img className="app-logo-mark" src="/pdm/herpert-logo-final-white-erp.png" alt="HERPERT" />
+              <div className="app-logo-block">
+                <div className="app-logo">HERPERT / BLITZ</div>
+                <div className="app-logo-sub">One front-end for emails and PDM</div>
+              </div>
+            </div>
+            <div className="app-header-right">
+              {user && <span className="app-user" title={`id: ${userId}`}>{user.name}</span>}
+              {workspaceView === 'emails' && (
+                <button
+                  className={`app-nav-btn ${view === 'brett' ? 'active' : ''}`}
+                  onClick={() => setView(v => v === 'brett' ? 'inbox' : 'brett')}
+                >
+                  BlitzBrett
+                </button>
+              )}
+              {workspaceView === 'emails' && <button className="app-compose-btn" onClick={() => setComposeState({ mode: 'new' })}>✉ Neue E-Mail</button>}
+              {workspaceView === 'emails'
+                ? <button className="app-refresh" onClick={loadEmails} title="Aktualisieren">↻</button>
+                : <button className="app-refresh" onClick={() => setPdmPath(`${activePdmItem.path.split('?')[0]}?t=${Date.now()}`)} title="PDM neu laden">↻</button>}
+              <button className="app-drawer-btn" onClick={() => setDrawerOpen(d => d === 'right' ? null : 'right')}>📋</button>
+              <button className="app-logout" onClick={() => instance.logoutRedirect()}>Abmelden</button>
+            </div>
           </div>
+          <div className="workspace-switcher" role="tablist" aria-label="Arbeitsbereich wählen">
+            <button className={`workspace-tab ${workspaceView === 'emails' ? 'active' : ''}`} onClick={() => setWorkspaceView('emails')}>✉ Emails</button>
+            <button className={`workspace-tab ${workspaceView === 'pdm' ? 'active' : ''}`} onClick={() => setWorkspaceView('pdm')}>HERPERT PDM</button>
+          </div>
+          {workspaceView === 'pdm' && (
+            <div className="pdm-topnav">
+              {PDM_NAV_ITEMS.map(item => (
+                <button
+                  key={item.path}
+                  className={`pdm-topnav-item ${activePdmItem.path.split('?')[0] === item.path ? 'active' : ''}`}
+                  onClick={() => setPdmPath(item.path)}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          )}
         </header>
 
-        {view === 'brett' ? (
+        {workspaceView === 'emails' && view === 'brett' ? (
           <BlitzBrett emails={emails} />
         ) : null}
 
+        {workspaceView === 'emails' ? (
         <div className={`app-body ${isDraggingCard ? 'card-dragging' : ''}`} style={view === 'brett' ? { display: 'none' } : undefined}>
           {drawerOpen && <div className="drawer-overlay" onClick={() => setDrawerOpen(null)} />}
           <aside className={`panel-left ${drawerOpen === 'left' ? 'drawer-open' : ''}`}>
@@ -464,14 +514,34 @@ export default function App() {
             <AttributePanel groups={rightGroups} onNew={type => setCreateModal(type)} onItemClick={setSelectedAttribute} onFilter={handleEntityFilter} activeFilterId={entityFilter?.attribute.id} />
           </aside>
         </div>
+        ) : (
+          <main className="pdm-shell">
+            <section className="pdm-shell-hero">
+              <div>
+                <p className="pdm-shell-kicker">HERPERT</p>
+                <h1>PDM-Bereiche</h1>
+                <p>Die ehemals separaten web-probe Seiten laufen jetzt innerhalb von Blitz unter <code>/pdm/*</code>.</p>
+              </div>
+              <div className="pdm-shell-actions">
+                <a className="pdm-shell-link" href={activePdmItem.path.split('?')[0]} target="_blank" rel="noreferrer">Seite direkt öffnen</a>
+              </div>
+            </section>
+            <iframe
+              key={pdmPath}
+              className="pdm-frame"
+              title="HERPERT PDM"
+              src={pdmPath}
+            />
+          </main>
+        )}
 
-        <ReplyTray
+        {workspaceView === 'emails' && <ReplyTray
           emails={replyEmails}
           onRemove={handleRemoveFromReplyTray}
           isEmailDragging={isDraggingEmailForReply}
-        />
+        />}
 
-        <EmailDetail
+        {workspaceView === 'emails' && <EmailDetail
           email={selectedEmail}
           loading={loadingDetail}
           instance={instance}
@@ -482,16 +552,16 @@ export default function App() {
           onReply={(email, initialBody) => setComposeState({ mode: 'reply', email, initialBody })}
           attributeGroups={attributeGroups}
           onLinkAdded={handleLinkAdded}
-        />
+        />}
 
-        {selectedAttribute && (
+        {workspaceView === 'emails' && selectedAttribute && (
           <AttributeDetail
             attribute={selectedAttribute}
             onClose={() => setSelectedAttribute(null)}
           />
         )}
 
-        {composeState && user && (
+        {workspaceView === 'emails' && composeState && user && (
           <ComposeModal
             mode={composeState.mode}
             originalEmail={composeState.mode === 'reply' ? composeState.email : undefined}
@@ -535,7 +605,7 @@ export default function App() {
           />
         )}
 
-        {createModal && (
+        {workspaceView === 'emails' && createModal && (
           <CreateModal
             type={createModal}
             onClose={() => setCreateModal(null)}
