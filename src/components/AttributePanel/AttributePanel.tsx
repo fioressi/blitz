@@ -28,11 +28,19 @@ function DraggableAttribute({ attribute, onClick }: { attribute: Attribute; onCl
       style={style}
       {...listeners}
       {...attributes}
-      onClick={() => onClick?.(attribute)}
     >
-      <span className="attribute-item-label">{attribute.label}</span>
-      {attribute.subLabel && (
-        <span className="attribute-item-sublabel">{attribute.subLabel}</span>
+      <div className="attribute-item-content">
+        <span className="attribute-item-label">{attribute.label}</span>
+        {attribute.subLabel && (
+          <span className="attribute-item-sublabel">{attribute.subLabel}</span>
+        )}
+      </div>
+      {onClick && (
+        <button
+          className="attribute-item-open-btn"
+          onClick={() => onClick(attribute)}
+          title="Details anzeigen"
+        >↗</button>
       )}
     </div>
   );
