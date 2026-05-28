@@ -13,9 +13,10 @@ interface Props {
   onDragEnd?: () => void;
   showReplyHandle?: boolean;
   onMarkReply?: (id: string) => void;
+  onMarkSaved?: (id: string) => void;
 }
 
-export function EmailCard({ email, onSwipeLeft, onSwipeRight, onClick, onDragStart, onDragEnd: onDragEndProp, showReplyHandle = true, onMarkReply }: Props) {
+export function EmailCard({ email, onSwipeLeft, onSwipeRight, onClick, onDragStart, onDragEnd: onDragEndProp, showReplyHandle = true, onMarkReply, onMarkSaved }: Props) {
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const controls = useAnimation();
@@ -102,16 +103,27 @@ export function EmailCard({ email, onSwipeLeft, onSwipeRight, onClick, onDragSta
         {isOver && <div className="drop-hint">Hier ablegen zum Verknüpfen</div>}
 
         {showReplyHandle && (
-          <div
-            ref={setDragRef}
-            className="reply-drag-handle"
-            style={{ transform: CSS.Translate.toString(transform) }}
-            {...listeners}
-            {...attributes}
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={(e) => { e.stopPropagation(); onMarkReply?.(email.id); }}
-          >
-            ↩ Zu beantworten
+          <div className="email-actions" onPointerDown={(e) => e.stopPropagation()}>
+            <button
+              className="email-action-btn action-delete"
+              onClick={(e) => { e.stopPropagation(); onSwipeLeft(email.id); }}
+            >🗑 Löschen</button>
+            <button
+              className="email-action-btn action-read"
+              onClick={(e) => { e.stopPropagation(); onSwipeRight(email.id); }}
+            >✓ Gelesen</button>
+            <div
+              ref={setDragRef}
+              className="email-action-btn action-reply"
+              style={{ transform: CSS.Translate.toString(transform) }}
+              {...listeners}
+              {...attributes}
+              onClick={(e) => { e.stopPropagation(); onMarkReply?.(email.id); }}
+            >↩ Beantworten</div>
+            <button
+              className="email-action-btn action-save"
+              onClick={(e) => { e.stopPropagation(); onMarkSaved?.(email.id); }}
+            >★ Merken</button>
           </div>
         )}
       </motion.div>

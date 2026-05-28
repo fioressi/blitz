@@ -10,7 +10,7 @@ export interface Email {
   hasAttachment: boolean;
   attachments: Attachment[];
   links: EmailLink[];
-  status: 'unread' | 'read' | 'deleted' | 'to-reply';
+  status: 'unread' | 'read' | 'deleted' | 'to-reply' | 'saved';
 }
 
 export interface Attachment {

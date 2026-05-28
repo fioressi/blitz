@@ -63,26 +63,37 @@
   opacity: 0.45;
 }
 
-.reply-drag-handle {
+.email-actions {
+  display: flex;
+  gap: 5px;
   margin-top: 10px;
-  padding: 5px 10px;
-  border-radius: 6px;
-  background: rgba(255,255,255,.04);
-  border: 1px dashed rgba(255,255,255,.18);
-  font-size: 11px;
-  color: var(--muted);
-  text-align: center;
-  cursor: grab;
-  touch-action: none;
-  user-select: none;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 
-.reply-drag-handle:hover {
-  background: rgba(102,217,239,.08);
-  border-color: var(--accent);
-  color: var(--accent);
+.email-action-btn {
+  flex: 1;
+  padding: 5px 4px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+  touch-action: none;
+  border: 1px solid transparent;
+  background: rgba(255,255,255,.04);
+  color: var(--muted);
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  white-space: nowrap;
 }
+
+.email-action-btn.action-reply {
+  cursor: grab;
+}
+
+.action-delete:hover  { background: rgba(248,113,113,.12); border-color: rgba(248,113,113,.4); color: var(--red); }
+.action-read:hover    { background: rgba(142,226,142,.12); border-color: rgba(142,226,142,.4); color: var(--green); }
+.action-reply:hover   { background: rgba(102,217,239,.10); border-color: rgba(102,217,239,.4); color: var(--accent); }
+.action-save:hover    { background: rgba(255,209,102,.12); border-color: rgba(255,209,102,.4); color: var(--yellow); }
 
 .email-card:active {
   cursor: grabbing;

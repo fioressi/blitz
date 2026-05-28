@@ -164,6 +164,11 @@
   color: var(--red);
 }
 
+.inbox-tab-count--saved {
+  background: rgba(255,209,102,.2);
+  color: var(--yellow);
+}
+
 .inbox-list {
   display: flex;
   flex-direction: column;

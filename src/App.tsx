@@ -19,6 +19,7 @@ import './App.css';
 
 const LS_DISMISSED = 'blitz_dismissed';
 const LS_READ      = 'blitz_read';
+const LS_SAVED     = 'blitz_saved';
 
 function getStoredIds(key: string): Set<string> {
   try { return new Set(JSON.parse(localStorage.getItem(key) || '[]')); }
@@ -32,7 +33,7 @@ function addStoredId(key: string, id: string) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-type Tab = 'inbox' | 'read' | 'reply';
+type Tab = 'inbox' | 'read' | 'reply' | 'saved';
 
 export default function App() {
   const { instance, accounts } = useMsal();
@@ -62,10 +63,12 @@ export default function App() {
   const inboxEmails = emails.filter(e => e.status === 'unread');
   const readEmails  = emails.filter(e => e.status === 'read');
   const toReply     = emails.filter(e => e.status === 'to-reply');
+  const savedEmails = emails.filter(e => e.status === 'saved');
 
   const tabEmails = activeTab === 'inbox' ? inboxEmails
     : activeTab === 'read'  ? readEmails
-    : toReply;
+    : activeTab === 'reply' ? toReply
+    : savedEmails;
 
   const loadEmails = useCallback(async () => {
     if (!user) return;
@@ -75,9 +78,12 @@ export default function App() {
       const msgs = await getInboxMessages(instance, user);
       const dismissed = getStoredIds(LS_DISMISSED);
       const readIds   = getStoredIds(LS_READ);
+      const savedIds  = getStoredIds(LS_SAVED);
       const filtered = msgs
         .filter(m => !dismissed.has(m.id))
-        .map(m => readIds.has(m.id) ? { ...m, status: 'read' as const } : m);
+        .map(m => readIds.has(m.id)  ? { ...m, status: 'read'  as const }
+                : savedIds.has(m.id) ? { ...m, status: 'saved' as const }
+                : m);
       setEmails(filtered);
       // restore reply tray from local state
       setReplyEmails(filtered.filter(e => e.status === 'to-reply'));
@@ -193,6 +199,11 @@ export default function App() {
     }
   };
 
+  const handleMarkSaved = (id: string) => {
+    addStoredId(LS_SAVED, id);
+    setEmails(prev => prev.map(e => e.id === id ? { ...e, status: 'saved' } : e));
+  };
+
   const handleRemoveFromReplyTray = (emailId: string) => {
     setReplyEmails(prev => prev.filter(e => e.id !== emailId));
     setEmails(prev => prev.map(e => e.id === emailId ? { ...e, status: 'unread' } : e));
@@ -242,6 +253,13 @@ export default function App() {
                 Beantworten
                 {toReply.length > 0 && <span className="inbox-tab-count inbox-tab-count--reply">{toReply.length}</span>}
               </button>
+              <button
+                className={`inbox-tab ${activeTab === 'saved' ? 'active' : ''}`}
+                onClick={() => setActiveTab('saved')}
+              >
+                Merken
+                {savedEmails.length > 0 && <span className="inbox-tab-count inbox-tab-count--saved">{savedEmails.length}</span>}
+              </button>
             </div>
 
             <div className="inbox-list">
@@ -252,8 +270,9 @@ export default function App() {
               ) : tabEmails.length === 0 ? (
                 <div className="inbox-empty">
                   {activeTab === 'inbox' ? 'Posteingang leer ✓'
-                    : activeTab === 'read' ? 'Keine gelesenen Emails'
-                    : 'Keine offenen Antworten'}
+                    : activeTab === 'read'  ? 'Keine gelesenen Emails'
+                    : activeTab === 'reply' ? 'Keine offenen Antworten'
+                    : 'Keine gemerkten Emails'}
                 </div>
               ) : (
                 tabEmails.map(email => (
@@ -272,6 +291,7 @@ export default function App() {
                       setReplyEmails(prev => prev.some(e => e.id === id) ? prev : [...prev, em]);
                       setEmails(prev => prev.map(e => e.id === id ? { ...e, status: 'to-reply' } : e));
                     } : undefined}
+                    onMarkSaved={activeTab === 'inbox' ? handleMarkSaved : undefined}
                   />
                 ))
               )}
