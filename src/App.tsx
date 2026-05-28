@@ -405,6 +405,8 @@ export default function App() {
           onSwipeLeft={handleSwipeLeft}
           onSwipeRight={handleSwipeRight}
           onReply={(email, initialBody) => setComposeState({ mode: 'reply', email, initialBody })}
+          attributeGroups={attributeGroups}
+          onLinkAdded={handleLinkAdded}
         />
 
         {selectedAttribute && (
