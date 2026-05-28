@@ -40,7 +40,8 @@
   color: var(--muted);
 }
 
-.app-refresh {
+.app-refresh,
+.app-compose-btn {
   padding: 5px 9px;
   font-size: 14px;
   background: transparent;
@@ -51,9 +52,19 @@
   transition: background 0.15s, color 0.15s;
 }
 
-.app-refresh:hover {
+.app-refresh:hover,
+.app-compose-btn:hover {
   background: var(--panel-hover);
   color: var(--text);
+}
+
+.app-compose-btn {
+  color: var(--accent);
+  border-color: rgba(102, 217, 239, .3);
+}
+.app-compose-btn:hover {
+  background: rgba(102, 217, 239, .1);
+  color: var(--accent);
 }
 
 .app-logout {

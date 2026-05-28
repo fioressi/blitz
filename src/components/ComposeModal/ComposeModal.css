@@ -1,0 +1,214 @@
+.compose-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .55);
+  backdrop-filter: blur(4px);
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.compose-panel {
+  background: rgba(255, 255, 255, .07);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, .13);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 680px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, .5);
+}
+
+/* Header */
+.compose-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, .1);
+  flex-shrink: 0;
+}
+
+.compose-title {
+  font-size: .85rem;
+  font-weight: 600;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.compose-original-subject {
+  font-size: .8rem;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.compose-close {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  transition: color .15s;
+}
+.compose-close:hover { color: var(--text); }
+
+/* Fields */
+.compose-fields {
+  padding: 8px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, .07);
+  flex-shrink: 0;
+}
+
+.compose-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, .06);
+}
+.compose-row:last-child { border-bottom: none; }
+
+.compose-label {
+  font-size: .75rem;
+  color: var(--muted);
+  width: 48px;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.compose-input {
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: .875rem;
+  font-family: inherit;
+  outline: none;
+  padding: 0;
+}
+.compose-input::placeholder { color: rgba(170, 184, 202, .4); }
+
+.compose-cc-btn {
+  background: none;
+  border: 1px solid rgba(255, 255, 255, .15);
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: .75rem;
+  cursor: pointer;
+  padding: 2px 8px;
+  white-space: nowrap;
+  transition: border-color .15s, color .15s;
+}
+.compose-cc-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Body textarea */
+.compose-body {
+  flex: 1;
+  min-height: 160px;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: .875rem;
+  font-family: inherit;
+  line-height: 1.6;
+  padding: 14px 16px;
+  resize: none;
+  outline: none;
+}
+.compose-body::placeholder { color: rgba(170, 184, 202, .35); }
+
+/* Quoted original */
+.compose-quote {
+  margin: 0 16px 12px;
+  border-left: 3px solid rgba(102, 217, 239, .4);
+  padding-left: 12px;
+  max-height: 180px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.compose-quote-header {
+  font-size: .75rem;
+  color: var(--muted);
+  margin-bottom: 6px;
+  line-height: 1.5;
+}
+
+.compose-quote-body {
+  font-size: .8rem;
+  color: rgba(170, 184, 202, .7);
+  line-height: 1.5;
+  overflow: hidden;
+}
+.compose-quote-body * { max-width: 100%; }
+.compose-quote-body img { display: none; }
+
+/* Error */
+.compose-error {
+  margin: 0 16px 10px;
+  padding: 8px 12px;
+  background: rgba(248, 113, 113, .12);
+  border: 1px solid rgba(248, 113, 113, .3);
+  border-radius: 8px;
+  color: var(--red);
+  font-size: .8rem;
+}
+
+/* Footer */
+.compose-footer {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding: 12px 16px;
+  border-top: 1px solid rgba(255, 255, 255, .1);
+  flex-shrink: 0;
+}
+
+.compose-btn-cancel {
+  background: rgba(255, 255, 255, .06);
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: .85rem;
+  padding: 8px 18px;
+  cursor: pointer;
+  transition: background .15s;
+}
+.compose-btn-cancel:hover:not(:disabled) { background: rgba(255, 255, 255, .1); }
+
+.compose-btn-send {
+  background: var(--accent);
+  border: none;
+  border-radius: 8px;
+  color: #0d1f30;
+  font-size: .85rem;
+  font-weight: 600;
+  padding: 8px 22px;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+.compose-btn-send:hover:not(:disabled) { opacity: .85; }
+.compose-btn-send:disabled,
+.compose-btn-cancel:disabled { opacity: .45; cursor: not-allowed; }
+
+/* Mobile */
+@media (max-width: 600px) {
+  .compose-overlay { padding: 0; align-items: flex-end; }
+  .compose-panel {
+    max-width: 100%;
+    border-radius: 16px 16px 0 0;
+    max-height: 95vh;
+  }
+}

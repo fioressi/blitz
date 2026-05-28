@@ -69,6 +69,39 @@ export async function getInboxMessages(
   return data.value.map(msg => mapMessage(msg));
 }
 
+export async function sendMail(
+  instance: IPublicClientApplication,
+  account: AccountInfo,
+  opts: {
+    to: string[];
+    cc?: string[];
+    subject: string;
+    htmlBody: string;
+  },
+): Promise<void> {
+  const token = await getToken(instance, account);
+  const message: Record<string, unknown> = {
+    subject: opts.subject,
+    body: { contentType: 'HTML', content: opts.htmlBody },
+    toRecipients: opts.to.map(addr => ({ emailAddress: { address: addr.trim() } })),
+  };
+  if (opts.cc && opts.cc.length > 0) {
+    message.ccRecipients = opts.cc.map(addr => ({ emailAddress: { address: addr.trim() } }));
+  }
+  const res = await fetch(`${GRAPH_BASE}/me/sendMail`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ message, saveToSentItems: true }),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`sendMail ${res.status}: ${text}`);
+  }
+}
+
 export async function getMessageDetail(
   instance: IPublicClientApplication,
   account: AccountInfo,

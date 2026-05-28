@@ -13,6 +13,7 @@ import { ReplyTray } from './components/ReplyTray/ReplyTray';
 import { EmailDetail } from './components/EmailDetail/EmailDetail';
 import { CreateModal } from './components/CreateModal/CreateModal';
 import { AttributeDetail } from './components/AttributeDetail/AttributeDetail';
+import { ComposeModal } from './components/ComposeModal/ComposeModal';
 import { AuthGuard } from './auth/AuthGuard';
 import './App.css';
 
@@ -79,6 +80,9 @@ export default function App() {
   const [createModal, setCreateModal] = useState<'task' | 'project' | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>('inbox');
   const [selectedAttribute, setSelectedAttribute] = useState<Attribute | null>(null);
+  const [composeState, setComposeState] = useState<
+    { mode: 'new' } | { mode: 'reply'; email: Email } | null
+  >(null);
 
   const leftGroups = attributeGroups.filter(g => g.side === 'left');
   const rightGroups = attributeGroups.filter(g => g.side === 'right');
@@ -278,6 +282,7 @@ export default function App() {
           <div className="app-logo">⚡ BLITZ</div>
           <div className="app-header-right">
             {user && <span className="app-user" title={`id: ${userId}`}>{user.name}</span>}
+            <button className="app-compose-btn" onClick={() => setComposeState({ mode: 'new' })} title="Neue E-Mail">✉</button>
             <button className="app-refresh" onClick={loadEmails} title="Aktualisieren">↻</button>
             <button className="app-drawer-btn" onClick={() => setDrawerOpen(d => d === 'right' ? null : 'right')}>📋</button>
             <button className="app-logout" onClick={() => instance.logoutRedirect()}>Abmelden</button>
@@ -377,12 +382,33 @@ export default function App() {
           onClose={() => setSelectedEmail(null)}
           onSwipeLeft={handleSwipeLeft}
           onSwipeRight={handleSwipeRight}
+          onReply={email => setComposeState({ mode: 'reply', email })}
         />
 
         {selectedAttribute && (
           <AttributeDetail
             attribute={selectedAttribute}
             onClose={() => setSelectedAttribute(null)}
+          />
+        )}
+
+        {composeState && user && (
+          <ComposeModal
+            mode={composeState.mode}
+            originalEmail={composeState.mode === 'reply' ? composeState.email : undefined}
+            instance={instance}
+            account={user}
+            onClose={() => setComposeState(null)}
+            onSent={() => {
+              setComposeState(null);
+              // Mark as replied if it was a reply
+              if (composeState.mode === 'reply') {
+                const id = composeState.email.id;
+                addStoredId(LS_REPLY, id);
+                if (userId) setEmailState(id, 'REPLY', userId).catch(console.error);
+                setEmails(prev => prev.map(e => e.id === id ? { ...e, status: 'to-reply' } : e));
+              }
+            }}
           />
         )}
 

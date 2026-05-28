@@ -8,9 +8,10 @@ interface Props {
   onClose: () => void;
   onSwipeLeft: (id: string) => void;
   onSwipeRight: (id: string) => void;
+  onReply?: (email: Email) => void;
 }
 
-export function EmailDetail({ email, loading, onClose, onSwipeLeft, onSwipeRight }: Props) {
+export function EmailDetail({ email, loading, onClose, onSwipeLeft, onSwipeRight, onReply }: Props) {
   const formatDate = (iso: string) => {
     return new Date(iso).toLocaleString('de-AT', {
       day: '2-digit', month: '2-digit', year: 'numeric',
@@ -49,7 +50,7 @@ export function EmailDetail({ email, loading, onClose, onSwipeLeft, onSwipeRight
               <button className="detail-action read" onClick={() => { onSwipeRight(email.id); onClose(); }}>
                 ✓ Gelesen
               </button>
-              <button className="detail-action reply">
+              <button className="detail-action reply" onClick={() => { onReply?.(email); onClose(); }}>
                 ↩ Antworten
               </button>
               <div style={{ flex: 1 }} />
