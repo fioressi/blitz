@@ -46,6 +46,153 @@
   color: var(--text);
 }
 
+/* ── Igor button in filter bar ──────────────────────────────────────────────── */
+
+.brett-igor-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 209, 102, 0.35);
+  border-radius: 6px;
+  color: var(--yellow);
+  font-size: 12px;
+  font-family: inherit;
+  font-weight: 700;
+  padding: 3px 10px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  letter-spacing: 0.01em;
+}
+
+.brett-igor-btn:hover {
+  background: rgba(255, 209, 102, 0.1);
+  border-color: rgba(255, 209, 102, 0.6);
+}
+
+.brett-igor-btn--active {
+  background: rgba(255, 209, 102, 0.14);
+  border-color: rgba(255, 209, 102, 0.6);
+}
+
+/* ── Igor panel ─────────────────────────────────────────────────────────────── */
+
+.brett-igor-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 16px 12px;
+  background: rgba(255, 209, 102, 0.05);
+  border-bottom: 1px solid rgba(255, 209, 102, 0.2);
+  flex-shrink: 0;
+}
+
+.brett-igor-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.brett-igor-chip {
+  background: transparent;
+  border: 1px solid rgba(255, 209, 102, 0.3);
+  border-radius: 6px;
+  color: var(--yellow);
+  font-size: 12px;
+  font-family: inherit;
+  font-weight: 600;
+  padding: 4px 12px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.brett-igor-chip:hover:not(:disabled) {
+  background: rgba(255, 209, 102, 0.12);
+  border-color: rgba(255, 209, 102, 0.6);
+}
+
+.brett-igor-chip:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.brett-igor-loading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 2px;
+}
+
+.brett-igor-thinking {
+  font-size: 12px;
+  color: var(--yellow);
+  opacity: 0.7;
+  font-style: italic;
+}
+
+.brett-igor-answer {
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 209, 102, 0.15);
+  border-radius: 8px;
+  padding: 10px 14px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.brett-igor-input-row {
+  display: flex;
+  gap: 6px;
+}
+
+.brett-igor-input {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 209, 102, 0.25);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 12px;
+  padding: 6px 10px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.brett-igor-input:focus {
+  border-color: rgba(255, 209, 102, 0.6);
+}
+
+.brett-igor-input::placeholder {
+  color: var(--muted);
+  opacity: 0.6;
+}
+
+.brett-igor-input:disabled {
+  opacity: 0.5;
+}
+
+.brett-igor-send {
+  background: rgba(255, 209, 102, 0.15);
+  border: 1px solid rgba(255, 209, 102, 0.35);
+  border-radius: 6px;
+  color: var(--yellow);
+  font-size: 16px;
+  font-family: inherit;
+  padding: 0 14px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.brett-igor-send:hover:not(:disabled) {
+  background: rgba(255, 209, 102, 0.28);
+  border-color: rgba(255, 209, 102, 0.6);
+}
+
+.brett-igor-send:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
 /* ── Board ──────────────────────────────────────────────────────────────────── */
 
 .brett-board {

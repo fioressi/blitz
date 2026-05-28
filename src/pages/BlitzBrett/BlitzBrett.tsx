@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type { Email } from '../../types/email';
 import {
   loadBrettProjects,
@@ -10,6 +10,7 @@ import {
   loadEmailsForEntity,
   type BrettItem,
 } from '../../services/pdmApiService';
+import { askIgor } from '../../services/igorService';
 import './BlitzBrett.css';
 
 interface Props {
@@ -43,11 +44,59 @@ function emailsToBrettItems(emails: Email[]): BrettItem[] {
   }));
 }
 
+const IGOR_QUICK: Array<{ label: string; prompt: string }> = [
+  {
+    label: '📋 Zusammenfassung',
+    prompt: 'Fasse den aktuellen Stand dieses PDM-Elements zusammen: Was ist erledigt, was ist offen, was ist der Gesamtstatus? Antworte auf Deutsch, prägnant in 3–5 Sätzen.',
+  },
+  {
+    label: '➡️ Nächste Schritte',
+    prompt: 'Was sind die nächsten konkreten Schritte für dieses Element? Leite sie aus den vorhandenen Tasks, Bestellungen und Emails ab. Nummerierte Liste auf Deutsch.',
+  },
+  {
+    label: '⚠️ Risiken',
+    prompt: 'Gibt es Hinweise auf Probleme, Verzögerungen oder offene Punkte bei diesem Element? Analysiere die verknüpften Daten und liste mögliche Risiken auf Deutsch auf.',
+  },
+];
+
+function buildBrettContext(selection: BrettItem, lanes: Record<string, LaneState>): string {
+  const laneLabel: Record<string, string> = {
+    PROJECT: 'Projekte', EMAIL: 'Emails', TASK: 'Tasks', ORDER: 'Bestellungen',
+    INVOICE: 'Rechnungen', OBJECT: 'Objekte', FILE: 'Dateien',
+  };
+  const lines: string[] = [
+    `Ausgewähltes Element: ${laneLabel[selection.entityType] ?? selection.entityType} — "${selection.title}"`,
+    selection.subtitle ? `  ${selection.subtitle}` : '',
+    '',
+    'Verknüpfte Elemente im Board:',
+  ];
+  for (const lane of LANES) {
+    if (lane.id === 'OFFER') continue;
+    const state = lanes[lane.id];
+    if (!state || state.loading || state.items.length === 0) continue;
+    lines.push(`\n${laneLabel[lane.id] ?? lane.id} (${state.items.length}):`);
+    for (const item of state.items.slice(0, 6)) {
+      const parts = [item.title];
+      if (item.subtitle) parts.push(`[${item.subtitle}]`);
+      if (item.meta) parts.push(`(${item.meta})`);
+      lines.push(`  - ${parts.join(' ')}`);
+    }
+    if (state.items.length > 6) lines.push(`  ... und ${state.items.length - 6} weitere`);
+  }
+  return lines.filter(l => l !== '').join('\n');
+}
+
 export function BlitzBrett({ emails }: Props) {
   const [lanes, setLanes] = useState<Record<string, LaneState>>(() =>
     Object.fromEntries(LANES.map(l => [l.id, { items: [], loading: true }])),
   );
   const [selection, setSelection] = useState<BrettItem | null>(null);
+
+  const [igorOpen, setIgorOpen]       = useState(false);
+  const [igorLoading, setIgorLoading] = useState(false);
+  const [igorAnswer, setIgorAnswer]   = useState('');
+  const [igorInput, setIgorInput]     = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const setLane = useCallback((id: string, update: Partial<LaneState>) => {
     setLanes(prev => ({ ...prev, [id]: { ...prev[id], ...update } }));
@@ -158,6 +207,9 @@ export function BlitzBrett({ emails }: Props) {
 
   const handleClear = useCallback(() => {
     setSelection(null);
+    setIgorOpen(false);
+    setIgorAnswer('');
+    setIgorInput('');
     setLane('EMAIL',   { items: emailsToBrettItems(emails), loading: false });
     setLane('FILE',    { items: [], loading: false });
     loadBrettProjects().then(items => setLane('PROJECT', { items, loading: false }));
@@ -167,16 +219,98 @@ export function BlitzBrett({ emails }: Props) {
     loadBrettInvoices().then(items => setLane('INVOICE', { items, loading: false }));
   }, [emails, setLane]);
 
+  const handleIgorAsk = useCallback(async (prompt: string) => {
+    if (!selection || igorLoading) return;
+    setIgorOpen(true);
+    setIgorLoading(true);
+    setIgorAnswer('');
+    try {
+      const context = buildBrettContext(selection, lanes);
+      const answer = await askIgor({ question: prompt, context });
+      setIgorAnswer(answer);
+    } catch (e) {
+      setIgorAnswer('Igor ist gerade nicht erreichbar.');
+    } finally {
+      setIgorLoading(false);
+    }
+  }, [selection, lanes, igorLoading]);
+
   return (
     <div className="brett-root">
       {selection && (
-        <div className="brett-filter-bar">
-          <span className="brett-filter-label">
-            {LANES.find(l => l.id === selection.entityType)?.icon} {selection.title}
-          </span>
-          {selection.subtitle && <span className="brett-filter-sub">{selection.subtitle}</span>}
-          <button className="brett-filter-clear" onClick={handleClear}>× Filter aufheben</button>
-        </div>
+        <>
+          <div className="brett-filter-bar">
+            <span className="brett-filter-label">
+              {LANES.find(l => l.id === selection.entityType)?.icon} {selection.title}
+            </span>
+            {selection.subtitle && <span className="brett-filter-sub">{selection.subtitle}</span>}
+            <button
+              className={`brett-igor-btn ${igorOpen ? 'brett-igor-btn--active' : ''}`}
+              onClick={() => setIgorOpen(o => !o)}
+              title="Igor KI-Assistent"
+            >
+              🤖 Igor
+            </button>
+            <button className="brett-filter-clear" onClick={handleClear}>× Filter aufheben</button>
+          </div>
+
+          {igorOpen && (
+            <div className="brett-igor-panel">
+              <div className="brett-igor-chips">
+                {IGOR_QUICK.map(q => (
+                  <button
+                    key={q.label}
+                    className="brett-igor-chip"
+                    onClick={() => handleIgorAsk(q.prompt)}
+                    disabled={igorLoading}
+                  >
+                    {q.label}
+                  </button>
+                ))}
+              </div>
+
+              {igorLoading && (
+                <div className="brett-igor-loading">
+                  <span className="brett-dot" /><span className="brett-dot" /><span className="brett-dot" />
+                  <span className="brett-igor-thinking">Igor denkt nach…</span>
+                </div>
+              )}
+
+              {igorAnswer && !igorLoading && (
+                <div className="brett-igor-answer">{igorAnswer}</div>
+              )}
+
+              <div className="brett-igor-input-row">
+                <input
+                  ref={inputRef}
+                  className="brett-igor-input"
+                  placeholder="Eigene Frage stellen…"
+                  value={igorInput}
+                  onChange={e => setIgorInput(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && igorInput.trim()) {
+                      handleIgorAsk(igorInput.trim());
+                      setIgorInput('');
+                    }
+                  }}
+                  disabled={igorLoading}
+                />
+                <button
+                  className="brett-igor-send"
+                  disabled={igorLoading || !igorInput.trim()}
+                  onClick={() => {
+                    if (igorInput.trim()) {
+                      handleIgorAsk(igorInput.trim());
+                      setIgorInput('');
+                    }
+                  }}
+                >
+                  →
+                </button>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       <div className="brett-board">
