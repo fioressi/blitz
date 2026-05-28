@@ -175,9 +175,10 @@ export default function App() {
     setSelectedEmail(email);
     setLoadingDetail(true);
     try {
+      const isSynthetic = email.id.startsWith('blitz-sent-');
       const [detail, dbLinks] = await Promise.all([
-        !email.body && user ? getMessageDetail(instance, user, email.id) : Promise.resolve(email),
-        loadEmailLinks(email.id),
+        !email.body && user && !isSynthetic ? getMessageDetail(instance, user, email.id) : Promise.resolve(email),
+        isSynthetic ? Promise.resolve([]) : loadEmailLinks(email.id),
       ]);
       const pdmLinks: EmailLink[] = dbLinks.map(l => ({
         attributeId: `${l.entityType}:${l.entityId}`,
@@ -206,7 +207,9 @@ export default function App() {
   const handleSwipeRight = (id: string) => {
     addStoredId(LS_READ, id);
     removeStoredId(LS_REPLY, id);
-    if (userId) setEmailState(id, 'READ', userId).then(() => console.log('[blitz] READ saved to DB:', id)).catch(e => console.error('[blitz] DB write failed:', e));
+    if (userId) setEmailState(id, 'READ', userId).catch(e => console.error('[blitz] DB write failed:', e));
+    const email = emails.find(e => e.id === id);
+    if (email && userId) saveEmailRecord(email, userId).catch(e => console.error('[blitz] saveEmailRecord (read) failed:', e));
     setEmails(prev => prev.map(e => e.id === id ? { ...e, status: 'read' } : e));
     setReplyEmails(prev => prev.filter(e => e.id !== id));
   };
@@ -278,6 +281,8 @@ export default function App() {
   const handleMarkSaved = (id: string) => {
     addStoredId(LS_SAVED, id);
     if (userId) setEmailState(id, 'SAVED', userId).catch(console.error);
+    const email = emails.find(e => e.id === id);
+    if (email && userId) saveEmailRecord(email, userId).catch(e => console.error('[blitz] saveEmailRecord (saved) failed:', e));
     setEmails(prev => prev.map(e => e.id === id ? { ...e, status: 'saved' } : e));
   };
 
@@ -432,10 +437,11 @@ export default function App() {
                 addStoredId(LS_REPLY, original.id);
                 if (userId) setEmailState(original.id, 'REPLY', userId).catch(console.error);
                 setEmails(prev => prev.map(e => e.id === original.id ? { ...e, status: 'to-reply' } : e));
-                if (userId) saveEmailRecord(original, userId).catch(e => console.error('[blitz] saveEmailRecord failed:', e));
-              } else if (sentData && userId && user) {
-                // Neue Email: synthetischen DB-Eintrag anlegen (kein Graph-MessageId verfügbar)
-                const synthetic: Email = {
+                if (userId) saveEmailRecord(original, userId).catch(e => console.error('[blitz] saveEmailRecord (reply) failed:', e));
+              }
+              if (sentData && userId && user) {
+                // Optimistic Update: sofort in sentEmails einfügen (kein DB-Roundtrip nötig)
+                const sentEmail: Email = {
                   id: `blitz-sent-${Date.now()}`,
                   from: user.name || user.username,
                   fromEmail: user.username,
@@ -452,14 +458,11 @@ export default function App() {
                   status: 'unread',
                   isSent: true,
                 };
-                saveEmailRecord(synthetic, userId).catch(e => console.error('[blitz] saveEmailRecord (new) failed:', e));
+                setSentEmails(prev => [sentEmail, ...prev]);
+                setSentLoaded(true);
+                saveEmailRecord(sentEmail, userId).catch(e => console.error('[blitz] saveEmailRecord (sent) failed:', e));
               }
               setComposeState(null);
-              setSentLoaded(false);
-              if (activeTab === 'sent') {
-                setSentEmails([]);
-                handleSelectTab('sent');
-              }
             }}
           />
         )}

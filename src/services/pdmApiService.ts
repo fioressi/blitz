@@ -201,19 +201,35 @@ export async function clearEmailState(messageId: string, userEmail: string): Pro
   });
 }
 
+function textFromEmail(email: Email): string | undefined {
+  const raw = email.body || email.preview || '';
+  if (!raw) return undefined;
+  const plain = email.bodyIsHtml
+    ? raw
+        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s{2,}/g, ' ')
+        .trim()
+    : raw;
+  return plain.slice(0, 4000) || undefined;
+}
+
 export async function saveEmailRecord(email: Email, userId: string): Promise<void> {
+  const bodyText = textFromEmail(email);
   await pdmFetch('/emails', {
     method: 'POST',
     body: JSON.stringify({
       messageId: email.id,
       subject: email.subject,
       from: email.fromEmail || email.from,
-      to: email.toEmail || '',
+      to: email.toEmail || email.to || '',
       sentAt: email.receivedAt,
       hasAttachments: email.hasAttachment,
       kind: 'COMMUNICATION',
       user: userId,
       targets: [],
+      ...(bodyText ? { comments: bodyText } : {}),
     }),
   });
 }
