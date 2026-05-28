@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { IPublicClientApplication, AccountInfo } from '@azure/msal-browser';
 import type { Email, Attachment, AttributeGroup, EmailLink } from '../../types/email';
@@ -30,14 +30,6 @@ export function EmailDetail({ email, loading, instance, account, onClose, onSwip
   const promptRef = useRef<HTMLInputElement>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [pdmAttachment, setPdmAttachment] = useState<Attachment | null>(null);
-
-  const sanitizeEmailHtml = (html: string) =>
-    html
-      .replace(/<head[\s\S]*?<\/head>/gi, '')
-      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-      .replace(/<\/?html[^>]*>/gi, '')
-      .replace(/<\/?body[^>]*>/gi, '');
 
   const formatDate = (iso: string) => new Date(iso).toLocaleString('de-AT', {
     day: '2-digit', month: '2-digit', year: 'numeric',
@@ -261,10 +253,9 @@ export function EmailDetail({ email, loading, instance, account, onClose, onSwip
             {loading ? (
               <div className="email-detail-loading">Inhalt wird geladen…</div>
             ) : email.bodyIsHtml ? (
-              <div
-                className="email-detail-body email-detail-body--html"
-                dangerouslySetInnerHTML={{ __html: sanitizeEmailHtml(email.body) }}
-              />
+              <div className="email-detail-body email-detail-body--html">
+                <EmailHtmlFrame html={email.body} />
+              </div>
             ) : (
               <div className="email-detail-body">{email.body || email.preview}</div>
             )}
@@ -412,5 +403,44 @@ export function EmailDetail({ email, loading, instance, account, onClose, onSwip
         </motion.div>
       )}
     </AnimatePresence>
+  );
+}
+
+const IFRAME_BASE_STYLE = `
+  <style>
+    html, body { margin: 0; padding: 0; background: transparent !important; }
+    * { box-sizing: border-box; }
+    img { max-width: 100%; height: auto; }
+    table { max-width: 100%; border-collapse: collapse; }
+  </style>
+`;
+
+function EmailHtmlFrame({ html }: { html: string }) {
+  const ref = useRef<HTMLIFrameElement>(null);
+
+  const srcDoc = IFRAME_BASE_STYLE + html.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+
+  const resize = () => {
+    const el = ref.current;
+    if (el?.contentDocument?.body) {
+      el.style.height = el.contentDocument.body.scrollHeight + 'px';
+    }
+  };
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.addEventListener('load', resize);
+    return () => el.removeEventListener('load', resize);
+  }, [srcDoc]);
+
+  return (
+    <iframe
+      ref={ref}
+      className="email-html-frame"
+      srcDoc={srcDoc}
+      sandbox="allow-same-origin"
+      title="email"
+    />
   );
 }

@@ -159,33 +159,16 @@
 
 .email-detail-body--html {
   white-space: normal;
+  padding-bottom: 4px;
 }
 
-/* Force unified font, size, and white color — overrides Outlook inline styles */
-.email-detail-body--html,
-.email-detail-body--html * {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
-  font-size: 14px !important;
-  color: var(--text) !important;
-  background: transparent !important;
-  line-height: 1.7 !important;
+.email-html-frame {
+  width: 100%;
+  border: none;
+  background: transparent;
+  display: block;
+  min-height: 80px;
 }
-
-/* Preserve bold */
-.email-detail-body--html b,
-.email-detail-body--html strong {
-  font-weight: 700 !important;
-}
-
-/* Links stay cyan */
-.email-detail-body--html a,
-.email-detail-body--html a * {
-  color: var(--accent) !important;
-}
-
-.email-detail-body--html p  { margin: 0 0 8px; }
-.email-detail-body--html table { border-collapse: collapse; max-width: 100%; }
-.email-detail-body--html img { max-width: 100%; height: auto; }
 
 .email-detail-attachments {
   border-top: 1px solid var(--line);
