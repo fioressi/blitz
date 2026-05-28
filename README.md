@@ -2,7 +2,7 @@
 
 PDM-fokussierter Email-Client für das [group-pdm](https://github.com/fioressi/group-pdm) Ökosystem.
 
-Emails aus Microsoft 365 / Exchange direkt im PDM-Kontext verwalten — Triage per Swipe und Action-Buttons, Verknüpfungen zu Tasks, Purchase Orders und Projekten per Drag & Drop, geräteübergreifende State-Sync via Azure SQL.
+Emails aus Microsoft 365 / Exchange direkt im PDM-Kontext verwalten — Triage per Swipe und Action-Buttons, Verknüpfungen zu Tasks, Purchase Orders und Projekten per Drag & Drop, KI-Unterstützung via Igor, geräteübergreifende State-Sync via Azure SQL.
 
 **Live:** https://victorious-bush-0a2200403.7.azurestaticapps.net
 
@@ -11,10 +11,27 @@ Emails aus Microsoft 365 / Exchange direkt im PDM-Kontext verwalten — Triage p
 ## Features
 
 ### Triage
-- **Vier Tabs** — Posteingang / Gelesen / Beantworten / Merken mit farbigen Badge-Counts
+- **Fünf Tabs** — Posteingang / Gelesen / Beantworten / Merken / Gesendet mit farbigen Badge-Counts
 - **4 Action-Buttons** pro Email-Karte: 🗑 Löschen · ✓ Gelesen · ↩ Beantworten · ★ Merken
 - **Swipe** links → Löschen, rechts → Gelesen (alternativ zu Buttons)
 - **Kein Reload-Spam** — bereits verarbeitete Emails werden beim Laden herausgefiltert
+
+### Email verfassen & Antworten
+- **ComposeModal** — Fenster für neue Emails und Antworten (To / CC / Betreff / Body)
+- **HTML-Zitat** — Originalmail bei Antworten mit Absender-Header als formatierter Quote
+- **Graph API Senden** — direkt via `POST /me/sendMail`, speichert in Outlook SentItems
+- **Gesendet-Tab** — zeigt ausschließlich mit Blitz gesendete Antworten (aus PDM_db)
+
+### Igor KI-Assistent
+- **AI-Panel** in der Email-Ansicht (gelber 🤖 Button in der Toolbar)
+  - Zusammenfassen, Übersetzen (DE), Aufgaben extrahieren, Antwort entwerfen
+  - Freier Prompt — eigene Anfragen an Igor
+  - KI-Antwort direkt in Antwort-Fenster einfügen
+- **Entitäten vorschlagen** — Igor analysiert die Email und schlägt passende Projekte/POs/Tasks vor
+  - Validierung gegen bekannte Entitäts-IDs (keine falschen Vorschläge)
+  - Ein-Klick-Verknüpfung der Vorschläge mit der Email
+- **KI-Toolbar** im Compose-Fenster: Antwort entwerfen / Übersetzen / Verbessern
+- **Sicher** — API-Key liegt server-seitig in Azure, nie im Frontend-Bundle
 
 ### PDM-Verknüpfung
 - **Drag & Drop** — Projekte, POs, Tasks von Attribut-Panels auf Email-Karte ziehen
@@ -34,6 +51,7 @@ Emails aus Microsoft 365 / Exchange direkt im PDM-Kontext verwalten — Triage p
 
 ### Geräteübergreifende Sync
 - **Alle Triage-Status** (Löschen/Gelesen/Merken/Beantworten) werden in `dbo.EMAIL_USER_STATES` gespeichert
+- **Stabile User-ID** — `localAccountId` (Entra ID OID UUID) statt Username für zuverlässige cross-device Identifikation
 - **Hybrid-Persistenz** — localStorage als schneller Cache, DB als Quelle der Wahrheit
 - Auf neuem Browser/Gerät: States werden beim Laden aus DB wiederhergestellt
 
@@ -58,6 +76,7 @@ Emails aus Microsoft 365 / Exchange direkt im PDM-Kontext verwalten — Triage p
 | Drag & Drop | @dnd-kit/core v6 (Attribut → Email-Karte) |
 | Auth | @azure/msal-browser v5 + @azure/msal-react v5 |
 | Email-Daten | Microsoft Graph API (direkt, kein Proxy) |
+| KI-Assistent | Igor (via pdm-api Proxy, API-Key server-seitig) |
 | PDM-Backend | pdm-api — Azure Functions Python v2 |
 | Datenbank | Azure SQL `PDM_db` (via pdm-api) |
 | Hosting | Azure Static Web Apps (Free Tier, GitHub Actions CI/CD) |
@@ -101,11 +120,12 @@ npm run dev
 
 ```
 Browser (React/TS)
-  ├── Microsoft Graph API    → Emails laden (Bearer Token des eingeloggten Users)
+  ├── Microsoft Graph API    → Emails laden + senden (Bearer Token des eingeloggten Users)
   ├── MSAL                   → Auth (Entra ID, PKCE)
-  └── pdm-api (Azure Func)   → Attribute, Email-Links, User-States (cross-device)
-        └── Azure SQL PDM_db → dbo.EMAILS, dbo.EMAIL_LINKS, dbo.EMAIL_USER_STATES,
-                               dbo.TASKS, dbo.PROJECTS
+  └── pdm-api (Azure Func)   → Attribute, Email-Links, User-States, Igor-Proxy
+        ├── Azure SQL PDM_db → dbo.EMAILS, dbo.EMAIL_LINKS, dbo.EMAIL_USER_STATES,
+        │                      dbo.TASKS, dbo.PROJECTS
+        └── Igor KI          → igor.fioresi.cloud (API-Key in Azure App Settings)
 ```
 
 Siehe [docs/architecture.md](docs/architecture.md) für Details.
@@ -133,6 +153,9 @@ Push auf master
 cd ..\group-pdm\api
 func azure functionapp publish pdm-api --python
 ```
+
+**Azure App Settings (pdm-api):**
+- `IGOR_API_KEY` — muss in Azure Portal → pdm-api → Konfiguration gesetzt werden
 
 ---
 
