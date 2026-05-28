@@ -137,7 +137,7 @@ export async function getMessageDetail(
     graphFetch<{ value: GraphAttachment[] }>(
       instance,
       account,
-      `/me/messages/${messageId}/attachments`,
+      `/me/messages/${messageId}/attachments?$select=id,name,size,contentType,isInline`,
     ).catch(() => ({ value: [] })),
   ]);
 
