@@ -12,9 +12,10 @@ interface Props {
   onDragStart?: () => void;
   onDragEnd?: () => void;
   showReplyHandle?: boolean;
+  onMarkReply?: (id: string) => void;
 }
 
-export function EmailCard({ email, onSwipeLeft, onSwipeRight, onClick, onDragStart, onDragEnd: onDragEndProp, showReplyHandle = true }: Props) {
+export function EmailCard({ email, onSwipeLeft, onSwipeRight, onClick, onDragStart, onDragEnd: onDragEndProp, showReplyHandle = true, onMarkReply }: Props) {
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const controls = useAnimation();
@@ -108,9 +109,9 @@ export function EmailCard({ email, onSwipeLeft, onSwipeRight, onClick, onDragSta
             {...listeners}
             {...attributes}
             onPointerDown={(e) => e.stopPropagation()}
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => { e.stopPropagation(); onMarkReply?.(email.id); }}
           >
-            ↩ Zu beantworten ziehen
+            ↩ Zu beantworten
           </div>
         )}
       </motion.div>

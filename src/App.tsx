@@ -266,6 +266,12 @@ export default function App() {
                     onDragStart={() => setIsDraggingCard(true)}
                     onDragEnd={() => setIsDraggingCard(false)}
                     showReplyHandle={activeTab === 'inbox'}
+                    onMarkReply={activeTab === 'inbox' ? (id) => {
+                      const em = emails.find(e => e.id === id);
+                      if (!em) return;
+                      setReplyEmails(prev => prev.some(e => e.id === id) ? prev : [...prev, em]);
+                      setEmails(prev => prev.map(e => e.id === id ? { ...e, status: 'to-reply' } : e));
+                    } : undefined}
                   />
                 ))
               )}
