@@ -325,55 +325,156 @@ export interface BrettItem {
   entityId: number;
 }
 
-function searchToBrettItem(r: SearchResult, entityType: string): BrettItem {
+// ── Internal row types ────────────────────────────────────────────────────────
+
+interface TaskRow {
+  TaskId: number;
+  Title: string;
+  TitleDe?: string;
+  Status?: string;
+  Priority?: string;
+  TaskType?: string;
+  DueAt?: string;
+}
+
+interface OrderRow {
+  OrderId: number;
+  PoNumber?: string;
+  OrderName?: string;
+  Status?: string;
+  PartId?: string;
+  SupplierName?: string;
+}
+
+interface ObjectRow {
+  ObjectId: number;
+  PartId: string;
+  part_name?: string;
+  Description?: string;
+}
+
+interface InvoiceRow {
+  InvoiceId: number;
+  InvoiceNumber?: string;
+  Status?: string;
+  SupplierName?: string;
+  PoNumber?: string;
+  TotalAmount?: number;
+  Currency?: string;
+  InvoiceDate?: string;
+}
+
+// ── Row → BrettItem converters ────────────────────────────────────────────────
+
+function taskToBrettItem(r: TaskRow): BrettItem {
   return {
-    id: `${entityType}:${r.id}`,
-    title: r.label,
-    subtitle: r.subLabel,
-    entityType,
-    entityId: r.id,
+    id: `TASK:${r.TaskId}`,
+    title: r.TitleDe || r.Title,
+    subtitle: [r.TaskType, r.Status].filter(Boolean).join(' · '),
+    meta: r.DueAt ? new Date(r.DueAt).toLocaleDateString('de-AT') : undefined,
+    entityType: 'TASK',
+    entityId: r.TaskId,
   };
 }
 
-export async function loadBrettItems(type: 'PROJECT' | 'TASK'): Promise<BrettItem[]> {
-  try {
-    const data = await pdmFetch<SearchResult[]>(`/search?type=${type}`);
-    return data.map(r => searchToBrettItem(r, type));
-  } catch {
-    return [];
-  }
+function orderToBrettItem(r: OrderRow): BrettItem {
+  return {
+    id: `ORDER:${r.OrderId}`,
+    title: r.PoNumber || r.OrderName || `PO #${r.OrderId}`,
+    subtitle: r.SupplierName || r.PartId,
+    meta: r.Status,
+    entityType: 'ORDER',
+    entityId: r.OrderId,
+  };
 }
 
-export async function loadPurchaseOrders(): Promise<BrettItem[]> {
-  try {
-    const data = await pdmFetch<SearchResult[]>('/search?type=ORDER');
-    return data.map(r => searchToBrettItem(r, 'ORDER'));
-  } catch {
-    return [];
-  }
+function objectToBrettItem(r: ObjectRow): BrettItem {
+  return {
+    id: `OBJECT:${r.ObjectId}`,
+    title: r.PartId,
+    subtitle: r.part_name || r.Description,
+    entityType: 'OBJECT',
+    entityId: r.ObjectId,
+  };
 }
 
-export async function loadObjectsForProject(projectId?: number): Promise<BrettItem[]> {
+function invoiceToBrettItem(r: InvoiceRow): BrettItem {
+  const amount = r.TotalAmount != null
+    ? `${r.TotalAmount.toLocaleString('de-AT', { maximumFractionDigits: 2 })} ${r.Currency || ''}`
+    : undefined;
+  return {
+    id: `INVOICE:${r.InvoiceId}`,
+    title: r.InvoiceNumber || `INV #${r.InvoiceId}`,
+    subtitle: r.SupplierName || r.PoNumber,
+    meta: [r.Status, amount].filter(Boolean).join(' · '),
+    entityType: 'INVOICE',
+    entityId: r.InvoiceId,
+  };
+}
+
+function buildQuery(base: string, params: Record<string, string | number | undefined>): string {
+  const qs = Object.entries(params)
+    .filter(([, v]) => v != null && v !== '')
+    .map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`)
+    .join('&');
+  return qs ? `${base}?${qs}` : base;
+}
+
+// ── Brett loaders — each returns BrettItem[] ──────────────────────────────────
+
+export async function loadBrettProjects(filter?: {
+  orderId?: number; objectId?: number; taskId?: number;
+  messageId?: string; attachmentId?: number;
+}): Promise<BrettItem[]> {
   try {
-    const url = projectId != null
-      ? `/search?type=OBJECT&projectId=${projectId}`
-      : '/search?type=OBJECT';
+    const url = buildQuery('/search', { type: 'PROJECT', ...filter });
     const data = await pdmFetch<SearchResult[]>(url);
-    return data.map(r => searchToBrettItem(r, 'OBJECT'));
-  } catch {
-    return [];
-  }
+    return data.map(r => ({ id: `PROJECT:${r.id}`, title: r.label, subtitle: r.subLabel, entityType: 'PROJECT', entityId: r.id }));
+  } catch { return []; }
 }
 
-export async function loadTasksForEntity(entityType: string, entityId: number): Promise<BrettItem[]> {
+export async function loadBrettTasks(filter?: {
+  entityType?: string; entityId?: number;
+  messageId?: string; attachmentId?: number;
+}): Promise<BrettItem[]> {
   try {
-    const data = await pdmFetch<SearchResult[]>(
-      `/search?type=TASK&entityType=${encodeURIComponent(entityType)}&entityId=${entityId}`,
-    );
-    return data.map(r => searchToBrettItem(r, 'TASK'));
-  } catch {
-    return [];
-  }
+    const url = buildQuery('/tasks', { top: 50, lang: 'de', ...filter });
+    const data = await pdmFetch<TaskRow[]>(url);
+    return data.map(taskToBrettItem);
+  } catch { return []; }
+}
+
+export async function loadBrettPurchaseOrders(filter?: {
+  projectId?: number; objectId?: number; taskId?: number;
+  messageId?: string; attachmentId?: number;
+}): Promise<BrettItem[]> {
+  try {
+    const url = buildQuery('/purchase-orders-tracking', { top: 200, ...filter });
+    const data = await pdmFetch<{ orders: OrderRow[] }>(url);
+    return (data.orders || []).map(orderToBrettItem);
+  } catch { return []; }
+}
+
+export async function loadBrettObjects(filter?: {
+  projectId?: number; orderId?: number; taskId?: number;
+  messageId?: string; attachmentId?: number;
+}): Promise<BrettItem[]> {
+  try {
+    const url = buildQuery('/pdm-objects', { top: 200, ...filter });
+    const data = await pdmFetch<ObjectRow[]>(url);
+    return data.map(objectToBrettItem);
+  } catch { return []; }
+}
+
+export async function loadBrettInvoices(filter?: {
+  projectId?: number; poId?: number; objectId?: number;
+  supplierId?: number;
+}): Promise<BrettItem[]> {
+  try {
+    const url = buildQuery('/invoices', { top: 100, ...filter });
+    const data = await pdmFetch<InvoiceRow[]>(url);
+    return data.map(invoiceToBrettItem);
+  } catch { return []; }
 }
 
 export async function loadAttachmentsForEntity(entityType: string, entityId: number): Promise<BrettItem[]> {
@@ -389,10 +490,21 @@ export async function loadAttachmentsForEntity(entityType: string, entityId: num
       entityType: 'FILE',
       entityId: r.AttachmentId,
     }));
-  } catch {
-    return [];
-  }
+  } catch { return []; }
 }
+
+// legacy shims — kept for BlitzBrett.tsx compatibility during transition
+/** @deprecated use loadBrettProjects */
+export async function loadBrettItems(type: 'PROJECT' | 'TASK'): Promise<BrettItem[]> {
+  if (type === 'PROJECT') return loadBrettProjects();
+  return loadBrettTasks();
+}
+/** @deprecated use loadBrettPurchaseOrders */
+export const loadPurchaseOrders = (): Promise<BrettItem[]> => loadBrettPurchaseOrders();
+/** @deprecated use loadBrettObjects */
+export const loadObjectsForProject = (projectId?: number): Promise<BrettItem[]> => loadBrettObjects(projectId != null ? { projectId } : undefined);
+/** @deprecated use loadBrettTasks */
+export const loadTasksForEntity = (entityType: string, entityId: number): Promise<BrettItem[]> => loadBrettTasks({ entityType, entityId });
 
 export async function loadEmailLinks(messageId: string): Promise<EmailLink[]> {
   try {
