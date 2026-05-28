@@ -21,6 +21,7 @@ import './App.css';
 const LS_DISMISSED = 'blitz_dismissed';
 const LS_READ      = 'blitz_read';
 const LS_SAVED     = 'blitz_saved';
+const LS_REPLY     = 'blitz_reply';
 const LS_LINKS     = 'blitz_links';
 
 function getStoredIds(key: string): Set<string> {
@@ -30,6 +31,11 @@ function getStoredIds(key: string): Set<string> {
 
 function addStoredId(key: string, id: string) {
   const next = [...getStoredIds(key), id].slice(-2000);
+  localStorage.setItem(key, JSON.stringify(next));
+}
+
+function removeStoredId(key: string, id: string) {
+  const next = [...getStoredIds(key)].filter(v => v !== id);
   localStorage.setItem(key, JSON.stringify(next));
 }
 
@@ -95,19 +101,20 @@ export default function App() {
       const dismissed   = getStoredIds(LS_DISMISSED);
       const readIds     = getStoredIds(LS_READ);
       const savedIds    = getStoredIds(LS_SAVED);
+      const replyIds    = getStoredIds(LS_REPLY);
       const storedLinks = getStoredLinks();
       const filtered = msgs
         .filter(m => !dismissed.has(m.id))
         .map(m => {
-          let em: Email = readIds.has(m.id)  ? { ...m, status: 'read'  as const }
-                        : savedIds.has(m.id) ? { ...m, status: 'saved' as const }
+          let em: Email = readIds.has(m.id)    ? { ...m, status: 'read'     as const }
+                        : savedIds.has(m.id)   ? { ...m, status: 'saved'    as const }
+                        : replyIds.has(m.id)   ? { ...m, status: 'to-reply' as const }
                         : m;
           const cached = storedLinks[m.id];
           if (cached && cached.length > 0) em = { ...em, links: cached };
           return em;
         });
       setEmails(filtered);
-      // restore reply tray from local state
       setReplyEmails(filtered.filter(e => e.status === 'to-reply'));
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -151,12 +158,14 @@ export default function App() {
 
   const handleSwipeLeft = (id: string) => {
     addStoredId(LS_DISMISSED, id);
+    removeStoredId(LS_REPLY, id);
     setEmails(prev => prev.filter(e => e.id !== id));
     setReplyEmails(prev => prev.filter(e => e.id !== id));
   };
 
   const handleSwipeRight = (id: string) => {
     addStoredId(LS_READ, id);
+    removeStoredId(LS_REPLY, id);
     setEmails(prev => prev.map(e => e.id === id ? { ...e, status: 'read' } : e));
     setReplyEmails(prev => prev.filter(e => e.id !== id));
   };
@@ -182,6 +191,7 @@ export default function App() {
     if (data?.isEmail && over.id === 'reply-tray') {
       const email = emails.find(e => e.id === data.emailId);
       if (!email) return;
+      addStoredId(LS_REPLY, email.id);
       setReplyEmails(prev => prev.some(e => e.id === email.id) ? prev : [...prev, email]);
       setEmails(prev => prev.map(e => e.id === email.id ? { ...e, status: 'to-reply' } : e));
       return;
@@ -229,6 +239,7 @@ export default function App() {
   };
 
   const handleRemoveFromReplyTray = (emailId: string) => {
+    removeStoredId(LS_REPLY, emailId);
     setReplyEmails(prev => prev.filter(e => e.id !== emailId));
     setEmails(prev => prev.map(e => e.id === emailId ? { ...e, status: 'unread' } : e));
   };
@@ -312,6 +323,7 @@ export default function App() {
                     onMarkReply={activeTab === 'inbox' ? (id) => {
                       const em = emails.find(e => e.id === id);
                       if (!em) return;
+                      addStoredId(LS_REPLY, id);
                       setReplyEmails(prev => prev.some(e => e.id === id) ? prev : [...prev, em]);
                       setEmails(prev => prev.map(e => e.id === id ? { ...e, status: 'to-reply' } : e));
                     } : undefined}
