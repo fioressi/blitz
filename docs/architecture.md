@@ -3,34 +3,45 @@
 ## Übersicht
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│  Browser (React + TypeScript)                                │
-│                                                              │
-│  ┌──────────┬──────────────────────────────┬──────────┐     │
-│  │Attribute │  Tabs: Inbox/Gelesen/         │Attribute │     │
-│  │(Projekte,│  Beantworten/Merken/Gesendet  │(Tasks)   │     │
-│  │POs) [+↗] │  Email-Karten + 4 Buttons    │      [+↗]│     │
-│  │          │  EmailDetail + AI-Panel       │          │     │
-│  └──────────┴──────────────────────────────┴──────────┘     │
-│  ┌──────────────────────────────────────────────────────┐   │
-│  │  Reply-Tray  ↩ ZU BEANTWORTEN  (Drop-Zone)          │   │
-│  └──────────────────────────────────────────────────────┘   │
-└──────┬──────────────────────────┬────────────────────────────┘
-       │                          │
-       ▼                          ▼
-Microsoft Graph API           pdm-api (Azure Functions Python v2)
-(Emails laden, senden)        (Attribute, Email-Links, States, Igor-Proxy)
-                                    │
-                              Azure SQL PDM_db
-                              (neutronzenker.database.windows.net)
-                                          │
-                                    ┌─────▼──────────────────┐
-                                    │ Igor KI-Assistent       │
-                                    │ igor.fioresi.cloud      │
-                                    │ (API Key nur server-    │
-                                    │  seitig in Azure Env)   │
-                                    └────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│ Browser                                                             │
+│                                                                     │
+│  Blitz React Shell                                                  │
+│  ┌───────────────────────────────────────────────────────────────┐   │
+│  │ Header + Workspace Switcher                                   │   │
+│  │  ├─ ✉ Emails → React Inbox / Triage / Igor / Compose         │   │
+│  │  └─ HERPERT PDM → Topnav + /pdm/*.html im eingebetteten View │   │
+│  └───────────────────────────────────────────────────────────────┘   │
+│                                                                     │
+│  Statische PDM-Assets (`public/pdm/`)                               │
+│  └─ ehemals web-probe: index, tasks, objects, bom, po-tracking …    │
+└───────────────┬───────────────────────────────┬──────────────────────┘
+                │                               │
+                ▼                               ▼
+     Microsoft Graph API            pdm-api (Azure Functions Python v2)
+     (Emails laden, senden)         (Attribute, Email-Links, States, Igor-Proxy)
+                                                │
+                                          Azure SQL PDM_db
+                                          (neutronzenker.database.windows.net)
+                                                    │
+                                              ┌─────▼──────────────────┐
+                                              │ Igor KI-Assistent       │
+                                              │ igor.fioresi.cloud      │
+                                              │ (API Key nur server-    │
+                                              │  seitig in Azure Env)   │
+                                              └────────────────────────┘
 ```
+
+## Hybrid-Strategie
+
+Blitz ist jetzt das einzige HERPERT-Webfrontend.
+Die Migration folgt bewusst einer Hybrid-Strategie:
+
+1. **Sofort nutzbar:** bestehende web-probe Dateien werden als statische Assets unter `public/pdm/` ausgeliefert.
+2. **Gemeinsame Shell:** React übernimmt globale Navigation, Branding und den Wechsel zwischen Mail-Client und PDM.
+3. **Schrittweise Modernisierung:** einzelne Seiten werden später bei Bedarf von statischem HTML/JS nach React überführt.
+
+Diese Strategie vermeidet eine riskante Big-Bang-Neuschreibung und hält das bestehende Deployment auf einer einzigen URL.
 
 ## Komponenten
 

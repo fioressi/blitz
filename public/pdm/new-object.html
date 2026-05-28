@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HERPERT Neues Objekt</title>
+  <style>
+    :root {
+      --bg:#0f1825;
+      --panel:rgba(255,255,255,.07);
+      --line:rgba(255,255,255,.13);
+      --text:#edf4ff;
+      --muted:#aab8ca;
+      --accent:#66d9ef;
+      --ok:#8ee28e;
+      --warn:#ffd166;
+      --bad:#ff8b8b;
+      --ink:#172033;
+    }
+    * { box-sizing:border-box; }
+    body {
+      margin:0;
+      font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:radial-gradient(circle at top, #20324b, var(--bg) 62%);
+      color:var(--text);
+    }
+    .wrap { width:min(1120px, 92%); margin:0 auto; padding:24px 0 44px; }
+    .hero, .panel {
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:16px;
+      box-shadow:0 14px 44px rgba(0,0,0,.26);
+      backdrop-filter:blur(8px);
+    }
+    .hero { padding:18px; }
+    .hero-top { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
+    .hero-top-actions { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .hero-logo { width:min(360px, 78vw); height:auto; display:block; margin:12px 0 8px; }
+    .eyebrow { display:inline-block; padding:6px 10px; border-radius:999px; background:rgba(102,217,239,.14); color:var(--accent); font-size:12px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+    .lang-select {
+      min-height:44px;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+      font-weight:800;
+    }
+    .lang-select option { color:#111; }
+    h1 { margin:10px 0 8px; font-size:clamp(2rem, 6vw, 3.8rem); line-height:1.02; }
+    p { color:var(--muted); line-height:1.48; margin:0; }
+    .buttons { display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
+    .btn {
+      min-height:44px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:11px 15px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+      text-decoration:none;
+      font-weight:800;
+      cursor:pointer;
+    }
+    .btn.primary { background:var(--accent); color:#07121d; border-color:transparent; }
+    .btn:disabled { opacity:.55; cursor:not-allowed; }
+    .grid { display:grid; grid-template-columns:minmax(0, 1.05fr) minmax(320px, .95fr); gap:14px; margin-top:14px; align-items:start; }
+    .panel { padding:16px; }
+    .form-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px; }
+    .field { display:flex; flex-direction:column; gap:7px; }
+    label { color:var(--muted); font-size:12px; font-weight:800; }
+    input, select, textarea {
+      width:100%;
+      min-height:44px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.07);
+      color:var(--text);
+      padding:10px 12px;
+      font:inherit;
+      outline:none;
+    }
+    select option { color:#111; }
+    textarea { min-height:108px; resize:vertical; }
+    .wide { grid-column:1 / -1; }
+    .photo-box {
+      min-height:280px;
+      border:1px dashed rgba(255,255,255,.22);
+      border-radius:16px;
+      background:rgba(255,255,255,.045);
+      display:grid;
+      place-items:center;
+      overflow:hidden;
+      position:relative;
+    }
+    .photo-box img { width:100%; height:100%; max-height:360px; object-fit:contain; display:none; background:#111927; }
+    .photo-empty { text-align:center; padding:24px; color:var(--muted); }
+    .thumb-card { display:grid; gap:12px; }
+    .status { min-height:22px; margin-top:12px; color:var(--muted); font-size:13px; }
+    .status.ok { color:var(--ok); }
+    .status.bad { color:var(--bad); }
+    .result-card {
+      display:none;
+      margin-top:12px;
+      padding:12px;
+      border-radius:12px;
+      background:rgba(142,226,142,.1);
+      border:1px solid rgba(142,226,142,.28);
+    }
+    .result-card strong { display:block; font-size:20px; margin-top:4px; }
+    .hint-list { margin:12px 0 0; padding-left:18px; color:var(--muted); line-height:1.45; }
+    @media (max-width: 760px) {
+      .wrap { width:100%; padding:10px 10px 28px; }
+      .hero, .panel { border-radius:14px; padding:14px; }
+      .hero-top { align-items:stretch; }
+      .hero-top-actions { display:grid; grid-template-columns:1fr; width:100%; gap:8px; }
+      .hero-logo { width:min(78vw, 320px); }
+      .lang-select { width:100%; }
+      h1 { font-size:30px; }
+      .buttons { display:grid; grid-template-columns:1fr; gap:8px; }
+      .btn { width:100%; }
+      .grid { grid-template-columns:1fr; gap:10px; }
+      .form-grid { grid-template-columns:1fr; gap:10px; }
+      .photo-box { min-height:230px; }
+      .photo-box img { max-height:300px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="hero">
+      <div class="hero-top">
+        <span class="eyebrow">HERPERT / Objekt anlegen</span>
+        <div class="hero-top-actions">
+          <a class="btn" href="./index.html">Übersicht</a>
+          <select id="lang-switcher" class="lang-select notranslate" aria-label="Language selector" translate="no">
+            <option value="de" translate="no">DE</option>
+            <option value="en" translate="no">EN</option>
+            <option value="hu" translate="no">HU</option>
+          </select>
+        </div>
+      </div>
+      <img class="hero-logo" src="./herpert-logo-final-white-erp.png" alt="HERPERT Logo">
+      <h1>Neues Objekt</h1>
+      <p>Legt ein PDM-Objekt über den offiziellen Schlüsselmechanismus an. Auf dem Handy kann direkt ein Foto aufgenommen werden; die Vorschau wird als Thumbnail mitgesendet.</p>
+    </section>
+
+    <div class="grid">
+      <section class="panel">
+        <form id="object-form">
+          <div class="form-grid">
+            <div class="field">
+              <label for="company-code">Firma</label>
+              <select id="company-code" required></select>
+            </div>
+            <div class="field">
+              <label for="project-id">Projekt</label>
+              <select id="project-id"></select>
+            </div>
+            <div class="field">
+              <label for="class-type">ClassType</label>
+              <select id="class-type"></select>
+            </div>
+            <div class="field">
+              <label for="class-code">ClassCode</label>
+              <select id="class-code" required></select>
+            </div>
+            <div class="field">
+              <label for="status-code">Status</label>
+              <select id="status-code" required></select>
+            </div>
+            <div class="field">
+              <label for="make-buy">Make / Buy</label>
+              <select id="make-buy">
+                <option value="">-</option>
+                <option value="MAKE">MAKE</option>
+                <option value="BUY">BUY</option>
+              </select>
+            </div>
+            <div class="field wide">
+              <label for="part-name">Name</label>
+              <input id="part-name" autocomplete="off" placeholder="z.B. Betonwerkzeug Adapterplatte">
+            </div>
+            <div class="field wide">
+              <label for="object-type">Typ</label>
+              <input id="object-type" autocomplete="off" placeholder="z.B. Teil, Baugruppe, Werkzeug">
+            </div>
+            <div class="field wide">
+              <label for="description">Beschreibung</label>
+              <textarea id="description" placeholder="Kurze technische Beschreibung"></textarea>
+            </div>
+          </div>
+          <div class="buttons">
+            <button class="btn primary" id="submit-btn" type="submit">Objekt anlegen</button>
+            <button class="btn" id="reset-btn" type="button">Zurücksetzen</button>
+          </div>
+          <div class="status" id="status-line"></div>
+          <div class="result-card" id="result-card">
+            Angelegt:
+            <strong id="result-partid"></strong>
+            <span id="result-objectid"></span>
+          </div>
+        </form>
+      </section>
+
+      <aside class="panel thumb-card">
+        <div class="field">
+          <label for="photo-input">Foto / Thumbnail</label>
+          <input id="photo-input" type="file" accept="image/*" capture="environment">
+        </div>
+        <div class="photo-box">
+          <div class="photo-empty" id="photo-empty">Noch kein Foto ausgewählt</div>
+          <img id="photo-preview" alt="Thumbnail Vorschau">
+        </div>
+        <button class="btn" id="clear-photo" type="button">Foto entfernen</button>
+        <ul class="hint-list">
+          <li>Auf dem Handy öffnet das Feld direkt Kamera oder Galerie.</li>
+          <li>Das Bild wird vor dem Senden verkleinert.</li>
+          <li>Nach dem Anlegen wird die erzeugte PartId angezeigt.</li>
+        </ul>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    const API_BASE = 'https://pdm-api.azurewebsites.net/api';
+    const langSelect = document.getElementById('lang-switcher');
+    const sharedLang = localStorage.getItem('herpert-lang');
+    if (langSelect) {
+      langSelect.value = ['de', 'en', 'hu'].includes(sharedLang) ? sharedLang : 'de';
+      langSelect.addEventListener('change', (event) => {
+        localStorage.setItem('herpert-lang', event.target.value);
+        document.documentElement.lang = event.target.value;
+      });
+    }
+    let filterOptions = null;
+    let thumbnailPayload = null;
+
+    function esc(v) {
+      return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+    function setStatus(message, kind = '') {
+      const el = document.getElementById('status-line');
+      el.textContent = message || '';
+      el.className = `status ${kind}`.trim();
+    }
+    function fillSelect(id, items, valueKey, labelFn, includeEmpty = true, emptyLabel = '-') {
+      const el = document.getElementById(id);
+      const current = el.value;
+      el.innerHTML = includeEmpty ? `<option value="">${emptyLabel}</option>` : '';
+      items.forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = valueKey ? item[valueKey] : item;
+        opt.textContent = labelFn(item);
+        el.appendChild(opt);
+      });
+      if ([...el.options].some(o => o.value === current)) el.value = current;
+    }
+    function refreshClassCodes() {
+      const type = document.getElementById('class-type').value;
+      const codes = !filterOptions ? [] : filterOptions.classCodes.filter(x => !type || x.ClassType === type);
+      fillSelect('class-code', codes, 'ClassCode', x => `${x.ClassCode} ${x.ClassName}`, false);
+      refreshStatusForClass();
+    }
+    function refreshStatusForClass() {
+      const classCode = document.getElementById('class-code').value;
+      const cls = filterOptions?.classCodes.find(x => String(x.ClassCode) === String(classCode));
+      const isCots = cls && (cls.IsCOTS === true || cls.IsCOTS === 1 || cls.IsCOTS === '1');
+      const statuses = isCots ? filterOptions.statuses.filter(x => x.StatusCode === '00') : filterOptions.statuses;
+      fillSelect('status-code', statuses, 'StatusCode', x => `${x.StatusCode} ${x.StatusName}`, false);
+    }
+    async function loadOptions() {
+      setStatus('Lade Stammdaten ...');
+      const res = await fetch(`${API_BASE}/pdm-objects/filter-options`, { cache:'no-store' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      filterOptions = await res.json();
+      fillSelect('company-code', filterOptions.companies, 'CompanyCode', x => `${x.CompanyCode} ${x.CompanyName}`, false);
+      fillSelect('project-id', filterOptions.projects, 'ProjectId', x => `${x.ProjectCode || ''} ${x.ProjectName}`.trim(), true, 'Kein Projekt');
+      fillSelect('class-type', filterOptions.classTypes, null, x => x, true, 'Alle');
+      refreshClassCodes();
+      setStatus('');
+    }
+    function resetPhoto() {
+      thumbnailPayload = null;
+      document.getElementById('photo-input').value = '';
+      document.getElementById('photo-preview').removeAttribute('src');
+      document.getElementById('photo-preview').style.display = 'none';
+      document.getElementById('photo-empty').style.display = 'block';
+    }
+    async function imageToPayload(file) {
+      const img = new Image();
+      const objectUrl = URL.createObjectURL(file);
+      try {
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+          img.src = objectUrl;
+        });
+        const maxSide = 1200;
+        const scale = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
+        canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL('image/png', 0.88);
+        return { dataUrl, mimeType: 'image/png' };
+      } finally {
+        URL.revokeObjectURL(objectUrl);
+      }
+    }
+    async function handlePhoto(file) {
+      if (!file) return resetPhoto();
+      setStatus('Bereite Foto vor ...');
+      thumbnailPayload = await imageToPayload(file);
+      const preview = document.getElementById('photo-preview');
+      preview.src = thumbnailPayload.dataUrl;
+      preview.style.display = 'block';
+      document.getElementById('photo-empty').style.display = 'none';
+      setStatus('');
+    }
+    async function submitObject(event) {
+      event.preventDefault();
+      const button = document.getElementById('submit-btn');
+      button.disabled = true;
+      document.getElementById('result-card').style.display = 'none';
+      setStatus('Lege Objekt an ...');
+      try {
+        const body = {
+          companyCode: document.getElementById('company-code').value,
+          projectId: document.getElementById('project-id').value || null,
+          classCode: document.getElementById('class-code').value,
+          statusCode: document.getElementById('status-code').value,
+          partName: document.getElementById('part-name').value.trim(),
+          type: document.getElementById('object-type').value.trim(),
+          makeBuy: document.getElementById('make-buy').value,
+          description: document.getElementById('description').value.trim(),
+        };
+        if (thumbnailPayload) {
+          body.thumbnailBase64 = thumbnailPayload.dataUrl;
+          body.thumbnailMimeType = thumbnailPayload.mimeType;
+        }
+        const res = await fetch(`${API_BASE}/pdm-objects`, {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify(body),
+        });
+        const payload = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(payload.error || `HTTP ${res.status}`);
+        document.getElementById('result-partid').textContent = payload.PartId || '-';
+        document.getElementById('result-objectid').textContent = `ObjectId ${payload.ObjectId || '-'}`;
+        document.getElementById('result-card').style.display = 'block';
+        setStatus('Objekt angelegt.', 'ok');
+      } catch (err) {
+        setStatus(`Fehler: ${err.message}`, 'bad');
+      } finally {
+        button.disabled = false;
+      }
+    }
+    function resetForm() {
+      document.getElementById('object-form').reset();
+      refreshClassCodes();
+      resetPhoto();
+      document.getElementById('result-card').style.display = 'none';
+      setStatus('');
+    }
+
+    document.getElementById('class-type').addEventListener('change', refreshClassCodes);
+    document.getElementById('class-code').addEventListener('change', refreshStatusForClass);
+    document.getElementById('photo-input').addEventListener('change', e => handlePhoto(e.target.files?.[0]).catch(err => setStatus(`Foto konnte nicht geladen werden: ${err.message}`, 'bad')));
+    document.getElementById('clear-photo').addEventListener('click', resetPhoto);
+    document.getElementById('reset-btn').addEventListener('click', resetForm);
+    document.getElementById('object-form').addEventListener('submit', submitObject);
+    loadOptions().catch(err => setStatus(`Stammdaten konnten nicht geladen werden: ${err.message}`, 'bad'));
+  </script>
+</body>
+</html>

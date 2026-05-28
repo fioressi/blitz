@@ -40,6 +40,13 @@ Emails aus Microsoft 365 / Exchange direkt im PDM-Kontext verwalten — Triage p
 - **Link-Tags** — Verknüpfte Objekte als Pills auf der Karte und im Detail-Modal
 - **Links persistent** — nach Reload weiterhin sichtbar (localStorage-Cache + DB)
 
+### PDM-Seiten (ehemals web-probe)
+- **Hybrid-Migration** — die bisherigen Vanilla-HTML/CSS/JS Seiten liegen jetzt unter `public/pdm/`
+- **Ein Frontend, eine URL** — Blitz enthält jetzt Email-Client und HERPERT PDM-Navigation gemeinsam
+- **React-Shell + statische Seiten** — Blitz steuert Header, Bereichswechsel und PDM-Topnav; die migrierten Seiten laufen unter `/pdm/*.html`
+- **PDM-Landingpage** — `index.html` aus web-probe bleibt als Hauptmenü innerhalb der PDM-Sektion erhalten
+- **Schrittweise React-Konvertierung** — wichtige Seiten wie Tasks/Objekte können später einzeln nativ übernommen werden
+
 ### Attribut-Detail
 - **↗ Button** auf jeder Attribut-Karte → Detail-Modal (Projekt/PO/Task)
 - Zeigt Name, Code, Status, Assignee, Beschreibung
@@ -114,6 +121,11 @@ npm run dev
 # http://localhost:5173
 ```
 
+### PDM-Assets synchronisieren
+
+Die migrierten HERPERT-Seiten liegen in `public/pdm/`.
+Wenn sich der Quellstand aus `group-pdm/web-probe/` ändert, müssen die statischen Dateien erneut nach `blitz/public/pdm/` übernommen werden.
+
 ---
 
 ## Architektur
@@ -147,6 +159,8 @@ Push auf master
 - `VITE_AAD_CLIENT_ID`
 - `VITE_AAD_TENANT_ID`
 - `AZURE_STATIC_WEB_APPS_API_TOKEN`
+
+Es gibt kein separates `web-probe` Deployment mehr. Die ehemaligen web-probe-Seiten werden zusammen mit Blitz über dieselbe Static Web App ausgeliefert.
 
 **pdm-api deployen** (manuell, kein CI/CD):
 ```powershell

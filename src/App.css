@@ -16,11 +16,90 @@
   flex-shrink: 0;
 }
 
+.app-header--stacked {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+
+.app-header-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.app-logo-wrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.app-logo-mark {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.app-logo-block {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
 .app-logo {
   font-size: 17px;
   font-weight: 900;
   color: var(--accent);
   letter-spacing: 0.04em;
+}
+
+.app-logo-sub {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.workspace-switcher {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.workspace-tab,
+.pdm-topnav-item,
+.pdm-shell-link {
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,.04);
+  color: var(--muted);
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.15s;
+}
+
+.workspace-tab:hover,
+.pdm-topnav-item:hover,
+.pdm-shell-link:hover {
+  background: var(--panel-hover);
+  color: var(--text);
+}
+
+.workspace-tab.active,
+.pdm-topnav-item.active {
+  background: rgba(102,217,239,.14);
+  color: var(--accent);
+  border-color: rgba(102,217,239,.4);
+}
+
+.pdm-topnav {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .app-header-right {
@@ -251,6 +330,61 @@
   font-style: italic;
 }
 
+.pdm-shell {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 14px;
+  overflow: hidden;
+}
+
+.pdm-shell-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(255,255,255,.05);
+  box-shadow: 0 12px 34px rgba(0,0,0,.22);
+}
+
+.pdm-shell-hero h1 {
+  margin: 2px 0 8px;
+  font-size: 28px;
+}
+
+.pdm-shell-hero p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.pdm-shell-kicker {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--yellow);
+  font-weight: 800;
+}
+
+.pdm-shell-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pdm-frame {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(255,255,255,.04);
+}
+
 /* ── Drawer toggle buttons (nur auf Mobile sichtbar) ── */
 .app-drawer-btn {
   display: none;
@@ -285,6 +419,43 @@
 /* ── Mobile Layout ── */
 @media (max-width: 768px) {
   .app-drawer-btn { display: flex; }
+
+  .app-header {
+    padding: 12px;
+  }
+
+  .app-header-main {
+    gap: 10px;
+  }
+
+  .app-logo-wrap {
+    gap: 10px;
+  }
+
+  .app-logo-mark {
+    width: 40px;
+    height: 40px;
+  }
+
+  .app-logo {
+    font-size: 15px;
+  }
+
+  .app-logo-sub {
+    font-size: 11px;
+  }
+
+  .workspace-switcher,
+  .pdm-topnav {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 2px;
+  }
+
+  .workspace-tab,
+  .pdm-topnav-item {
+    white-space: nowrap;
+  }
 
   .panel-left,
   .panel-right {
@@ -322,4 +493,32 @@
   .app-stats { display: none; }
 
   .inbox { padding: 0 8px; }
+
+  .pdm-shell {
+    padding: 10px;
+  }
+
+  .pdm-shell-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 14px;
+    border-radius: 14px;
+  }
+
+  .pdm-shell-hero h1 {
+    font-size: 22px;
+  }
+
+  .pdm-shell-actions {
+    width: 100%;
+  }
+
+  .pdm-shell-link {
+    width: 100%;
+    text-align: center;
+  }
+
+  .pdm-frame {
+    border-radius: 14px;
+  }
 }

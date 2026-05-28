@@ -91,7 +91,16 @@
 
 ---
 
-## Phase 4 — PDM-Integration vertiefen
+## Phase 3b — web-probe Migration (abgeschlossen)
+
+- [x] Statische Seiten aus `group-pdm/web-probe/` nach `blitz/public/pdm/` übernommen
+- [x] Blitz-Header um Workspace-Wechsel `Emails` / `HERPERT PDM` erweitert
+- [x] PDM-Topnav in der React-Shell ergänzt
+- [x] `public/staticwebapp.config.json` für `/pdm/*` vom SPA-Fallback ausgenommen
+- [x] HERPERT Logos und Hauptmenü (`/pdm/index.html`) in Blitz integriert
+- [x] Separates web-probe Deployment fachlich abgelöst
+
+## Phase 4 — Schrittweise React-Konvertierung
 
 - [ ] **AttributeDetail API** — `GET/PUT /api/projects/{id}`, `/tasks/{id}`, `/orders/{id}` in pdm-api
 - [ ] **Email-Links cross-device** — Bulk-Endpunkt `GET /api/email-links-by-user?user=...`
