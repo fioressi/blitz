@@ -122,6 +122,49 @@ export async function createProject(fields: {
   });
 }
 
+export interface AttributeDetailData {
+  id: number;
+  entityType: string;
+  // Project
+  projectCode?: string;
+  projectName?: string;
+  // Task
+  title?: string;
+  taskType?: string;
+  priority?: string;
+  status?: string;
+  // Order
+  orderNumber?: string;
+  supplierName?: string;
+  amount?: number;
+  // Common
+  description?: string;
+  assignedTo?: string;
+  dueAt?: string;
+  createdAt?: string;
+}
+
+export async function fetchAttributeDetail(entityType: string, entityId: number): Promise<AttributeDetailData | null> {
+  const segment = entityType === 'PROJECT' ? 'projects'
+                : entityType === 'TASK'    ? 'tasks'
+                : 'orders';
+  try {
+    return await pdmFetch<AttributeDetailData>(`/${segment}/${entityId}`);
+  } catch {
+    return null;
+  }
+}
+
+export async function updateAttributeDetail(entityType: string, entityId: number, fields: Partial<AttributeDetailData>): Promise<void> {
+  const segment = entityType === 'PROJECT' ? 'projects'
+                : entityType === 'TASK'    ? 'tasks'
+                : 'orders';
+  await pdmFetch(`/${segment}/${entityId}`, {
+    method: 'PUT',
+    body: JSON.stringify(fields),
+  });
+}
+
 export async function loadEmailLinks(messageId: string): Promise<EmailLink[]> {
   try {
     const data = await pdmFetch<{

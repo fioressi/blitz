@@ -1,0 +1,317 @@
+.attr-detail-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+.attr-detail-modal {
+  background: rgba(22,35,56,.96);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  width: 480px;
+  max-width: calc(100vw - 32px);
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 64px rgba(0,0,0,.5);
+  backdrop-filter: blur(16px);
+  overflow: hidden;
+}
+
+.attr-detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+}
+
+.attr-detail-type {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.attr-detail-icon {
+  font-size: 18px;
+}
+
+.attr-detail-type-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.attr-detail-code {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+  background: rgba(102,217,239,.12);
+  padding: 2px 8px;
+  border-radius: 99px;
+}
+
+.attr-detail-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.attr-detail-edit-btn {
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  background: rgba(255,255,255,.06);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.attr-detail-edit-btn:hover {
+  background: rgba(102,217,239,.1);
+  border-color: rgba(102,217,239,.35);
+  color: var(--accent);
+}
+
+.attr-detail-close {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.attr-detail-close:hover {
+  background: rgba(248,113,113,.12);
+  border-color: rgba(248,113,113,.35);
+  color: var(--red);
+}
+
+.attr-detail-body {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.attr-detail-loading {
+  padding: 40px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+  font-style: italic;
+}
+
+.attr-detail-name {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0 0 4px;
+  line-height: 1.3;
+}
+
+.attr-detail-sublabel {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 0 0 16px;
+}
+
+.attr-detail-no-detail {
+  font-size: 12px;
+  color: var(--muted);
+  font-style: italic;
+  margin-top: 12px;
+}
+
+/* ── Detail fields ── */
+.attr-detail-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.attr-detail-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.attr-detail-field-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+}
+
+.attr-detail-field-value {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.attr-detail-field-value.multiline {
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  margin: 0;
+}
+
+/* ── Status badges ── */
+.attr-detail-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 99px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.attr-badge-new         { background: rgba(255,255,255,.1); color: var(--muted); }
+.attr-badge-in_progress { background: rgba(102,217,239,.15); color: var(--accent); }
+.attr-badge-blocked     { background: rgba(248,113,113,.15); color: var(--red); }
+.attr-badge-done        { background: rgba(142,226,142,.15); color: var(--green); }
+.attr-badge-ordered     { background: rgba(102,217,239,.15); color: var(--accent); }
+.attr-badge-shipped,
+.attr-badge-shipping    { background: rgba(255,209,102,.15); color: var(--yellow); }
+.attr-badge-arrived,
+.attr-badge-stocked     { background: rgba(142,226,142,.15); color: var(--green); }
+.attr-badge-low         { background: rgba(142,226,142,.12); color: var(--green); }
+.attr-badge-medium      { background: rgba(255,209,102,.12); color: var(--yellow); }
+.attr-badge-high,
+.attr-badge-critical    { background: rgba(248,113,113,.12); color: var(--red); }
+
+/* ── Edit form ── */
+.attr-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.attr-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.attr-form-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+}
+
+.attr-form-input {
+  background: rgba(255,255,255,.05);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 8px 10px;
+  font-size: 13px;
+  color: var(--text);
+  font-family: inherit;
+  transition: border-color 0.15s, background 0.15s;
+  outline: none;
+  resize: vertical;
+}
+
+.attr-form-input:focus {
+  border-color: var(--accent);
+  background: rgba(102,217,239,.04);
+}
+
+select.attr-form-input option {
+  background: #1a2b40;
+  color: var(--text);
+}
+
+.attr-edit-error {
+  font-size: 12px;
+  color: var(--red);
+  background: rgba(248,113,113,.08);
+  border: 1px solid rgba(248,113,113,.2);
+  border-radius: 7px;
+  padding: 8px 12px;
+  margin: 0;
+}
+
+.attr-edit-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  padding-top: 4px;
+}
+
+.attr-edit-cancel {
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.attr-edit-cancel:hover {
+  background: var(--panel-hover);
+  color: var(--text);
+}
+
+.attr-edit-save {
+  padding: 8px 20px;
+  font-size: 13px;
+  font-weight: 700;
+  background: rgba(102,217,239,.15);
+  border: 1px solid rgba(102,217,239,.35);
+  border-radius: 8px;
+  color: var(--accent);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.attr-edit-save:hover:not(:disabled) {
+  background: rgba(102,217,239,.25);
+}
+
+.attr-edit-save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .attr-detail-modal {
+    width: 100%;
+    max-width: 100%;
+    max-height: 90vh;
+    border-radius: 16px 16px 0 0;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+  }
+
+  .attr-detail-backdrop {
+    align-items: flex-end;
+  }
+}

@@ -12,6 +12,7 @@ import { EmailCard } from './components/EmailCard/EmailCard';
 import { ReplyTray } from './components/ReplyTray/ReplyTray';
 import { EmailDetail } from './components/EmailDetail/EmailDetail';
 import { CreateModal } from './components/CreateModal/CreateModal';
+import { AttributeDetail } from './components/AttributeDetail/AttributeDetail';
 import { AuthGuard } from './auth/AuthGuard';
 import './App.css';
 
@@ -56,6 +57,7 @@ export default function App() {
   const [drawerOpen, setDrawerOpen] = useState<'left' | 'right' | null>(null);
   const [createModal, setCreateModal] = useState<'task' | 'project' | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>('inbox');
+  const [selectedAttribute, setSelectedAttribute] = useState<Attribute | null>(null);
 
   const leftGroups = attributeGroups.filter(g => g.side === 'left');
   const rightGroups = attributeGroups.filter(g => g.side === 'right');
@@ -227,7 +229,7 @@ export default function App() {
         <div className={`app-body ${isDraggingCard ? 'card-dragging' : ''}`}>
           {drawerOpen && <div className="drawer-overlay" onClick={() => setDrawerOpen(null)} />}
           <aside className={`panel-left ${drawerOpen === 'left' ? 'drawer-open' : ''}`}>
-            <AttributePanel groups={leftGroups} onNew={type => setCreateModal(type)} />
+            <AttributePanel groups={leftGroups} onNew={type => setCreateModal(type)} onItemClick={setSelectedAttribute} />
           </aside>
 
           <main className="inbox">
@@ -299,7 +301,7 @@ export default function App() {
           </main>
 
           <aside className={`panel-right ${drawerOpen === 'right' ? 'drawer-open' : ''}`}>
-            <AttributePanel groups={rightGroups} onNew={type => setCreateModal(type)} />
+            <AttributePanel groups={rightGroups} onNew={type => setCreateModal(type)} onItemClick={setSelectedAttribute} />
           </aside>
         </div>
 
@@ -316,6 +318,13 @@ export default function App() {
           onSwipeLeft={handleSwipeLeft}
           onSwipeRight={handleSwipeRight}
         />
+
+        {selectedAttribute && (
+          <AttributeDetail
+            attribute={selectedAttribute}
+            onClose={() => setSelectedAttribute(null)}
+          />
+        )}
 
         {createModal && (
           <CreateModal

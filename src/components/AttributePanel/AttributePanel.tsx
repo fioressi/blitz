@@ -6,9 +6,10 @@ import './AttributePanel.css';
 interface Props {
   groups: AttributeGroup[];
   onNew?: (type: 'task' | 'project') => void;
+  onItemClick?: (attribute: Attribute) => void;
 }
 
-function DraggableAttribute({ attribute }: { attribute: Attribute }) {
+function DraggableAttribute({ attribute, onClick }: { attribute: Attribute; onClick?: (a: Attribute) => void }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: attribute.id,
     data: attribute,
@@ -27,6 +28,7 @@ function DraggableAttribute({ attribute }: { attribute: Attribute }) {
       style={style}
       {...listeners}
       {...attributes}
+      onClick={() => onClick?.(attribute)}
     >
       <span className="attribute-item-label">{attribute.label}</span>
       {attribute.subLabel && (
@@ -36,7 +38,7 @@ function DraggableAttribute({ attribute }: { attribute: Attribute }) {
   );
 }
 
-export function AttributePanel({ groups, onNew }: Props) {
+export function AttributePanel({ groups, onNew, onItemClick }: Props) {
   return (
     <div className="attribute-panel">
       {groups.map(group => (
@@ -56,7 +58,7 @@ export function AttributePanel({ groups, onNew }: Props) {
           </div>
           <div className="attribute-items">
             {group.items.map(item => (
-              <DraggableAttribute key={item.id} attribute={item} />
+              <DraggableAttribute key={item.id} attribute={item} onClick={onItemClick} />
             ))}
           </div>
         </div>
