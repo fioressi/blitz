@@ -31,6 +31,14 @@ export function EmailDetail({ email, loading, instance, account, onClose, onSwip
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [pdmAttachment, setPdmAttachment] = useState<Attachment | null>(null);
 
+  const sanitizeEmailHtml = (html: string) =>
+    html
+      .replace(/<head[\s\S]*?<\/head>/gi, '')
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+      .replace(/<\/?html[^>]*>/gi, '')
+      .replace(/<\/?body[^>]*>/gi, '');
+
   const formatDate = (iso: string) => new Date(iso).toLocaleString('de-AT', {
     day: '2-digit', month: '2-digit', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
@@ -255,7 +263,7 @@ export function EmailDetail({ email, loading, instance, account, onClose, onSwip
             ) : email.bodyIsHtml ? (
               <div
                 className="email-detail-body email-detail-body--html"
-                dangerouslySetInnerHTML={{ __html: email.body }}
+                dangerouslySetInnerHTML={{ __html: sanitizeEmailHtml(email.body) }}
               />
             ) : (
               <div className="email-detail-body">{email.body || email.preview}</div>
