@@ -15,6 +15,7 @@ import { CreateModal } from './components/CreateModal/CreateModal';
 import { AttributeDetail } from './components/AttributeDetail/AttributeDetail';
 import { ComposeModal } from './components/ComposeModal/ComposeModal';
 import { AuthGuard } from './auth/AuthGuard';
+import { BlitzBrett } from './pages/BlitzBrett/BlitzBrett';
 import './App.css';
 
 // ── localStorage helpers ──────────────────────────────────────────────────────
@@ -86,6 +87,8 @@ export default function App() {
   const [composeState, setComposeState] = useState<
     { mode: 'new' } | { mode: 'reply'; email: Email; initialBody?: string } | null
   >(null);
+  const [view, setView] = useState<'inbox' | 'brett'>('inbox');
+
   const [entityFilter, setEntityFilter] = useState<{
     attribute: Attribute;
     emails: Email[];
@@ -323,6 +326,12 @@ export default function App() {
           <div className="app-logo">⚡ BLITZ</div>
           <div className="app-header-right">
             {user && <span className="app-user" title={`id: ${userId}`}>{user.name}</span>}
+            <button
+              className={`app-nav-btn ${view === 'brett' ? 'active' : ''}`}
+              onClick={() => setView(v => v === 'brett' ? 'inbox' : 'brett')}
+            >
+              BlitzBrett
+            </button>
             <button className="app-compose-btn" onClick={() => setComposeState({ mode: 'new' })}>✉ Neue E-Mail</button>
             <button className="app-refresh" onClick={loadEmails} title="Aktualisieren">↻</button>
             <button className="app-drawer-btn" onClick={() => setDrawerOpen(d => d === 'right' ? null : 'right')}>📋</button>
@@ -330,7 +339,11 @@ export default function App() {
           </div>
         </header>
 
-        <div className={`app-body ${isDraggingCard ? 'card-dragging' : ''}`}>
+        {view === 'brett' ? (
+          <BlitzBrett emails={emails} />
+        ) : null}
+
+        <div className={`app-body ${isDraggingCard ? 'card-dragging' : ''}`} style={view === 'brett' ? { display: 'none' } : undefined}>
           {drawerOpen && <div className="drawer-overlay" onClick={() => setDrawerOpen(null)} />}
           <aside className={`panel-left ${drawerOpen === 'left' ? 'drawer-open' : ''}`}>
             <AttributePanel groups={leftGroups} onNew={type => setCreateModal(type)} onItemClick={setSelectedAttribute} onFilter={handleEntityFilter} activeFilterId={entityFilter?.attribute.id} />

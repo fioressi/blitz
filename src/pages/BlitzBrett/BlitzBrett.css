@@ -1,0 +1,203 @@
+.brett-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ── Filter bar ─────────────────────────────────────────────────────────────── */
+
+.brett-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(102, 217, 239, 0.08);
+  border-bottom: 1px solid rgba(102, 217, 239, 0.3);
+  flex-shrink: 0;
+}
+
+.brett-filter-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.brett-filter-sub {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.brett-filter-clear {
+  margin-left: auto;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  font-family: inherit;
+  padding: 3px 10px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+
+.brett-filter-clear:hover {
+  background: var(--panel-hover);
+  color: var(--text);
+}
+
+/* ── Board ──────────────────────────────────────────────────────────────────── */
+
+.brett-board {
+  display: flex;
+  flex: 1;
+  overflow-x: auto;
+  overflow-y: hidden;
+  gap: 12px;
+  padding: 16px;
+}
+
+/* ── Lane ───────────────────────────────────────────────────────────────────── */
+
+.brett-lane {
+  flex-shrink: 0;
+  width: 230px;
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+
+.brett-lane-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px 9px;
+  border-top: 3px solid transparent;
+  background: rgba(255, 255, 255, 0.03);
+  flex-shrink: 0;
+}
+
+.brett-lane-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.brett-lane-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  flex: 1;
+  letter-spacing: 0.02em;
+}
+
+.brett-lane-count {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 1px 7px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* ── Cards container ────────────────────────────────────────────────────────── */
+
+.brett-lane-cards {
+  overflow-y: auto;
+  flex: 1;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ── Loading dots ───────────────────────────────────────────────────────────── */
+
+.brett-lane-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  padding: 24px 0;
+}
+
+.brett-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--muted);
+  animation: brett-pulse 1.2s ease-in-out infinite;
+}
+
+.brett-dot:nth-child(2) { animation-delay: 0.2s; }
+.brett-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes brett-pulse {
+  0%, 100% { opacity: 0.3; transform: scale(0.8); }
+  50%       { opacity: 1;   transform: scale(1.1); }
+}
+
+/* ── Empty / placeholder ────────────────────────────────────────────────────── */
+
+.brett-placeholder,
+.brett-empty {
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
+  padding: 20px 8px;
+  line-height: 1.5;
+  font-style: italic;
+}
+
+/* ── Card ───────────────────────────────────────────────────────────────────── */
+
+.brett-card {
+  width: 100%;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px 11px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 12px;
+}
+
+.brett-card:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.brett-card--selected {
+  border-color: var(--lane-color, var(--accent));
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 0 1px var(--lane-color, var(--accent));
+}
+
+.brett-card-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.brett-card-sub {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.brett-card-meta {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 4px;
+  opacity: 0.7;
+}

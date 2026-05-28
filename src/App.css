@@ -70,6 +70,30 @@
   border-color: rgba(102, 217, 239, .6);
 }
 
+.app-nav-btn {
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  letter-spacing: 0.02em;
+}
+
+.app-nav-btn:hover {
+  background: var(--panel-hover);
+  color: var(--text);
+}
+
+.app-nav-btn.active {
+  background: rgba(102, 217, 239, 0.12);
+  border-color: rgba(102, 217, 239, 0.45);
+  color: var(--accent);
+}
+
 .app-logout {
   padding: 5px 12px;
   font-size: 12px;

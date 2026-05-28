@@ -314,6 +314,86 @@ export async function loadEmailsForEntity(entityType: string, entityId: number):
   }
 }
 
+// ── BlitzBrett ────────────────────────────────────────────────────────────────
+
+export interface BrettItem {
+  id: string;
+  title: string;
+  subtitle?: string;
+  meta?: string;
+  entityType: string;
+  entityId: number;
+}
+
+function searchToBrettItem(r: SearchResult, entityType: string): BrettItem {
+  return {
+    id: `${entityType}:${r.id}`,
+    title: r.label,
+    subtitle: r.subLabel,
+    entityType,
+    entityId: r.id,
+  };
+}
+
+export async function loadBrettItems(type: 'PROJECT' | 'TASK'): Promise<BrettItem[]> {
+  try {
+    const data = await pdmFetch<SearchResult[]>(`/search?type=${type}`);
+    return data.map(r => searchToBrettItem(r, type));
+  } catch {
+    return [];
+  }
+}
+
+export async function loadPurchaseOrders(): Promise<BrettItem[]> {
+  try {
+    const data = await pdmFetch<SearchResult[]>('/search?type=ORDER');
+    return data.map(r => searchToBrettItem(r, 'ORDER'));
+  } catch {
+    return [];
+  }
+}
+
+export async function loadObjectsForProject(projectId?: number): Promise<BrettItem[]> {
+  try {
+    const url = projectId != null
+      ? `/search?type=OBJECT&projectId=${projectId}`
+      : '/search?type=OBJECT';
+    const data = await pdmFetch<SearchResult[]>(url);
+    return data.map(r => searchToBrettItem(r, 'OBJECT'));
+  } catch {
+    return [];
+  }
+}
+
+export async function loadTasksForEntity(entityType: string, entityId: number): Promise<BrettItem[]> {
+  try {
+    const data = await pdmFetch<SearchResult[]>(
+      `/search?type=TASK&entityType=${encodeURIComponent(entityType)}&entityId=${entityId}`,
+    );
+    return data.map(r => searchToBrettItem(r, 'TASK'));
+  } catch {
+    return [];
+  }
+}
+
+export async function loadAttachmentsForEntity(entityType: string, entityId: number): Promise<BrettItem[]> {
+  try {
+    const data = await pdmFetch<Array<{ id: number; name: string; size?: number; contentType?: string }>>(
+      `/attachments?entityType=${encodeURIComponent(entityType)}&entityId=${entityId}`,
+    );
+    return data.map(r => ({
+      id: `FILE:${r.id}`,
+      title: r.name,
+      subtitle: r.contentType,
+      meta: r.size != null ? `${Math.round(r.size / 1024)} KB` : undefined,
+      entityType: 'FILE',
+      entityId: r.id,
+    }));
+  } catch {
+    return [];
+  }
+}
+
 export async function loadEmailLinks(messageId: string): Promise<EmailLink[]> {
   try {
     const data = await pdmFetch<{
