@@ -101,13 +101,17 @@
 }
 
 .email-detail-email {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--muted);
+  font-style: italic;
+  font-weight: 300;
 }
 
 .email-detail-date {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--muted);
+  font-style: italic;
+  font-weight: 300;
 }
 
 .email-detail-subject {
@@ -147,19 +151,39 @@
 .email-detail-body {
   font-size: 14px;
   line-height: 1.7;
-  color: var(--muted);
+  color: var(--text);
   padding: 0 20px 20px;
   white-space: pre-wrap;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .email-detail-body--html {
   white-space: normal;
-  color: var(--text);
-  opacity: .85;
 }
 
-.email-detail-body--html a { color: var(--accent); }
-.email-detail-body--html p { margin: 0 0 8px; }
+/* Force unified font, size, and white color — overrides Outlook inline styles */
+.email-detail-body--html,
+.email-detail-body--html * {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+  font-size: 14px !important;
+  color: var(--text) !important;
+  background: transparent !important;
+  line-height: 1.7 !important;
+}
+
+/* Preserve bold */
+.email-detail-body--html b,
+.email-detail-body--html strong {
+  font-weight: 700 !important;
+}
+
+/* Links stay cyan */
+.email-detail-body--html a,
+.email-detail-body--html a * {
+  color: var(--accent) !important;
+}
+
+.email-detail-body--html p  { margin: 0 0 8px; }
 .email-detail-body--html table { border-collapse: collapse; max-width: 100%; }
 .email-detail-body--html img { max-width: 100%; height: auto; }
 
