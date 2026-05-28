@@ -2,7 +2,7 @@
 
 PDM-fokussierter Email-Client für das [group-pdm](https://github.com/fioressi/group-pdm) Ökosystem.
 
-Emails aus Microsoft 365 / Exchange direkt im PDM-Kontext verwalten — Verknüpfungen zu Tasks, Purchase Orders und Projekten per Drag & Drop.
+Emails aus Microsoft 365 / Exchange direkt im PDM-Kontext verwalten — Triage per Swipe und Action-Buttons, Verknüpfungen zu Tasks, Purchase Orders und Projekten per Drag & Drop, geräteübergreifende State-Sync via Azure SQL.
 
 **Live:** https://victorious-bush-0a2200403.7.azurestaticapps.net
 
@@ -11,24 +11,31 @@ Emails aus Microsoft 365 / Exchange direkt im PDM-Kontext verwalten — Verknüp
 ## Features
 
 ### Triage
-- **Drei Tabs** — Posteingang / Gelesen / Beantworten mit Badge-Counts
-- **Swipe links** → Email dauerhaft ausblenden (ID in `localStorage`)
-- **Swipe rechts** → als gelesen markieren (bleibt im Gelesen-Tab auch nach Reload)
-- **Kein Reload-Spam** — bereits verarbeitete Emails werden beim erneuten Laden herausgefiltert
+- **Vier Tabs** — Posteingang / Gelesen / Beantworten / Merken mit farbigen Badge-Counts
+- **4 Action-Buttons** pro Email-Karte: 🗑 Löschen · ✓ Gelesen · ↩ Beantworten · ★ Merken
+- **Swipe** links → Löschen, rechts → Gelesen (alternativ zu Buttons)
+- **Kein Reload-Spam** — bereits verarbeitete Emails werden beim Laden herausgefiltert
 
 ### PDM-Verknüpfung
 - **Drag & Drop** — Projekte, POs, Tasks von Attribut-Panels auf Email-Karte ziehen
 - **Gespeichert in DB** — `dbo.EMAILS + dbo.EMAIL_LINKS` via pdm-api (Azure Functions + Azure SQL)
 - **Geteilt sichtbar** — verknüpfte Emails für alle PDM-User sichtbar (z.B. in Access-Forms)
 - **Link-Tags** — Verknüpfte Objekte als Pills auf der Karte und im Detail-Modal
+- **Links persistent** — nach Reload weiterhin sichtbar (localStorage-Cache + DB)
+
+### Attribut-Detail
+- **↗ Button** auf jeder Attribut-Karte → Detail-Modal (Projekt/PO/Task)
+- Zeigt Name, Code, Status, Assignee, Beschreibung
+- Edit-Formular für Projekte und Tasks (benötigt pdm-api Detail-Endpunkte)
 
 ### Erstellen
 - **Neues Projekt** (linkes Panel `+`) — legt Eintrag in `dbo.PROJECTS` an, generiert Projektcode (H26xxx)
 - **Neuer Task** (rechtes Panel `+`) — legt Eintrag in `dbo.TASKS` an, synct zu SharePoint PDM-Liste
 
-### Beantworten
-- **Reply-Tray** — Email per Drag auf den unteren Balken → markiert als "zu beantworten"
-- **Beantworten-Tab** — Übersicht aller noch offenen Reply-Emails als volle Karten
+### Geräteübergreifende Sync
+- **Alle Triage-Status** (Löschen/Gelesen/Merken/Beantworten) werden in `dbo.EMAIL_USER_STATES` gespeichert
+- **Hybrid-Persistenz** — localStorage als schneller Cache, DB als Quelle der Wahrheit
+- Auf neuem Browser/Gerät: States werden beim Laden aus DB wiederhergestellt
 
 ### Design
 - **HERPERT Design Language** — konsistent mit web-probe (group-pdm)
@@ -96,8 +103,9 @@ npm run dev
 Browser (React/TS)
   ├── Microsoft Graph API    → Emails laden (Bearer Token des eingeloggten Users)
   ├── MSAL                   → Auth (Entra ID, PKCE)
-  └── pdm-api (Azure Func)   → Attribute laden, Email-Links speichern
-        └── Azure SQL PDM_db → dbo.EMAILS, dbo.EMAIL_LINKS, dbo.TASKS, dbo.PROJECTS
+  └── pdm-api (Azure Func)   → Attribute, Email-Links, User-States (cross-device)
+        └── Azure SQL PDM_db → dbo.EMAILS, dbo.EMAIL_LINKS, dbo.EMAIL_USER_STATES,
+                               dbo.TASKS, dbo.PROJECTS
 ```
 
 Siehe [docs/architecture.md](docs/architecture.md) für Details.
@@ -119,6 +127,12 @@ Push auf master
 - `VITE_AAD_CLIENT_ID`
 - `VITE_AAD_TENANT_ID`
 - `AZURE_STATIC_WEB_APPS_API_TOKEN`
+
+**pdm-api deployen** (manuell, kein CI/CD):
+```powershell
+cd ..\group-pdm\api
+func azure functionapp publish pdm-api --python
+```
 
 ---
 
