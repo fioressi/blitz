@@ -378,16 +378,16 @@ export async function loadTasksForEntity(entityType: string, entityId: number): 
 
 export async function loadAttachmentsForEntity(entityType: string, entityId: number): Promise<BrettItem[]> {
   try {
-    const data = await pdmFetch<Array<{ id: number; name: string; size?: number; contentType?: string }>>(
+    const data = await pdmFetch<Array<{ AttachmentId: number; FileName: string; FileSize?: number; MimeType?: string }>>(
       `/attachments?entityType=${encodeURIComponent(entityType)}&entityId=${entityId}`,
     );
     return data.map(r => ({
-      id: `FILE:${r.id}`,
-      title: r.name,
-      subtitle: r.contentType,
-      meta: r.size != null ? `${Math.round(r.size / 1024)} KB` : undefined,
+      id: `FILE:${r.AttachmentId}`,
+      title: r.FileName,
+      subtitle: r.MimeType,
+      meta: r.FileSize != null ? `${Math.round(r.FileSize / 1024)} KB` : undefined,
       entityType: 'FILE',
-      entityId: r.id,
+      entityId: r.AttachmentId,
     }));
   } catch {
     return [];
