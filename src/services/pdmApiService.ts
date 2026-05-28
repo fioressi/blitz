@@ -165,6 +165,42 @@ export async function updateAttributeDetail(entityType: string, entityId: number
   });
 }
 
+export type EmailStateStatus = 'DISMISSED' | 'READ' | 'SAVED' | 'REPLY';
+
+export interface UserEmailState {
+  messageId: string;
+  status: EmailStateStatus;
+}
+
+export async function loadEmailUserStates(userEmail: string): Promise<UserEmailState[]> {
+  try {
+    const data = await pdmFetch<{ states: UserEmailState[] }>(
+      `/email-states?user=${encodeURIComponent(userEmail)}`
+    );
+    return data.states || [];
+  } catch {
+    return [];
+  }
+}
+
+export async function setEmailState(
+  messageId: string,
+  status: EmailStateStatus,
+  userEmail: string,
+): Promise<void> {
+  await pdmFetch('/email-states', {
+    method: 'POST',
+    body: JSON.stringify({ messageId, status, user: userEmail }),
+  });
+}
+
+export async function clearEmailState(messageId: string, userEmail: string): Promise<void> {
+  await pdmFetch('/email-states', {
+    method: 'DELETE',
+    body: JSON.stringify({ messageId, user: userEmail }),
+  });
+}
+
 export async function loadEmailLinks(messageId: string): Promise<EmailLink[]> {
   try {
     const data = await pdmFetch<{

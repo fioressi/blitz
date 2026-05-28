@@ -6,7 +6,7 @@ import { useMsal } from '@azure/msal-react';
 import type { Email, EmailLink, AttributeGroup } from './types/email';
 import { mockAttributeGroups } from './data/mockData';
 import { getInboxMessages, getMessageDetail } from './services/graphService';
-import { loadAttributeGroups, saveEmailWithLink, loadEmailLinks } from './services/pdmApiService';
+import { loadAttributeGroups, saveEmailWithLink, loadEmailLinks, loadEmailUserStates, setEmailState, clearEmailState } from './services/pdmApiService';
 import { AttributePanel } from './components/AttributePanel/AttributePanel';
 import { EmailCard } from './components/EmailCard/EmailCard';
 import { ReplyTray } from './components/ReplyTray/ReplyTray';
@@ -97,18 +97,35 @@ export default function App() {
     setLoading(true);
     setLoadError(null);
     try {
-      const msgs = await getInboxMessages(instance, user);
-      const dismissed   = getStoredIds(LS_DISMISSED);
-      const readIds     = getStoredIds(LS_READ);
-      const savedIds    = getStoredIds(LS_SAVED);
-      const replyIds    = getStoredIds(LS_REPLY);
+      const [msgs, apiStates] = await Promise.all([
+        getInboxMessages(instance, user),
+        user.username ? loadEmailUserStates(user.username) : Promise.resolve([]),
+      ]);
+
+      // Start with localStorage cache (fast / offline fallback)
+      const dismissed = getStoredIds(LS_DISMISSED);
+      const readIds   = getStoredIds(LS_READ);
+      const savedIds  = getStoredIds(LS_SAVED);
+      const replyIds  = getStoredIds(LS_REPLY);
+
+      // Override with DB states (authoritative, cross-device)
+      for (const s of apiStates) {
+        const id = s.messageId;
+        switch (s.status) {
+          case 'DISMISSED': dismissed.add(id); addStoredId(LS_DISMISSED, id); break;
+          case 'READ':      readIds.add(id);   addStoredId(LS_READ, id);      break;
+          case 'SAVED':     savedIds.add(id);  addStoredId(LS_SAVED, id);     break;
+          case 'REPLY':     replyIds.add(id);  addStoredId(LS_REPLY, id);     break;
+        }
+      }
+
       const storedLinks = getStoredLinks();
       const filtered = msgs
         .filter(m => !dismissed.has(m.id))
         .map(m => {
-          let em: Email = readIds.has(m.id)    ? { ...m, status: 'read'     as const }
-                        : savedIds.has(m.id)   ? { ...m, status: 'saved'    as const }
-                        : replyIds.has(m.id)   ? { ...m, status: 'to-reply' as const }
+          let em: Email = readIds.has(m.id)  ? { ...m, status: 'read'     as const }
+                        : savedIds.has(m.id) ? { ...m, status: 'saved'    as const }
+                        : replyIds.has(m.id) ? { ...m, status: 'to-reply' as const }
                         : m;
           const cached = storedLinks[m.id];
           if (cached && cached.length > 0) em = { ...em, links: cached };
@@ -159,6 +176,7 @@ export default function App() {
   const handleSwipeLeft = (id: string) => {
     addStoredId(LS_DISMISSED, id);
     removeStoredId(LS_REPLY, id);
+    if (user?.username) setEmailState(id, 'DISMISSED', user.username).catch(console.error);
     setEmails(prev => prev.filter(e => e.id !== id));
     setReplyEmails(prev => prev.filter(e => e.id !== id));
   };
@@ -166,6 +184,7 @@ export default function App() {
   const handleSwipeRight = (id: string) => {
     addStoredId(LS_READ, id);
     removeStoredId(LS_REPLY, id);
+    if (user?.username) setEmailState(id, 'READ', user.username).catch(console.error);
     setEmails(prev => prev.map(e => e.id === id ? { ...e, status: 'read' } : e));
     setReplyEmails(prev => prev.filter(e => e.id !== id));
   };
@@ -192,6 +211,7 @@ export default function App() {
       const email = emails.find(e => e.id === data.emailId);
       if (!email) return;
       addStoredId(LS_REPLY, email.id);
+      if (user?.username) setEmailState(email.id, 'REPLY', user.username).catch(console.error);
       setReplyEmails(prev => prev.some(e => e.id === email.id) ? prev : [...prev, email]);
       setEmails(prev => prev.map(e => e.id === email.id ? { ...e, status: 'to-reply' } : e));
       return;
@@ -235,11 +255,13 @@ export default function App() {
 
   const handleMarkSaved = (id: string) => {
     addStoredId(LS_SAVED, id);
+    if (user?.username) setEmailState(id, 'SAVED', user.username).catch(console.error);
     setEmails(prev => prev.map(e => e.id === id ? { ...e, status: 'saved' } : e));
   };
 
   const handleRemoveFromReplyTray = (emailId: string) => {
     removeStoredId(LS_REPLY, emailId);
+    if (user?.username) clearEmailState(emailId, user.username).catch(console.error);
     setReplyEmails(prev => prev.filter(e => e.id !== emailId));
     setEmails(prev => prev.map(e => e.id === emailId ? { ...e, status: 'unread' } : e));
   };
@@ -324,6 +346,7 @@ export default function App() {
                       const em = emails.find(e => e.id === id);
                       if (!em) return;
                       addStoredId(LS_REPLY, id);
+                      if (user?.username) setEmailState(id, 'REPLY', user.username).catch(console.error);
                       setReplyEmails(prev => prev.some(e => e.id === id) ? prev : [...prev, em]);
                       setEmails(prev => prev.map(e => e.id === id ? { ...e, status: 'to-reply' } : e));
                     } : undefined}
