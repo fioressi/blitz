@@ -6,18 +6,20 @@
 ┌─────────────────────────────────────────────────────────────┐
 │  Browser (React + TypeScript)                               │
 │                                                             │
-│  ┌──────────────┬──────────────────────┬──────────────┐    │
-│  │ Attribute    │   Email-Karten       │ Attribute    │    │
-│  │ (links)      │   (Posteingang)      │ (rechts)     │    │
-│  └──────────────┴──────────────────────┴──────────────┘    │
-│  ┌─────────────────────────────────────────────────────┐    │
-│  │  Reply-Tray (zu beantworten)                        │    │
-│  └─────────────────────────────────────────────────────┘    │
-└───────┬──────────────────────────┬──────────────────────────┘
+│  ┌───────────┬───────────────────────────┬───────────┐     │
+│  │ Attribute │  Tabs: Inbox/Gelesen/Reply │ Attribute │     │
+│  │ (links)   │  Email-Karten             │ (rechts)  │     │
+│  └───────────┴───────────────────────────┴───────────┘     │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │  Reply-Tray (zu beantworten — Drop-Zone)             │   │
+│  └──────────────────────────────────────────────────────┘   │
+└───────┬──────────────────────────┬───────────────────────────┘
         │                          │
         ▼                          ▼
 Microsoft Graph API           pdm-api (Azure Functions)
-(Emails, Kontakte)            (Email-Links in PDM_db)
+(Emails, Kontakte)            (Attribute, Email-Links, Tasks, Projekte)
+                                    │
+                              Azure SQL PDM_db
 ```
 
 ## Komponenten
@@ -27,13 +29,14 @@ Microsoft Graph API           pdm-api (Azure Functions)
 | Ordner | Zweck |
 |--------|-------|
 | `auth/` | MSAL-Konfiguration, AuthGuard-Komponente |
-| `components/EmailCard/` | Swipeable Email-Karte mit Drag & Drop Drop-Zone |
-| `components/AttributePanel/` | Draggable Attribut-Listen (links/rechts) |
-| `components/ReplyTray/` | Unterer Container für "zu beantworten" |
+| `components/EmailCard/` | Swipeable Email-Karte mit dnd-kit Drop-Zone + Reply-Handle |
+| `components/AttributePanel/` | Draggable Attribut-Listen (links/rechts) mit `+` Erstellen-Button |
+| `components/ReplyTray/` | Unterer Drop-Balken für "zu beantworten", expandiert beim Drag |
 | `components/EmailDetail/` | Modal-Ansicht einer geöffneten Email |
-| `data/` | Fallback Mock-Daten |
-| `services/graphService.ts` | Microsoft Graph API Integration |
-| `services/pdmApiService.ts` | pdm-api Integration (Attribute + Email-Links) |
+| `components/CreateModal/` | Formular-Modal für neuen Task oder neues Projekt |
+| `data/` | Fallback Mock-Daten (werden durch pdm-api-Daten ersetzt) |
+| `services/graphService.ts` | Microsoft Graph API Integration (Posteingang, Detail) |
+| `services/pdmApiService.ts` | pdm-api Integration (Attribute, Email-Links, createTask, createProject) |
 | `types/` | TypeScript-Interfaces |
 
 ### Auth-Flow
@@ -47,70 +50,103 @@ Nutzer öffnet App
   → App lädt Emails über Graph API mit Bearer Token
 ```
 
+**Registrierte Redirect URIs (SPA Platform):**
+- `http://localhost:5173` (Entwicklung)
+- `https://victorious-bush-0a2200403.7.azurestaticapps.net` (Produktion)
+
 ### Email-Lebenszyklus
 
 ```
-Graph API → Posteingang (nur im Browser, nicht in DB)
+Graph API → Posteingang (im Browser-State)
   │
-  ├── Swipe links        → als gelöscht markiert (nicht in DB)
-  ├── Swipe rechts       → als gelesen markiert (nicht in DB*)
+  ├── Swipe links   → ID in localStorage "blitz_dismissed"
+  │                   → beim nächsten Load herausgefiltert (dauerhaft weg)
+  │
+  ├── Swipe rechts  → ID in localStorage "blitz_read"
+  │                   → beim nächsten Load als status: 'read' geladen
+  │                   → sichtbar im "Gelesen"-Tab
+  │
   ├── Attribut draufziehen → dbo.EMAILS + dbo.EMAIL_LINKS (pdm-api)
-  └── Reply-Tray         → Status "to-reply" (lokal)
+  │                          → verknüpfte Email für alle PDM-User sichtbar
+  │
+  └── Reply-Handle drag → status: 'to-reply'
+                           → sichtbar im "Beantworten"-Tab + Reply-Tray
 ```
 
-*) Swipe rechts ohne Attribut speichert noch nicht in DB — pdm-api erfordert
-   mindestens ein Target. Geplant für Phase 2.
+### localStorage-Schlüssel
+
+| Key | Inhalt | Zweck |
+|-----|--------|-------|
+| `blitz_dismissed` | `string[]` (max 2000 IDs) | Swipe-links Emails permanent ausblenden |
+| `blitz_read` | `string[]` (max 2000 IDs) | Swipe-rechts Emails als "gelesen" markieren |
+
+### Drag & Drop Architektur
+
+Zwei parallele Systeme:
+
+1. **framer-motion** `drag` auf `motion.div` — freies elastisches Drag für Swipe-Gesten (links/rechts)
+2. **@dnd-kit** `useDraggable` / `useDroppable` — für:
+   - Attribut-Karten → Email-Karten (Verknüpfung)
+   - Reply-Handle → Reply-Tray (zu beantworten markieren)
+   - `DragOverlay` lässt Attribut-Karten frei über allen Containern schweben
+
+**Konflikt-Vermeidung:** Der Reply-Handle hat `onPointerDown stopPropagation`, damit framer-motion nicht gleichzeitig einen Swipe startet. Wenn dnd-kit aktiv ist (`isDragging: true`), wird framer-motion `drag` auf `false` gesetzt.
 
 ## Datenbank (PDM_db auf Azure SQL)
 
 Nur Emails die mit einem PDM-Attribut verknüpft werden, landen in der DB.
-Die DB ist **kein Postfach-Spiegel** — sie speichert PDM-relevante Emails.
-
-Tabellen sind Teil des bestehenden `pdm-api` Schemas:
 
 ### dbo.EMAILS
 
 ```sql
--- Felder (Auswahl):
-MessageId     NVARCHAR(998)  -- Graph API Message ID (unique)
-GraphItemId   NVARCHAR(998)  -- Graph API Item ID
-Subject       NVARCHAR(998)
-FromAddr      NVARCHAR(320)
-SentAt        DATETIME2
+MessageId      NVARCHAR(998)   -- Graph API Message ID (unique)
+GraphItemId    NVARCHAR(998)   -- Graph API Item ID
+Subject        NVARCHAR(998)
+FromAddr       NVARCHAR(320)
+ToAddr         NVARCHAR(2000)
+SentAt         DATETIME2
 HasAttachments BIT
-Kind          NVARCHAR(64)   -- 'COMMUNICATION' | 'RFQ' | 'ORDER' | ...
-LinkedBy      NVARCHAR(320)  -- Entra-ID preferred_username
-LinkedAt      DATETIME2
+Kind           NVARCHAR(64)    -- 'COMMUNICATION' | 'RFQ' | 'ORDER' | ...
+MimeContent    VARBINARY(MAX)  -- optional: vollständiges .eml
+LinkedBy       NVARCHAR(320)   -- Entra-ID preferred_username
+LinkedAt       DATETIME2
 ```
 
 ### dbo.EMAIL_LINKS
 
 ```sql
--- Felder:
-EmailId       INT            -- FK → dbo.EMAILS
-EntityType    NVARCHAR(64)   -- 'PROJECT' | 'ORDER' | 'TASK' | 'OBJECT' | ...
-EntityId      INT
+EmailId    INT            -- FK → dbo.EMAILS
+EntityType NVARCHAR(64)   -- 'PROJECT' | 'ORDER' | 'TASK' | 'OBJECT' | ...
+EntityId   INT
 ```
 
-## pdm-api Endpunkte
+## pdm-api Endpunkte (genutzt von Blitz)
 
 | Methode | Endpunkt | Beschreibung |
 |---------|----------|--------------|
-| `GET` | `/api/search?type=PROJECT\|ORDER\|TASK` | Attribute für die Panels laden |
-| `POST` | `/api/emails` | Email + 1..N PDM-Links anlegen (idempotent via MessageId) |
-| `GET` | `/api/emails/by-message?messageId=...` | Email-Detail + alle Links abrufen |
-| `PATCH` | `/api/emails/{id}` | Kind ändern oder weitere Links hinzufügen |
-| `DELETE` | `/api/email-links` | Einzelne Verknüpfung löschen |
+| `GET` | `/api/search?type=PROJECT\|ORDER\|TASK` | Attribute für Panels laden |
+| `POST` | `/api/emails` | Email + 1..N PDM-Links anlegen (idempotent) |
+| `GET` | `/api/emails/by-message?messageId=...` | Email-Detail + alle Links |
+| `POST` | `/api/tasks` | Neuen Task anlegen (synct zu SharePoint) |
+| `POST` | `/api/projects` | Neues Projekt anlegen (generiert H26xxx Code) |
 
-**Base URL:** `https://pdm-api.azurewebsites.net`
+**Base URL:** `https://pdm-api.azurewebsites.net`  
+**Auth:** `SKIP_AUTH=1` in Azure gesetzt → kein Bearer Token nötig (Phase 1)
 
-## Azure AD
+## Azure AD App Registration
 
-- **App:** blitz (`a1627a40-18ee-4461-a75a-cca6a4608fd4`)
-- **Tenant:** `02a50c76-4445-4435-89d3-e6e871f29342`
-- **Auth-Typ:** SPA (PKCE, loginRedirect), kein Client Secret
+- **App Name:** blitz
+- **Client ID:** `a1627a40-18ee-4461-a75a-cca6a4608fd4`
+- **Tenant ID:** `02a50c76-4445-4435-89d3-e6e871f29342`
+- **Auth-Typ:** SPA Platform (PKCE, loginRedirect), kein Client Secret
 - **Scopes:** `User.Read`, `Mail.Read`, `Mail.ReadWrite`, `Mail.Send`, `Contacts.Read`
-- **Redirect URI:** `http://localhost:5173` (dev), produktions-URL noch nicht konfiguriert
+
+## Deployment
+
+- **Hosting:** Azure Static Web Apps (Free Tier)
+- **URL:** `https://victorious-bush-0a2200403.7.azurestaticapps.net`
+- **CI/CD:** GitHub Actions — Push auf `master` → Build → Deploy
+- **SPA-Routing:** `public/staticwebapp.config.json` leitet alle Pfade auf `index.html`
 
 ## Bibliotheken
 
@@ -119,34 +155,23 @@ EntityId      INT
 | `@azure/msal-browser` | v5 | MSAL Auth (PKCE) |
 | `@azure/msal-react` | v5 | React-Hooks für MSAL |
 | `framer-motion` | v12 | Swipe-Animationen, Physics-Drag |
-| `@dnd-kit/core` | v6 | Drag & Drop für Attribut-Karten |
+| `@dnd-kit/core` | v6 | Drag & Drop für Attribut-Karten + Reply-Handle |
 | `vite` | v8 | Build-Tool |
 
 ## Technische Entscheidungen
 
-### Warum Graph API direkt vom Frontend?
+### Graph API direkt vom Frontend
 
-Graph API unterstützt PKCE-basierte SPA-Auth nativ.
-Ein Backend-Proxy würde keinen Sicherheitsgewinn bringen und die Latenz erhöhen.
-Emails werden nicht über pdm-api geleitet — nur die PDM-Verknüpfungen.
+Graph API unterstützt PKCE-SPA-Auth nativ. Ein Proxy-Backend würde keinen Sicherheitsgewinn bringen und die Latenz erhöhen. Emails werden nie über pdm-api geleitet — nur PDM-Verknüpfungen.
 
-### Warum Teil von pdm-api statt eigenem Backend?
+### localStorage für Dismissed/Read
 
-Blitz ist in Phase 1 ein PDM-Tool. Auth, DB-Verbindung und Deployment
-sind bereits vorhanden. Bei wachsendem Scope (mehrere Accounts, externe Nutzer)
-wird ein eigenes Backend evaluiert.
+Server-seitige Persistenz wäre möglich, aber unnötig aufwendig für Phase 1. localStorage reicht für bis zu 2000 IDs pro Key. Nachteil: gilt pro Browser, nicht geräteübergreifend.
 
 ### Warum framer-motion UND @dnd-kit?
 
-Email-Karten brauchen physik-basierte Swipe-Gesten (framer-motion).
-Attribut-Karten brauchen präzises Drag & Drop mit Drop-Zonen (@dnd-kit).
-Beide Systeme koexistieren: framer-motion auf `motion.div` für Swipe,
-@dnd-kit mit `useDraggable`/`useDroppable` für Attribut-Verknüpfung.
-`DragOverlay` von @dnd-kit ermöglicht das freie Schweben der Attribut-Karte
-über allen Containern während des Drags.
+Email-Karten brauchen physik-basierte Swipe-Gesten (framer-motion). Attribut-Karten und Reply-Handle brauchen präzise Drop-Zonen (@dnd-kit). `DragOverlay` ermöglicht freies Schweben der Attribut-Karte. Der `stopPropagation`-Fix am Reply-Handle verhindert den Konflikt zwischen beiden Systemen.
 
-### Warum loginRedirect statt loginPopup?
+### HERPERT Design Language
 
-Browser blockieren Popups aus Sicherheitsgründen in bestimmten Kontexten.
-`loginRedirect` ist zuverlässiger und erfordert `handleRedirectPromise()`
-in `main.tsx` vor dem ersten Render.
+Konsistent mit `web-probe` (group-pdm): `#101928` Hintergrund, radial-gradient, glassmorphism Panels (`rgba + backdrop-filter`), Inter Font, Cyan `#66d9ef` als Accent. Alle CSS-Variablen in `src/index.css`.
