@@ -14,11 +14,12 @@ export async function askIgor(opts: {
   question: string;
   emailBody?: string;
   emailSubject?: string;
-  context?: string; // explicit context override (takes precedence over emailSubject)
+  context?: string;   // explicit context override (takes precedence over emailSubject)
+  input?: string;     // generic plain-text input (alternative to emailBody)
 }): Promise<string> {
   const context = opts.context
     ?? (opts.emailSubject ? `Betreff: ${opts.emailSubject}` : undefined);
-  const input = opts.emailBody ? stripHtml(opts.emailBody) : undefined;
+  const input = opts.input ?? (opts.emailBody ? stripHtml(opts.emailBody) : undefined);
 
   const res = await fetch(`${PDM_API}/igor-ask`, {
     method: 'POST',
