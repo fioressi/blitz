@@ -8,67 +8,69 @@
   top: 50%;
   transform: translateY(-50%);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   pointer-events: none;
   z-index: 0;
 }
 
 .swipe-indicator.delete {
   left: 12px;
-  color: #ef4444;
+  color: var(--red);
 }
 
 .swipe-indicator.read {
   right: 12px;
-  color: #10b981;
+  color: var(--green);
 }
 
 .email-card-drop-zone {
   position: relative;
   z-index: 1;
-  border-radius: 10px;
+  border-radius: 8px;
   transition: box-shadow 0.15s;
 }
 
 .email-card-drop-zone.drag-over {
-  box-shadow: 0 0 0 2px #3b82f6, 0 0 12px rgba(59,130,246,0.3);
+  box-shadow: 0 0 0 2px var(--accent), 0 0 16px rgba(102,217,239,.2);
 }
 
 .email-card {
   position: relative;
-  min-height: 160px;
-  background: #1e2030;
-  border: 1px solid #2d3148;
-  border-radius: 10px;
-  padding: 24px 20px;
+  min-height: 150px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px;
   cursor: grab;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
   user-select: none;
+  backdrop-filter: blur(8px);
+  box-shadow: var(--shadow);
 }
 
 .email-card:hover {
-  border-color: #4b5280;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  background: var(--panel-hover);
+  border-color: rgba(255,255,255,.22);
 }
 
 .email-card-drop-zone.drag-over .email-card,
 .email-card.drag-over {
-  border-color: #3b82f6;
-  background: #1e2840;
+  border-color: var(--accent);
+  background: rgba(102,217,239,.06);
 }
 
 .email-card.is-dragging {
-  opacity: 0.5;
+  opacity: 0.45;
 }
 
 .reply-drag-handle {
   margin-top: 10px;
   padding: 5px 10px;
-  border-radius: 5px;
-  background: #1a1d2e;
-  border: 1px dashed #374151;
+  border-radius: 6px;
+  background: rgba(255,255,255,.04);
+  border: 1px dashed rgba(255,255,255,.18);
   font-size: 11px;
-  color: #4b5563;
+  color: var(--muted);
   text-align: center;
   cursor: grab;
   touch-action: none;
@@ -77,9 +79,9 @@
 }
 
 .reply-drag-handle:hover {
-  background: #1e2840;
-  border-color: #6366f1;
-  color: #a5b4fc;
+  background: rgba(102,217,239,.08);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .email-card:active {
@@ -97,13 +99,13 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: #3b4280;
+  background: rgba(102,217,239,.18);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 13px;
-  font-weight: 600;
-  color: #a5b4fc;
+  font-weight: 700;
+  color: var(--accent);
   flex-shrink: 0;
 }
 
@@ -116,13 +118,13 @@
 
 .email-from {
   font-size: 13px;
-  font-weight: 600;
-  color: #e2e8f0;
+  font-weight: 700;
+  color: var(--text);
 }
 
 .email-time {
   font-size: 11px;
-  color: #6b7280;
+  color: var(--muted);
 }
 
 .attachment-icon {
@@ -131,14 +133,15 @@
 
 .email-subject {
   font-size: 13px;
-  font-weight: 500;
-  color: #c8d0e0;
+  font-weight: 600;
+  color: var(--text);
   margin-bottom: 4px;
+  opacity: .88;
 }
 
 .email-preview {
   font-size: 12px;
-  color: #6b7280;
+  color: var(--muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -155,20 +158,20 @@
   font-size: 11px;
   padding: 2px 8px;
   border-radius: 99px;
-  font-weight: 500;
+  font-weight: 600;
 }
 
-.link-type-project { background: #1d3a6b; color: #93c5fd; }
-.link-type-purchase-order { background: #064e3b; color: #6ee7b7; }
-.link-type-task { background: #451a03; color: #fcd34d; }
-.link-type-tag { background: #1e1b4b; color: #c4b5fd; }
+.link-type-project       { background: rgba(102,217,239,.14); color: var(--accent); }
+.link-type-purchase-order{ background: rgba(142,226,142,.14); color: var(--green); }
+.link-type-task          { background: rgba(255,209,102,.14); color: var(--yellow); }
+.link-type-tag           { background: rgba(255,255,255,.1);  color: var(--muted); }
 
 .drop-hint {
   margin-top: 8px;
   text-align: center;
   font-size: 12px;
-  color: #3b82f6;
+  color: var(--accent);
   padding: 4px;
-  border-radius: 4px;
-  border: 1px dashed #3b82f6;
+  border-radius: 6px;
+  border: 1px dashed rgba(102,217,239,.4);
 }

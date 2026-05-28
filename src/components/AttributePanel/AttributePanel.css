@@ -18,11 +18,11 @@
   align-items: center;
   gap: 8px;
   padding: 4px 0;
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 10px;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #6b7280;
+  letter-spacing: 0.08em;
+  color: var(--muted);
 }
 
 .attribute-new-btn {
@@ -30,9 +30,9 @@
   width: 20px;
   height: 20px;
   border-radius: 5px;
-  border: 1px solid #2d3148;
+  border: 1px solid var(--line);
   background: transparent;
-  color: #4b5563;
+  color: var(--muted);
   font-size: 16px;
   line-height: 1;
   cursor: pointer;
@@ -44,17 +44,17 @@
 }
 
 .attribute-new-btn:hover {
-  background: #1e2840;
-  border-color: #3b82f6;
-  color: #3b82f6;
+  background: rgba(102,217,239,.1);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .attribute-group-icon {
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .attribute-group-title {
-  font-size: 11px;
+  font-size: 10px;
 }
 
 .attribute-items {
@@ -65,21 +65,24 @@
 
 .attribute-item {
   padding: 7px 10px;
-  background: #1e2030;
-  border: 1px solid #2d3148;
-  border-left: 3px solid #3b82f6;
-  border-radius: 6px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
   cursor: grab;
-  transition: background 0.15s;
+  transition: background 0.15s, border-color 0.15s;
   user-select: none;
   touch-action: none;
   display: flex;
   flex-direction: column;
   gap: 2px;
+  backdrop-filter: blur(6px);
 }
 
 .attribute-item:hover {
-  background: #252840;
+  background: var(--panel-hover);
+  border-color: rgba(255,255,255,.2);
+  border-left-color: var(--accent);
 }
 
 .attribute-item:active {
@@ -87,7 +90,7 @@
 }
 
 .attribute-drag-overlay {
-  box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+  box-shadow: 0 16px 48px rgba(0,0,0,.5);
   transform: scale(1.05);
   opacity: 0.95;
   cursor: grabbing;
@@ -96,13 +99,13 @@
 
 .attribute-item-label {
   font-size: 12px;
-  color: #e2e8f0;
-  font-weight: 500;
+  color: var(--text);
+  font-weight: 600;
 }
 
 .attribute-item-sublabel {
   font-size: 10px;
-  color: #6b7280;
+  color: var(--muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

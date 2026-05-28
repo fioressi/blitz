@@ -1,15 +1,16 @@
 .reply-tray {
-  background: #151728;
-  border-top: 1px solid #2d3148;
+  background: rgba(255,255,255,.05);
+  border-top: 1px solid var(--line);
   padding: 10px 20px;
-  min-height: 70px;
+  min-height: 68px;
   transition: background 0.15s, border-color 0.15s;
   flex-shrink: 0;
+  backdrop-filter: blur(8px);
 }
 
 .reply-tray.drag-over {
-  background: #1a2040;
-  border-top-color: #6366f1;
+  background: rgba(102,217,239,.06);
+  border-top-color: var(--accent);
 }
 
 .reply-tray-header {
@@ -19,18 +20,18 @@
   margin-bottom: 8px;
 }
 
-.reply-tray-icon { font-size: 14px; }
+.reply-tray-icon { font-size: 13px; }
 
 .reply-tray-title {
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 10px;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #6b7280;
+  letter-spacing: 0.08em;
+  color: var(--muted);
 }
 
 .reply-tray-count {
-  background: #ef4444;
+  background: rgba(248,113,113,.8);
   color: white;
   font-size: 10px;
   font-weight: 700;
@@ -40,7 +41,7 @@
 
 .reply-tray-empty {
   font-size: 12px;
-  color: #2d3148;
+  color: rgba(255,255,255,.15);
   font-style: italic;
 }
 
@@ -54,25 +55,26 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #1e2030;
-  border: 1px solid #2d3148;
+  background: var(--panel);
+  border: 1px solid var(--line);
   border-radius: 8px;
   padding: 7px 10px;
   min-width: 180px;
   max-width: 260px;
+  backdrop-filter: blur(6px);
 }
 
 .reply-tray-card-avatar {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: #3b4280;
+  background: rgba(102,217,239,.18);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 12px;
-  font-weight: 600;
-  color: #a5b4fc;
+  font-weight: 700;
+  color: var(--accent);
   flex-shrink: 0;
 }
 
@@ -86,8 +88,8 @@
 
 .reply-tray-card-from {
   font-size: 11px;
-  font-weight: 600;
-  color: #c8d0e0;
+  font-weight: 700;
+  color: var(--text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -95,7 +97,7 @@
 
 .reply-tray-card-subject {
   font-size: 10px;
-  color: #6b7280;
+  color: var(--muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -104,15 +106,16 @@
 .reply-tray-card-remove {
   background: none;
   border: none;
-  color: #4b5563;
+  color: var(--muted);
   cursor: pointer;
   font-size: 16px;
   line-height: 1;
   padding: 0 2px;
   flex-shrink: 0;
+  transition: color 0.15s;
 }
 
-.reply-tray-card-remove:hover { color: #ef4444; }
+.reply-tray-card-remove:hover { color: var(--red); }
 
 @media (max-width: 768px) {
   .reply-tray {
