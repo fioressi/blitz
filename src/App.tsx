@@ -11,6 +11,7 @@ import { AttributePanel } from './components/AttributePanel/AttributePanel';
 import { EmailCard } from './components/EmailCard/EmailCard';
 import { ReplyTray } from './components/ReplyTray/ReplyTray';
 import { EmailDetail } from './components/EmailDetail/EmailDetail';
+import { CreateModal } from './components/CreateModal/CreateModal';
 import { AuthGuard } from './auth/AuthGuard';
 import './App.css';
 
@@ -32,6 +33,7 @@ export default function App() {
   const [isDraggingCard, setIsDraggingCard] = useState(false);
   const [activeAttribute, setActiveAttribute] = useState<Attribute | null>(null);
   const [drawerOpen, setDrawerOpen] = useState<'left' | 'right' | null>(null);
+  const [createModal, setCreateModal] = useState<'task' | 'project' | null>(null);
 
   const leftGroups = attributeGroups.filter(g => g.side === 'left');
   const rightGroups = attributeGroups.filter(g => g.side === 'right');
@@ -174,7 +176,7 @@ export default function App() {
         <div className={`app-body ${isDraggingCard ? 'card-dragging' : ''}`}>
           {drawerOpen && <div className="drawer-overlay" onClick={() => setDrawerOpen(null)} />}
           <aside className={`panel-left ${drawerOpen === 'left' ? 'drawer-open' : ''}`}>
-            <AttributePanel groups={leftGroups} />
+            <AttributePanel groups={leftGroups} onNew={type => setCreateModal(type)} />
           </aside>
 
           <main className="inbox">
@@ -205,7 +207,7 @@ export default function App() {
           </main>
 
           <aside className={`panel-right ${drawerOpen === 'right' ? 'drawer-open' : ''}`}>
-            <AttributePanel groups={rightGroups} />
+            <AttributePanel groups={rightGroups} onNew={type => setCreateModal(type)} />
           </aside>
         </div>
 
@@ -221,6 +223,18 @@ export default function App() {
           onSwipeLeft={handleSwipeLeft}
           onSwipeRight={handleSwipeRight}
         />
+
+        {createModal && (
+          <CreateModal
+            type={createModal}
+            onClose={() => setCreateModal(null)}
+            onCreated={() => {
+              loadAttributeGroups()
+                .then(groups => setAttributeGroups(groups))
+                .catch(err => console.error('Attribute konnten nicht geladen werden:', err));
+            }}
+          />
+        )}
       </div>
       <DragOverlay dropAnimation={{ duration: 180, easing: 'ease' }}>
         {activeAttribute && (

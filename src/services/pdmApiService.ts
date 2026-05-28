@@ -43,6 +43,7 @@ export async function loadAttributeGroups(): Promise<AttributeGroup[]> {
       title: 'Projekte',
       icon: '📁',
       side: 'left',
+      createType: 'project' as const,
       items: projects.slice(0, 20).map(r => toAttr(r, '#3b82f6')),
     },
     {
@@ -57,6 +58,7 @@ export async function loadAttributeGroups(): Promise<AttributeGroup[]> {
       title: 'Tasks',
       icon: '📋',
       side: 'right',
+      createType: 'task' as const,
       items: tasks.slice(0, 20).map(r => toAttr(r, '#f59e0b')),
     },
   ];
@@ -93,6 +95,31 @@ interface EmailLink {
   entityType: string;
   entityId: number;
   entityLabel: string;
+}
+
+export async function createTask(fields: {
+  title: string;
+  taskType?: string;
+  priority?: string;
+  assignedTo?: string;
+  dueAt?: string;
+  description?: string;
+}): Promise<{ taskId: number }> {
+  return pdmFetch('/tasks', {
+    method: 'POST',
+    body: JSON.stringify(fields),
+  });
+}
+
+export async function createProject(fields: {
+  projectName: string;
+  description?: string;
+  assignedTo?: string;
+}): Promise<{ projectId: number; projectCode: string }> {
+  return pdmFetch('/projects', {
+    method: 'POST',
+    body: JSON.stringify(fields),
+  });
 }
 
 export async function loadEmailLinks(messageId: string): Promise<EmailLink[]> {

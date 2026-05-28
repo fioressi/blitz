@@ -5,6 +5,7 @@ import './AttributePanel.css';
 
 interface Props {
   groups: AttributeGroup[];
+  onNew?: (type: 'task' | 'project') => void;
 }
 
 function DraggableAttribute({ attribute }: { attribute: Attribute }) {
@@ -35,7 +36,7 @@ function DraggableAttribute({ attribute }: { attribute: Attribute }) {
   );
 }
 
-export function AttributePanel({ groups }: Props) {
+export function AttributePanel({ groups, onNew }: Props) {
   return (
     <div className="attribute-panel">
       {groups.map(group => (
@@ -43,6 +44,15 @@ export function AttributePanel({ groups }: Props) {
           <div className="attribute-group-header">
             <span className="attribute-group-icon">{group.icon}</span>
             <span className="attribute-group-title">{group.title}</span>
+            {group.createType && onNew && (
+              <button
+                className="attribute-new-btn"
+                onClick={() => onNew(group.createType!)}
+                title={group.createType === 'task' ? 'Neuer Task' : 'Neues Projekt'}
+              >
+                +
+              </button>
+            )}
           </div>
           <div className="attribute-items">
             {group.items.map(item => (

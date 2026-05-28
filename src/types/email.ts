@@ -46,4 +46,5 @@ export interface AttributeGroup {
   icon: string;
   items: Attribute[];
   side: 'left' | 'right';
+  createType?: 'task' | 'project';
 }
