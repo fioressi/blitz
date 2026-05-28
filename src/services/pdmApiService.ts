@@ -1,0 +1,111 @@
+import type { AttributeGroup, Attribute, Email } from '../types/email';
+
+const PDM_API = 'https://pdm-api.azurewebsites.net/api';
+
+interface SearchResult {
+  type: string;
+  id: number;
+  label: string;
+  subLabel?: string;
+}
+
+async function pdmFetch<T>(path: string, options?: RequestInit): Promise<T> {
+  const res = await fetch(`${PDM_API}${path}`, {
+    headers: { 'Content-Type': 'application/json' },
+    ...options,
+  });
+  if (!res.ok) throw new Error(`pdm-api error: ${res.status} ${path}`);
+  return res.json();
+}
+
+export async function loadAttributeGroups(): Promise<AttributeGroup[]> {
+  const [projects, orders, tasks] = await Promise.all([
+    pdmFetch<SearchResult[]>('/search?type=PROJECT').catch(e => { console.error('PROJECT fetch failed:', e); return []; }),
+    pdmFetch<SearchResult[]>('/search?type=ORDER').catch(e => { console.error('ORDER fetch failed:', e); return []; }),
+    pdmFetch<SearchResult[]>('/search?type=TASK').catch(e => { console.error('TASK fetch failed:', e); return []; }),
+  ]);
+
+  const toAttr = (r: SearchResult, color: string): Attribute => ({
+    id: String(r.id),
+    type: r.type.toLowerCase() === 'order' ? 'purchase-order'
+        : r.type.toLowerCase() === 'project' ? 'project'
+        : 'task',
+    label: r.label,
+    subLabel: r.subLabel,
+    color,
+    entityType: r.type,
+    entityId: r.id,
+  });
+
+  return [
+    {
+      id: 'projects',
+      title: 'Projekte',
+      icon: '📁',
+      side: 'left',
+      items: projects.slice(0, 20).map(r => toAttr(r, '#3b82f6')),
+    },
+    {
+      id: 'orders',
+      title: 'Purchase Orders',
+      icon: '🛒',
+      side: 'left',
+      items: orders.slice(0, 20).map(r => toAttr(r, '#10b981')),
+    },
+    {
+      id: 'tasks',
+      title: 'Tasks',
+      icon: '📋',
+      side: 'right',
+      items: tasks.slice(0, 20).map(r => toAttr(r, '#f59e0b')),
+    },
+  ];
+}
+
+export async function saveEmailWithLink(
+  email: Email,
+  entityType: string,
+  entityId: number,
+): Promise<void> {
+  await pdmFetch('/emails', {
+    method: 'POST',
+    body: JSON.stringify({
+      messageId: email.id,
+      graphItemId: email.id,
+      subject: email.subject,
+      from: `${email.from} <${email.fromEmail}>`,
+      sentAt: email.receivedAt,
+      hasAttachments: email.hasAttachment,
+      kind: 'COMMUNICATION',
+      targets: [{ type: entityType, id: entityId }],
+    }),
+  });
+}
+
+export async function saveEmail(email: Email): Promise<void> {
+  // Swipe rechts ohne Attribut — mit OBJECT als Platzhalter ist nicht möglich.
+  // Wir speichern erst wenn ein Attribut zugewiesen wird.
+  // Diese Funktion ist ein No-op bis die API ein "save without target" unterstützt.
+  console.log('saveEmail (kein Target) — noch nicht implementiert', email.id);
+}
+
+interface EmailLink {
+  entityType: string;
+  entityId: number;
+  entityLabel: string;
+}
+
+export async function loadEmailLinks(messageId: string): Promise<EmailLink[]> {
+  try {
+    const data = await pdmFetch<{
+      links?: Array<{ entityType: string; entityId: number; label?: string }>;
+    }>(`/emails/by-message?messageId=${encodeURIComponent(messageId)}`);
+    return (data.links || []).map(l => ({
+      entityType: l.entityType,
+      entityId: l.entityId,
+      entityLabel: l.label || `${l.entityType} #${l.entityId}`,
+    }));
+  } catch {
+    return [];
+  }
+}

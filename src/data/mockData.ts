@@ -1,0 +1,103 @@
+import type { Email, AttributeGroup } from '../types/email';
+
+export const mockEmails: Email[] = [
+  {
+    id: '1',
+    from: 'Max Muster',
+    fromEmail: 'max.muster@lieferant.at',
+    subject: 'Angebot Welle GP-2026-04',
+    preview: 'Sehr geehrte Damen und Herren, anbei unser Angebot für die Welle...',
+    body: 'Sehr geehrte Damen und Herren,\n\nanbei unser Angebot für die Welle GP-2026-04. Wir können den gewünschten Termin einhalten.\n\nMit freundlichen Grüßen\nMax Muster',
+    receivedAt: '2026-05-27T10:34:00',
+    hasAttachment: true,
+    attachments: [{ id: 'a1', name: 'Angebot_Welle.pdf', size: 245000, contentType: 'application/pdf' }],
+    links: [],
+    status: 'unread',
+  },
+  {
+    id: '2',
+    from: 'Anna Schmidt',
+    fromEmail: 'a.schmidt@supplier.de',
+    subject: 'RE: Bestellung PO-2026-001',
+    preview: 'Die Lieferung ist für nächste Woche Dienstag bestätigt...',
+    body: 'Guten Tag,\n\ndie Lieferung ist für nächste Woche Dienstag bestätigt. Tracking-Nummer folgt.\n\nBest regards,\nAnna Schmidt',
+    receivedAt: '2026-05-27T09:20:00',
+    hasAttachment: false,
+    attachments: [],
+    links: [],
+    status: 'unread',
+  },
+  {
+    id: '3',
+    from: 'Thomas Berger',
+    fromEmail: 't.berger@firma.com',
+    subject: 'Freigabe Zeichnung V3 benötigt',
+    preview: 'Kannst du die aktualisierte Zeichnung noch heute freigeben?',
+    body: 'Hi,\n\nkannst du die aktualisierte Zeichnung V3 noch heute freigeben? Der Lieferant wartet.\n\nDanke,\nThomas',
+    receivedAt: '2026-05-27T08:55:00',
+    hasAttachment: true,
+    attachments: [{ id: 'a2', name: 'Zeichnung_V3.pdf', size: 1200000, contentType: 'application/pdf' }],
+    links: [],
+    status: 'unread',
+  },
+  {
+    id: '4',
+    from: 'Julia Maier',
+    fromEmail: 'j.maier@intern.at',
+    subject: 'Meeting morgen 14:00',
+    preview: 'Kurze Erinnerung: Morgen um 14:00 Uhr Review-Meeting für Phase 2...',
+    body: 'Hallo,\n\nkurze Erinnerung: Morgen um 14:00 Uhr Review-Meeting für Phase 2 in Raum 3.\n\nLG Julia',
+    receivedAt: '2026-05-26T16:10:00',
+    hasAttachment: false,
+    attachments: [],
+    links: [],
+    status: 'unread',
+  },
+];
+
+export const mockAttributeGroups: AttributeGroup[] = [
+  {
+    id: 'projects',
+    title: 'Projekte',
+    icon: '📁',
+    side: 'left',
+    items: [
+      { id: 'p1', type: 'project', label: 'GPH-001', color: '#3b82f6' },
+      { id: 'p2', type: 'project', label: 'GPH-002', color: '#3b82f6' },
+      { id: 'p3', type: 'project', label: 'Honey Badger', color: '#3b82f6' },
+    ],
+  },
+  {
+    id: 'pos',
+    title: 'Purchase Orders',
+    icon: '🛒',
+    side: 'left',
+    items: [
+      { id: 'po1', type: 'purchase-order', label: 'PO-2026-001', color: '#10b981' },
+      { id: 'po2', type: 'purchase-order', label: 'PO-2026-002', color: '#10b981' },
+      { id: 'po3', type: 'purchase-order', label: 'PO-2026-003', color: '#10b981' },
+    ],
+  },
+  {
+    id: 'tasks',
+    title: 'Tasks',
+    icon: '📋',
+    side: 'right',
+    items: [
+      { id: 't1', type: 'task', label: '#45 RFQ Welle', color: '#f59e0b' },
+      { id: 't2', type: 'task', label: '#46 Inspektion', color: '#f59e0b' },
+      { id: 't3', type: 'task', label: '#47 QC Entscheid', color: '#f59e0b' },
+    ],
+  },
+  {
+    id: 'tags',
+    title: 'Tags',
+    icon: '🏷',
+    side: 'right',
+    items: [
+      { id: 'tg1', type: 'tag', label: 'Dringend', color: '#ef4444' },
+      { id: 'tg2', type: 'tag', label: 'Warten', color: '#8b5cf6' },
+      { id: 'tg3', type: 'tag', label: 'Klären', color: '#6b7280' },
+    ],
+  },
+];

@@ -1,0 +1,115 @@
+.reply-tray {
+  background: #151728;
+  border-top: 1px solid #2d3148;
+  padding: 10px 20px;
+  min-height: 70px;
+  transition: background 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+
+.reply-tray.drag-over {
+  background: #1a2040;
+  border-top-color: #6366f1;
+}
+
+.reply-tray-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.reply-tray-icon { font-size: 14px; }
+
+.reply-tray-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6b7280;
+}
+
+.reply-tray-count {
+  background: #ef4444;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 99px;
+}
+
+.reply-tray-empty {
+  font-size: 12px;
+  color: #2d3148;
+  font-style: italic;
+}
+
+.reply-tray-items {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.reply-tray-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #1e2030;
+  border: 1px solid #2d3148;
+  border-radius: 8px;
+  padding: 7px 10px;
+  min-width: 180px;
+  max-width: 260px;
+}
+
+.reply-tray-card-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #3b4280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: #a5b4fc;
+  flex-shrink: 0;
+}
+
+.reply-tray-card-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.reply-tray-card-from {
+  font-size: 11px;
+  font-weight: 600;
+  color: #c8d0e0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reply-tray-card-subject {
+  font-size: 10px;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reply-tray-card-remove {
+  background: none;
+  border: none;
+  color: #4b5563;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 2px;
+  flex-shrink: 0;
+}
+
+.reply-tray-card-remove:hover { color: #ef4444; }
