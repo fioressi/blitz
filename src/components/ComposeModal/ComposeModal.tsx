@@ -100,12 +100,15 @@ export function ComposeModal({ mode, originalEmail, initialBody, instance, accou
     if (e.key === 'Escape') onClose();
   };
 
-  const runAi = async (question: string) => {
+  const runAi = async (question: string, source: 'original' | 'current' = 'original') => {
     setAiLoading(true);
     try {
+      const emailBody = source === 'current'
+        ? body
+        : (originalEmail ? (originalEmail.body || originalEmail.preview) : body);
       const answer = await askIgor({
         question,
-        emailBody: originalEmail ? (originalEmail.body || originalEmail.preview) : body,
+        emailBody,
         emailSubject: originalEmail?.subject,
       });
       setBody(answer);
@@ -190,10 +193,10 @@ export function ComposeModal({ mode, originalEmail, initialBody, instance, accou
                 🤖 Entwurf
               </button>
             )}
-            <button className="compose-ai-chip" onClick={() => runAi(IGOR_PROMPTS.translate)} disabled={aiLoading || sending}>
+            <button className="compose-ai-chip" onClick={() => runAi(IGOR_PROMPTS.translate, 'current')} disabled={aiLoading || sending || !body.trim()}>
               Übersetzen (DE)
             </button>
-            <button className="compose-ai-chip" onClick={() => runAi(IGOR_PROMPTS.improve)} disabled={aiLoading || sending || !body.trim()}>
+            <button className="compose-ai-chip" onClick={() => runAi(IGOR_PROMPTS.improve, 'current')} disabled={aiLoading || sending || !body.trim()}>
               Verbessern
             </button>
             {aiLoading && <span className="compose-ai-loading">Igor…</span>}

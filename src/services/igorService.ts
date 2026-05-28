@@ -39,9 +39,35 @@ export async function askIgor(opts: {
 }
 
 export const IGOR_PROMPTS = {
-  summarize:   'Fasse diese Email in 3–5 Sätzen zusammen.',
-  translate:   'Übersetze diese Email vollständig ins Deutsche.',
-  tasks:       'Extrahiere alle Aufgaben und To-dos als nummerierte Liste.',
-  draftReply:  'Schreibe eine professionelle, kurze Antwort auf diese Email.',
-  improve:     'Verbessere den folgenden Text stilistisch, behalte den Inhalt bei.',
+  summarize: `Fasse die folgende Email prägnant zusammen.
+Struktur:
+• Worum geht es? (1 Satz)
+• Wichtigste Punkte (2–3 Bullets)
+• Handlungsbedarf (falls vorhanden, sonst weglassen)
+Antworte auf Deutsch.`,
+
+  translate: `Übersetze die folgende Email vollständig ins Deutsche.
+Behalte Ton, Anrede und Formatierung des Originals bei.
+Gib nur die Übersetzung aus — keine Erklärungen, kein Präambel.`,
+
+  tasks: `Extrahiere alle Aufgaben, To-dos und Handlungspunkte aus der folgenden Email.
+Format: nummerierte Liste, ein Punkt pro Zeile.
+Für jeden Punkt: Was ist zu tun? Verantwortlicher und Deadline angeben, falls in der Email erwähnt.
+Falls keine konkreten Aufgaben vorhanden: Schreibe nur "Keine Aufgaben gefunden."
+Antworte auf Deutsch.`,
+
+  draftReply: `Schreibe eine professionelle Antwort auf die folgende Email.
+Regeln:
+• Ton: freundlich, klar, auf den Punkt
+• Sprache: dieselbe wie die Ursprungsemail
+• Adressiere alle gestellten Fragen und Punkte
+• Kein Betreff, keine Signatur — nur den Fließtext der Antwort
+• Maximal 150 Wörter`,
+
+  improve: `Verbessere den folgenden Text sprachlich und stilistisch.
+Regeln:
+• Inhalt und Kernaussagen bleiben unverändert
+• Verbessere Grammatik, Satzbau und Professionalität
+• Behalte die Sprache des Originals bei (Deutsch bleibt Deutsch, Englisch bleibt Englisch)
+• Gib nur den verbesserten Text aus — keine Erklärungen, kein Kommentar`,
 };
