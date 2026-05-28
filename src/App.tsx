@@ -6,7 +6,7 @@ import { useMsal } from '@azure/msal-react';
 import type { Email, EmailLink, AttributeGroup } from './types/email';
 import { mockAttributeGroups } from './data/mockData';
 import { getInboxMessages, getMessageDetail } from './services/graphService';
-import { loadAttributeGroups, saveEmailWithLink, loadEmailLinks, loadEmailUserStates, setEmailState, clearEmailState, saveEmailRecord, loadBlitzSentEmails } from './services/pdmApiService';
+import { loadAttributeGroups, saveEmailWithLink, loadEmailLinks, loadEmailUserStates, setEmailState, clearEmailState, saveEmailRecord, loadBlitzSentEmails, loadEmailsForEntity } from './services/pdmApiService';
 import { AttributePanel } from './components/AttributePanel/AttributePanel';
 import { EmailCard } from './components/EmailCard/EmailCard';
 import { ReplyTray } from './components/ReplyTray/ReplyTray';
@@ -86,6 +86,11 @@ export default function App() {
   const [composeState, setComposeState] = useState<
     { mode: 'new' } | { mode: 'reply'; email: Email; initialBody?: string } | null
   >(null);
+  const [entityFilter, setEntityFilter] = useState<{
+    attribute: Attribute;
+    emails: Email[];
+    loading: boolean;
+  } | null>(null);
 
   const leftGroups = attributeGroups.filter(g => g.side === 'left');
   const rightGroups = attributeGroups.filter(g => g.side === 'right');
@@ -286,6 +291,22 @@ export default function App() {
     setEmails(prev => prev.map(e => e.id === id ? { ...e, status: 'saved' } : e));
   };
 
+  const handleEntityFilter = async (attribute: Attribute) => {
+    if (entityFilter?.attribute.id === attribute.id) {
+      setEntityFilter(null);
+      return;
+    }
+    if (!attribute.entityType || attribute.entityId == null) return;
+    setEntityFilter({ attribute, emails: [], loading: true });
+    const dbEmails = await loadEmailsForEntity(attribute.entityType, attribute.entityId);
+    const allLoaded = [...emails, ...sentEmails];
+    const merged = dbEmails.map(dbEmail => {
+      const mem = allLoaded.find(e => e.id === dbEmail.id);
+      return mem ? { ...dbEmail, ...mem } : dbEmail;
+    });
+    setEntityFilter({ attribute, emails: merged, loading: false });
+  };
+
   const handleRemoveFromReplyTray = (emailId: string) => {
     removeStoredId(LS_REPLY, emailId);
     if (userId) clearEmailState(emailId, userId).catch(console.error);
@@ -312,7 +333,7 @@ export default function App() {
         <div className={`app-body ${isDraggingCard ? 'card-dragging' : ''}`}>
           {drawerOpen && <div className="drawer-overlay" onClick={() => setDrawerOpen(null)} />}
           <aside className={`panel-left ${drawerOpen === 'left' ? 'drawer-open' : ''}`}>
-            <AttributePanel groups={leftGroups} onNew={type => setCreateModal(type)} onItemClick={setSelectedAttribute} />
+            <AttributePanel groups={leftGroups} onNew={type => setCreateModal(type)} onItemClick={setSelectedAttribute} onFilter={handleEntityFilter} activeFilterId={entityFilter?.attribute.id} />
           </aside>
 
           <main className="inbox">
@@ -353,8 +374,42 @@ export default function App() {
               </button>
             </div>
 
+            {entityFilter && (
+              <div className="entity-filter-bar">
+                <span className="entity-filter-icon">
+                  {entityFilter.attribute.type === 'project' ? '📁'
+                    : entityFilter.attribute.type === 'task' ? '📋'
+                    : '🛒'}
+                </span>
+                <span className="entity-filter-label">{entityFilter.attribute.label}</span>
+                {entityFilter.attribute.subLabel && (
+                  <span className="entity-filter-sub">{entityFilter.attribute.subLabel}</span>
+                )}
+                <button className="entity-filter-clear" onClick={() => setEntityFilter(null)}>×</button>
+              </div>
+            )}
+
             <div className="inbox-list">
-              {(loading && activeTab !== 'sent') || (sentLoading && activeTab === 'sent') ? (
+              {entityFilter?.loading ? (
+                <div className="inbox-loading">Emails werden gefiltert…</div>
+              ) : entityFilter ? (
+                entityFilter.emails.length === 0 ? (
+                  <div className="inbox-empty">Keine verknüpften Emails gefunden</div>
+                ) : (
+                  entityFilter.emails.map(email => (
+                    <EmailCard
+                      key={email.id}
+                      email={email}
+                      onSwipeLeft={handleSwipeLeft}
+                      onSwipeRight={handleSwipeRight}
+                      onClick={handleOpenEmail}
+                      onDragStart={() => setIsDraggingCard(true)}
+                      onDragEnd={() => setIsDraggingCard(false)}
+                      showReplyHandle={false}
+                    />
+                  ))
+                )
+              ) : (loading && activeTab !== 'sent') || (sentLoading && activeTab === 'sent') ? (
                 <div className="inbox-loading">Emails werden geladen…</div>
               ) : loadError && activeTab !== 'sent' ? (
                 <div className="inbox-error">Fehler: {loadError}</div>
@@ -393,7 +448,7 @@ export default function App() {
           </main>
 
           <aside className={`panel-right ${drawerOpen === 'right' ? 'drawer-open' : ''}`}>
-            <AttributePanel groups={rightGroups} onNew={type => setCreateModal(type)} onItemClick={setSelectedAttribute} />
+            <AttributePanel groups={rightGroups} onNew={type => setCreateModal(type)} onItemClick={setSelectedAttribute} onFilter={handleEntityFilter} activeFilterId={entityFilter?.attribute.id} />
           </aside>
         </div>
 

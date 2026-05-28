@@ -287,6 +287,33 @@ export async function loadContacts(): Promise<CrmContact[]> {
   }
 }
 
+export async function loadEmailsForEntity(entityType: string, entityId: number): Promise<Email[]> {
+  try {
+    const rows = await pdmFetch<DbEmailRow[]>(
+      `/emails?entityType=${encodeURIComponent(entityType)}&entityId=${entityId}`,
+    );
+    return rows.map(r => ({
+      id: r.MessageId,
+      from: r.FromAddr,
+      fromEmail: r.FromAddr,
+      to: r.ToAddr || undefined,
+      toEmail: r.ToAddr || undefined,
+      subject: r.Subject,
+      preview: '',
+      body: '',
+      bodyIsHtml: false,
+      receivedAt: r.LinkedAt || r.SentAt,
+      hasAttachment: false,
+      attachments: [],
+      links: [],
+      status: 'read' as const,
+      isSent: false,
+    }));
+  } catch {
+    return [];
+  }
+}
+
 export async function loadEmailLinks(messageId: string): Promise<EmailLink[]> {
   try {
     const data = await pdmFetch<{

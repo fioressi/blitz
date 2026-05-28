@@ -126,6 +126,17 @@
   cursor: grabbing;
 }
 
+.attribute-item--filtered {
+  background: rgba(102,217,239,.1);
+  border-color: rgba(102,217,239,.5);
+  border-left-color: var(--accent);
+}
+
+.attribute-item--filtered .attribute-item-label {
+  color: var(--accent);
+  font-weight: 700;
+}
+
 .attribute-drag-overlay {
   box-shadow: 0 16px 48px rgba(0,0,0,.5);
   transform: scale(1.05);

@@ -7,9 +7,16 @@ interface Props {
   groups: AttributeGroup[];
   onNew?: (type: 'task' | 'project') => void;
   onItemClick?: (attribute: Attribute) => void;
+  onFilter?: (attribute: Attribute) => void;
+  activeFilterId?: string;
 }
 
-function DraggableAttribute({ attribute, onClick }: { attribute: Attribute; onClick?: (a: Attribute) => void }) {
+function DraggableAttribute({ attribute, onClick, onFilter, isFiltered }: {
+  attribute: Attribute;
+  onClick?: (a: Attribute) => void;
+  onFilter?: (a: Attribute) => void;
+  isFiltered?: boolean;
+}) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: attribute.id,
     data: attribute,
@@ -24,12 +31,16 @@ function DraggableAttribute({ attribute, onClick }: { attribute: Attribute; onCl
   return (
     <div
       ref={setNodeRef}
-      className="attribute-item"
+      className={`attribute-item ${isFiltered ? 'attribute-item--filtered' : ''}`}
       style={style}
       {...listeners}
       {...attributes}
     >
-      <div className="attribute-item-content">
+      <div
+        className="attribute-item-content"
+        onClick={onFilter ? (e) => { e.stopPropagation(); onFilter(attribute); } : undefined}
+        style={onFilter ? { cursor: 'pointer' } : undefined}
+      >
         <span className="attribute-item-label">{attribute.label}</span>
         {attribute.subLabel && (
           <span className="attribute-item-sublabel">{attribute.subLabel}</span>
@@ -46,7 +57,7 @@ function DraggableAttribute({ attribute, onClick }: { attribute: Attribute; onCl
   );
 }
 
-export function AttributePanel({ groups, onNew, onItemClick }: Props) {
+export function AttributePanel({ groups, onNew, onItemClick, onFilter, activeFilterId }: Props) {
   return (
     <div className="attribute-panel">
       {groups.map(group => (
@@ -66,7 +77,13 @@ export function AttributePanel({ groups, onNew, onItemClick }: Props) {
           </div>
           <div className="attribute-items">
             {group.items.map(item => (
-              <DraggableAttribute key={item.id} attribute={item} onClick={onItemClick} />
+              <DraggableAttribute
+                key={item.id}
+                attribute={item}
+                onClick={onItemClick}
+                onFilter={onFilter}
+                isFiltered={activeFilterId === item.id}
+              />
             ))}
           </div>
         </div>
