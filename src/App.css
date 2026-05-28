@@ -146,3 +146,75 @@
   padding: 40px;
   font-style: italic;
 }
+
+/* ── Drawer toggle buttons (nur auf Mobile sichtbar) ── */
+.app-drawer-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: 1px solid #2d3148;
+  border-radius: 6px;
+  color: #6b7280;
+  cursor: pointer;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.app-drawer-btn:hover {
+  border-color: #4b5280;
+  color: #9ca3af;
+}
+
+/* ── Drawer Overlay ── */
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 199;
+  backdrop-filter: blur(2px);
+}
+
+/* ── Mobile Layout ── */
+@media (max-width: 768px) {
+  .app-drawer-btn { display: flex; }
+
+  .panel-left,
+  .panel-right {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    z-index: 200;
+    width: 260px;
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .panel-left {
+    left: 0;
+    border-right: 1px solid #3d4168;
+    transform: translateX(-100%);
+  }
+
+  .panel-right {
+    right: 0;
+    border-left: 1px solid #3d4168;
+    border-right: none;
+    transform: translateX(100%);
+  }
+
+  .panel-left.drawer-open  { transform: translateX(0); }
+  .panel-right.drawer-open { transform: translateX(0); }
+
+  .app-user {
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .app-stats { display: none; }
+
+  .inbox { padding: 0 8px; }
+}

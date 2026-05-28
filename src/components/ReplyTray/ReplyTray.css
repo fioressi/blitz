@@ -113,3 +113,20 @@
 }
 
 .reply-tray-card-remove:hover { color: #ef4444; }
+
+@media (max-width: 768px) {
+  .reply-tray {
+    padding: 8px 12px;
+    min-height: 52px;
+  }
+
+  .reply-tray-items {
+    gap: 6px;
+  }
+
+  .reply-tray-card {
+    min-width: 140px;
+    max-width: 200px;
+    padding: 5px 8px;
+  }
+}

@@ -31,6 +31,7 @@ export default function App() {
   const [attributeGroups, setAttributeGroups] = useState<AttributeGroup[]>(mockAttributeGroups);
   const [isDraggingCard, setIsDraggingCard] = useState(false);
   const [activeAttribute, setActiveAttribute] = useState<Attribute | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState<'left' | 'right' | null>(null);
 
   const leftGroups = attributeGroups.filter(g => g.side === 'left');
   const rightGroups = attributeGroups.filter(g => g.side === 'right');
@@ -159,17 +160,20 @@ export default function App() {
       <DndContext sensors={sensors} onDragStart={handleDndDragStart} onDragEnd={handleDndDragEnd}>
       <div className="app">
         <header className="app-header">
+          <button className="app-drawer-btn" onClick={() => setDrawerOpen(d => d === 'left' ? null : 'left')}>📁</button>
           <div className="app-logo">⚡ BLITZ</div>
           <div className="app-header-right">
             {user && <span className="app-user">{user.name}</span>}
             <span className="app-stats">{activeEmails.length} ungelesen</span>
             <button className="app-refresh" onClick={loadEmails} title="Aktualisieren">↻</button>
+            <button className="app-drawer-btn" onClick={() => setDrawerOpen(d => d === 'right' ? null : 'right')}>📋</button>
             <button className="app-logout" onClick={() => instance.logoutRedirect()}>Abmelden</button>
           </div>
         </header>
 
         <div className={`app-body ${isDraggingCard ? 'card-dragging' : ''}`}>
-          <aside className="panel-left">
+          {drawerOpen && <div className="drawer-overlay" onClick={() => setDrawerOpen(null)} />}
+          <aside className={`panel-left ${drawerOpen === 'left' ? 'drawer-open' : ''}`}>
             <AttributePanel groups={leftGroups} />
           </aside>
 
@@ -200,7 +204,7 @@ export default function App() {
             </div>
           </main>
 
-          <aside className="panel-right">
+          <aside className={`panel-right ${drawerOpen === 'right' ? 'drawer-open' : ''}`}>
             <AttributePanel groups={rightGroups} />
           </aside>
         </div>
