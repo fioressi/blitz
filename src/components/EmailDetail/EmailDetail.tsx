@@ -204,29 +204,6 @@ export function EmailDetail({ email, loading, instance, account, onClose, onSwip
               </div>
             </div>
 
-            <div className="email-detail-subject">{email.subject}</div>
-
-            {email.links.length > 0 && (
-              <div className="email-detail-links">
-                {email.links.map((link, i) => (
-                  <span key={i} className={`email-link-tag link-type-${link.attributeType}`}>
-                    {link.label}
-                  </span>
-                ))}
-              </div>
-            )}
-
-            {loading ? (
-              <div className="email-detail-loading">Inhalt wird geladen…</div>
-            ) : email.bodyIsHtml ? (
-              <div
-                className="email-detail-body email-detail-body--html"
-                dangerouslySetInnerHTML={{ __html: email.body }}
-              />
-            ) : (
-              <div className="email-detail-body">{email.body || email.preview}</div>
-            )}
-
             {(email.attachments.length > 0 || email.hasAttachment) && (
               <div className="email-detail-attachments">
                 <div className="attachments-title">
@@ -259,6 +236,29 @@ export function EmailDetail({ email, loading, instance, account, onClose, onSwip
                   </div>
                 ))}
               </div>
+            )}
+
+            <div className="email-detail-subject">{email.subject}</div>
+
+            {email.links.length > 0 && (
+              <div className="email-detail-links">
+                {email.links.map((link, i) => (
+                  <span key={i} className={`email-link-tag link-type-${link.attributeType}`}>
+                    {link.label}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {loading ? (
+              <div className="email-detail-loading">Inhalt wird geladen…</div>
+            ) : email.bodyIsHtml ? (
+              <div
+                className="email-detail-body email-detail-body--html"
+                dangerouslySetInnerHTML={{ __html: email.body }}
+              />
+            ) : (
+              <div className="email-detail-body">{email.body || email.preview}</div>
             )}
 
             {/* ── PDM Attachment Picker ── */}
