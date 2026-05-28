@@ -477,19 +477,56 @@ export async function loadBrettInvoices(filter?: {
   } catch { return []; }
 }
 
+const ATT_TYPE_LABELS: Record<string, string> = {
+  DRAWING:       'Zeichnung',
+  SPEC:          'Spezifikation',
+  QUOTE:         'Angebot',
+  OFFER:         'Angebot',
+  INVOICE:       'Rechnung',
+  DELIVERY_NOTE: 'Lieferschein',
+  CERTIFICATE:   'Zertifikat',
+  IMAGE:         'Bild',
+  SHIPPING:      'Versand',
+  OTHER:         'Datei',
+};
+
+function fileIcon(name: string): string {
+  const ext = (name.split('.').pop() || '').toLowerCase();
+  if (ext === 'pdf') return '📄';
+  if (['stp', 'step', 'stl', 'igs', 'iges', 'obj', 'sat'].includes(ext)) return '🔩';
+  if (['dxf', 'dwg'].includes(ext)) return '📐';
+  if (['jpg', 'jpeg', 'png', 'bmp', 'gif', 'svg', 'tif', 'tiff'].includes(ext)) return '🖼️';
+  if (['xlsx', 'xls', 'csv', 'ods'].includes(ext)) return '📊';
+  if (['docx', 'doc', 'odt', 'rtf', 'txt'].includes(ext)) return '📝';
+  if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext)) return '📦';
+  if (['eml', 'msg'].includes(ext)) return '✉️';
+  return '📎';
+}
+
 export async function loadAttachmentsForEntity(entityType: string, entityId: number): Promise<BrettItem[]> {
   try {
-    const data = await pdmFetch<Array<{ AttachmentId: number; FileName: string; FileSize?: number; MimeType?: string }>>(
+    const data = await pdmFetch<Array<{
+      AttachmentId: number;
+      FileName: string;
+      FileSize?: number;
+      MimeType?: string;
+      AttachmentType?: string;
+    }>>(
       `/attachments?entityType=${encodeURIComponent(entityType)}&entityId=${entityId}`,
     );
-    return data.map(r => ({
-      id: `FILE:${r.AttachmentId}`,
-      title: r.FileName,
-      subtitle: r.MimeType,
-      meta: r.FileSize != null ? `${Math.round(r.FileSize / 1024)} KB` : undefined,
-      entityType: 'FILE',
-      entityId: r.AttachmentId,
-    }));
+    return data.map(r => {
+      const icon = fileIcon(r.FileName);
+      const typeLabel = r.AttachmentType ? (ATT_TYPE_LABELS[r.AttachmentType] ?? r.AttachmentType) : undefined;
+      const sizeLabel = r.FileSize != null ? `${Math.round(r.FileSize / 1024)} KB` : undefined;
+      return {
+        id: `FILE:${r.AttachmentId}`,
+        title: `${icon} ${r.FileName}`,
+        subtitle: typeLabel,
+        meta: sizeLabel,
+        entityType: 'FILE',
+        entityId: r.AttachmentId,
+      };
+    });
   } catch { return []; }
 }
 
