@@ -426,18 +426,35 @@ export default function App() {
             instance={instance}
             account={user}
             onClose={() => setComposeState(null)}
-            onSent={() => {
+            onSent={(sentData) => {
               if (composeState.mode === 'reply') {
                 const original = composeState.email;
-                // Mark as replied in state + DB
                 addStoredId(LS_REPLY, original.id);
                 if (userId) setEmailState(original.id, 'REPLY', userId).catch(console.error);
                 setEmails(prev => prev.map(e => e.id === original.id ? { ...e, status: 'to-reply' } : e));
-                // Save original email to PDM_db (LinkedBy = userId)
                 if (userId) saveEmailRecord(original, userId).catch(e => console.error('[blitz] saveEmailRecord failed:', e));
+              } else if (sentData && userId && user) {
+                // Neue Email: synthetischen DB-Eintrag anlegen (kein Graph-MessageId verfügbar)
+                const synthetic: Email = {
+                  id: `blitz-sent-${Date.now()}`,
+                  from: user.name || user.username,
+                  fromEmail: user.username,
+                  to: sentData.to,
+                  toEmail: sentData.to,
+                  subject: sentData.subject,
+                  preview: '',
+                  body: '',
+                  bodyIsHtml: false,
+                  receivedAt: new Date().toISOString(),
+                  hasAttachment: false,
+                  attachments: [],
+                  links: [],
+                  status: 'unread',
+                  isSent: true,
+                };
+                saveEmailRecord(synthetic, userId).catch(e => console.error('[blitz] saveEmailRecord (new) failed:', e));
               }
               setComposeState(null);
-              // Reload sent tab if currently open
               setSentLoaded(false);
               if (activeTab === 'sent') {
                 setSentEmails([]);

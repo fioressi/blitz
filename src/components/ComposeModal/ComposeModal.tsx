@@ -13,7 +13,7 @@ interface Props {
   instance: IPublicClientApplication;
   account: AccountInfo;
   onClose: () => void;
-  onSent?: () => void;
+  onSent?: (sentData?: { to: string; subject: string }) => void;
 }
 
 function buildQuotedHtml(email: Email): string {
@@ -87,7 +87,7 @@ export function ComposeModal({ mode, originalEmail, initialBody, instance, accou
         subject: subject.trim(),
         htmlBody,
       });
-      onSent?.();
+      onSent?.({ to: toList[0], subject: subject.trim() });
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Fehler beim Senden.');
