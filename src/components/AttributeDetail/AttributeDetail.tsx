@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { Attribute } from '../../types/email';
-import { fetchAttributeDetail, updateAttributeDetail } from '../../services/pdmApiService';
-import type { AttributeDetailData } from '../../services/pdmApiService';
+import { fetchAttributeDetail, updateAttributeDetail, loadContacts } from '../../services/pdmApiService';
+import type { AttributeDetailData, CrmContact } from '../../services/pdmApiService';
 import './AttributeDetail.css';
 
 interface Props {
@@ -187,7 +187,7 @@ function EditForm({ type, form, onChange, onSave, onCancel, saving, error }: Edi
         <>
           <FormField label="Name" value={form.projectName || ''} onChange={v => onChange('projectName', v)} />
           <FormField label="Beschreibung" value={form.description || ''} onChange={v => onChange('description', v)} multiline />
-          <FormField label="Zugewiesen" value={form.assignedTo || ''} onChange={v => onChange('assignedTo', v)} />
+          <ContactSelect value={form.assignedTo || ''} onChange={v => onChange('assignedTo', v)} />
         </>
       )}
       {type === 'task' && (
@@ -196,7 +196,7 @@ function EditForm({ type, form, onChange, onSave, onCancel, saving, error }: Edi
           <FormSelect label="Typ" value={form.taskType || ''} options={TASK_TYPE_OPTIONS} onChange={v => onChange('taskType', v)} />
           <FormSelect label="Priorität" value={form.priority || ''} options={PRIORITY_OPTIONS} onChange={v => onChange('priority', v)} />
           <FormSelect label="Status" value={form.status || ''} options={STATUS_TASK_OPTIONS} onChange={v => onChange('status', v)} />
-          <FormField label="Zugewiesen" value={form.assignedTo || ''} onChange={v => onChange('assignedTo', v)} />
+          <ContactSelect value={form.assignedTo || ''} onChange={v => onChange('assignedTo', v)} />
           <FormField label="Fällig" value={form.dueAt ? form.dueAt.slice(0, 10) : ''} onChange={v => onChange('dueAt', v)} type="date" />
           <FormField label="Beschreibung" value={form.description || ''} onChange={v => onChange('description', v)} multiline />
         </>
@@ -213,6 +213,34 @@ function EditForm({ type, form, onChange, onSave, onCancel, saving, error }: Edi
           {saving ? 'Speichert…' : 'Speichern'}
         </button>
       </div>
+    </div>
+  );
+}
+
+function ContactSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [contacts, setContacts] = useState<CrmContact[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadContacts().then(c => { setContacts(c); setLoading(false); });
+  }, []);
+
+  return (
+    <div className="attr-form-field">
+      <label className="attr-form-label">Zugewiesen</label>
+      <select
+        className="attr-form-input"
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        disabled={loading}
+      >
+        <option value="">{loading ? 'Lädt…' : '— wählen —'}</option>
+        {contacts.map(c => (
+          <option key={c.id} value={c.label} title={c.subLabel}>
+            {c.label}{c.subLabel ? ` · ${c.subLabel}` : ''}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }

@@ -270,6 +270,23 @@ export async function loadBlitzSentEmails(userId: string): Promise<Email[]> {
   }
 }
 
+export interface CrmContact {
+  id: number;
+  label: string;
+  subLabel?: string;
+}
+
+export async function loadContacts(): Promise<CrmContact[]> {
+  try {
+    const data = await pdmFetch<Array<{ type: string; id: number; label: string; subLabel?: string }>>(
+      '/search?type=CONTACT',
+    );
+    return data.map(r => ({ id: r.id, label: r.label, subLabel: r.subLabel }));
+  } catch {
+    return [];
+  }
+}
+
 export async function loadEmailLinks(messageId: string): Promise<EmailLink[]> {
   try {
     const data = await pdmFetch<{
