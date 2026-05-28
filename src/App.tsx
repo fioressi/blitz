@@ -21,6 +21,7 @@ import './App.css';
 const LS_DISMISSED = 'blitz_dismissed';
 const LS_READ      = 'blitz_read';
 const LS_SAVED     = 'blitz_saved';
+const LS_LINKS     = 'blitz_links';
 
 function getStoredIds(key: string): Set<string> {
   try { return new Set(JSON.parse(localStorage.getItem(key) || '[]')); }
@@ -30,6 +31,19 @@ function getStoredIds(key: string): Set<string> {
 function addStoredId(key: string, id: string) {
   const next = [...getStoredIds(key), id].slice(-2000);
   localStorage.setItem(key, JSON.stringify(next));
+}
+
+function getStoredLinks(): Record<string, EmailLink[]> {
+  try { return JSON.parse(localStorage.getItem(LS_LINKS) || '{}'); }
+  catch { return {}; }
+}
+
+function addStoredLink(messageId: string, link: EmailLink) {
+  const all = getStoredLinks();
+  const existing = all[messageId] || [];
+  if (existing.some(l => l.attributeId === link.attributeId)) return;
+  all[messageId] = [...existing, link];
+  localStorage.setItem(LS_LINKS, JSON.stringify(all));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -78,14 +92,20 @@ export default function App() {
     setLoadError(null);
     try {
       const msgs = await getInboxMessages(instance, user);
-      const dismissed = getStoredIds(LS_DISMISSED);
-      const readIds   = getStoredIds(LS_READ);
-      const savedIds  = getStoredIds(LS_SAVED);
+      const dismissed   = getStoredIds(LS_DISMISSED);
+      const readIds     = getStoredIds(LS_READ);
+      const savedIds    = getStoredIds(LS_SAVED);
+      const storedLinks = getStoredLinks();
       const filtered = msgs
         .filter(m => !dismissed.has(m.id))
-        .map(m => readIds.has(m.id)  ? { ...m, status: 'read'  as const }
-                : savedIds.has(m.id) ? { ...m, status: 'saved' as const }
-                : m);
+        .map(m => {
+          let em: Email = readIds.has(m.id)  ? { ...m, status: 'read'  as const }
+                        : savedIds.has(m.id) ? { ...m, status: 'saved' as const }
+                        : m;
+          const cached = storedLinks[m.id];
+          if (cached && cached.length > 0) em = { ...em, links: cached };
+          return em;
+        });
       setEmails(filtered);
       // restore reply tray from local state
       setReplyEmails(filtered.filter(e => e.status === 'to-reply'));
@@ -188,6 +208,8 @@ export default function App() {
       if (alreadyLinked) return e;
       return { ...e, links: [...e.links, link] };
     }));
+
+    addStoredLink(emailId, link);
 
     if (link.entityType && link.entityId != null) {
       const email = emails.find(e => e.id === emailId);
