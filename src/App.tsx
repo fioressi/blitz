@@ -97,11 +97,13 @@ export default function App() {
     if (!user) return;
     setLoading(true);
     setLoadError(null);
+    console.log('[blitz] loadEmails — userId:', userId, '| username:', user.username, '| homeAccountId:', user.homeAccountId);
     try {
       const [msgs, apiStates] = await Promise.all([
         getInboxMessages(instance, user),
         userId ? loadEmailUserStates(userId) : Promise.resolve([]),
       ]);
+      console.log('[blitz] apiStates from DB:', apiStates.length, apiStates);
 
       // Start with localStorage cache (fast / offline fallback)
       const dismissed = getStoredIds(LS_DISMISSED);
@@ -177,7 +179,7 @@ export default function App() {
   const handleSwipeLeft = (id: string) => {
     addStoredId(LS_DISMISSED, id);
     removeStoredId(LS_REPLY, id);
-    if (userId) setEmailState(id, 'DISMISSED', userId).catch(console.error);
+    if (userId) setEmailState(id, 'DISMISSED', userId).then(() => console.log('[blitz] DISMISSED saved to DB:', id)).catch(e => console.error('[blitz] DB write failed:', e));
     setEmails(prev => prev.filter(e => e.id !== id));
     setReplyEmails(prev => prev.filter(e => e.id !== id));
   };
@@ -185,7 +187,7 @@ export default function App() {
   const handleSwipeRight = (id: string) => {
     addStoredId(LS_READ, id);
     removeStoredId(LS_REPLY, id);
-    if (userId) setEmailState(id, 'READ', userId).catch(console.error);
+    if (userId) setEmailState(id, 'READ', userId).then(() => console.log('[blitz] READ saved to DB:', id)).catch(e => console.error('[blitz] DB write failed:', e));
     setEmails(prev => prev.map(e => e.id === id ? { ...e, status: 'read' } : e));
     setReplyEmails(prev => prev.filter(e => e.id !== id));
   };
@@ -275,7 +277,7 @@ export default function App() {
           <button className="app-drawer-btn" onClick={() => setDrawerOpen(d => d === 'left' ? null : 'left')}>📁</button>
           <div className="app-logo">⚡ BLITZ</div>
           <div className="app-header-right">
-            {user && <span className="app-user">{user.name}</span>}
+            {user && <span className="app-user" title={`id: ${userId}`}>{user.name}</span>}
             <button className="app-refresh" onClick={loadEmails} title="Aktualisieren">↻</button>
             <button className="app-drawer-btn" onClick={() => setDrawerOpen(d => d === 'right' ? null : 'right')}>📋</button>
             <button className="app-logout" onClick={() => instance.logoutRedirect()}>Abmelden</button>
