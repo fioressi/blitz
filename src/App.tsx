@@ -84,7 +84,7 @@ export default function App() {
   const [sentLoading, setSentLoading] = useState(false);
   const [sentLoaded, setSentLoaded] = useState(false);
   const [composeState, setComposeState] = useState<
-    { mode: 'new' } | { mode: 'reply'; email: Email } | null
+    { mode: 'new' } | { mode: 'reply'; email: Email; initialBody?: string } | null
   >(null);
 
   const leftGroups = attributeGroups.filter(g => g.side === 'left');
@@ -404,7 +404,7 @@ export default function App() {
           onClose={() => setSelectedEmail(null)}
           onSwipeLeft={handleSwipeLeft}
           onSwipeRight={handleSwipeRight}
-          onReply={email => setComposeState({ mode: 'reply', email })}
+          onReply={(email, initialBody) => setComposeState({ mode: 'reply', email, initialBody })}
         />
 
         {selectedAttribute && (
@@ -418,6 +418,7 @@ export default function App() {
           <ComposeModal
             mode={composeState.mode}
             originalEmail={composeState.mode === 'reply' ? composeState.email : undefined}
+            initialBody={composeState.mode === 'reply' ? composeState.initialBody : undefined}
             instance={instance}
             account={user}
             onClose={() => setComposeState(null)}

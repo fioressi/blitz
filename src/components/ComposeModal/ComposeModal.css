@@ -113,6 +113,40 @@
 }
 .compose-cc-btn:hover { border-color: var(--accent); color: var(--accent); }
 
+/* AI Toolbar */
+.compose-ai-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, .06);
+  flex-wrap: wrap;
+}
+
+.compose-ai-chip {
+  background: rgba(255, 214, 102, .07);
+  border: 1px solid rgba(255, 214, 102, .22);
+  border-radius: 16px;
+  color: #ffd166;
+  font-size: .75rem;
+  padding: 3px 10px;
+  cursor: pointer;
+  transition: background .15s;
+}
+.compose-ai-chip:hover:not(:disabled) { background: rgba(255, 214, 102, .15); }
+.compose-ai-chip:disabled { opacity: .35; cursor: not-allowed; }
+
+.compose-ai-loading {
+  font-size: .75rem;
+  color: #ffd166;
+  opacity: .7;
+  animation: compose-ai-pulse 1s ease-in-out infinite;
+}
+@keyframes compose-ai-pulse {
+  0%, 100% { opacity: .4; }
+  50%       { opacity: 1; }
+}
+
 /* Body textarea */
 .compose-body {
   flex: 1;

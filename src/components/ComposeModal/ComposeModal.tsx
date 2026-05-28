@@ -3,11 +3,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { IPublicClientApplication, AccountInfo } from '@azure/msal-browser';
 import type { Email } from '../../types/email';
 import { sendMail } from '../../services/graphService';
+import { askIgor, IGOR_PROMPTS } from '../../services/igorService';
 import './ComposeModal.css';
 
 interface Props {
   mode: 'new' | 'reply';
   originalEmail?: Email;
+  initialBody?: string;
   instance: IPublicClientApplication;
   account: AccountInfo;
   onClose: () => void;
@@ -45,17 +47,19 @@ function textToHtml(text: string): string {
     .replace(/\n/g, '<br>');
 }
 
-export function ComposeModal({ mode, originalEmail, instance, account, onClose, onSent }: Props) {
+export function ComposeModal({ mode, originalEmail, initialBody, instance, account, onClose, onSent }: Props) {
   const [to, setTo] = useState('');
   const [cc, setCc] = useState('');
   const [showCc, setShowCc] = useState(false);
   const [subject, setSubject] = useState('');
-  const [body, setBody] = useState('');
+  const [body, setBody] = useState(initialBody ?? '');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
+    if (initialBody) setBody(initialBody);
     if (mode === 'reply' && originalEmail) {
       setTo(originalEmail.fromEmail);
       setSubject(
@@ -94,6 +98,23 @@ export function ComposeModal({ mode, originalEmail, instance, account, onClose, 
 
   const handleKey = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') onClose();
+  };
+
+  const runAi = async (question: string) => {
+    setAiLoading(true);
+    try {
+      const answer = await askIgor({
+        question,
+        emailBody: originalEmail ? (originalEmail.body || originalEmail.preview) : body,
+        emailSubject: originalEmail?.subject,
+      });
+      setBody(answer);
+      bodyRef.current?.focus();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Igor Fehler');
+    } finally {
+      setAiLoading(false);
+    }
   };
 
   return (
@@ -161,6 +182,21 @@ export function ComposeModal({ mode, originalEmail, instance, account, onClose, 
                 placeholder="Betreff..."
               />
             </div>
+          </div>
+
+          <div className="compose-ai-toolbar">
+            {mode === 'reply' && (
+              <button className="compose-ai-chip" onClick={() => runAi(IGOR_PROMPTS.draftReply)} disabled={aiLoading || sending}>
+                🤖 Entwurf
+              </button>
+            )}
+            <button className="compose-ai-chip" onClick={() => runAi(IGOR_PROMPTS.translate)} disabled={aiLoading || sending}>
+              Übersetzen (DE)
+            </button>
+            <button className="compose-ai-chip" onClick={() => runAi(IGOR_PROMPTS.improve)} disabled={aiLoading || sending || !body.trim()}>
+              Verbessern
+            </button>
+            {aiLoading && <span className="compose-ai-loading">Igor…</span>}
           </div>
 
           <textarea

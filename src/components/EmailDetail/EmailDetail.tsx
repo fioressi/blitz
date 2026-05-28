@@ -1,5 +1,7 @@
+import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Email } from '../../types/email';
+import { askIgor, IGOR_PROMPTS } from '../../services/igorService';
 import './EmailDetail.css';
 
 interface Props {
@@ -8,21 +10,61 @@ interface Props {
   onClose: () => void;
   onSwipeLeft: (id: string) => void;
   onSwipeRight: (id: string) => void;
-  onReply?: (email: Email) => void;
+  onReply?: (email: Email, initialBody?: string) => void;
 }
 
 export function EmailDetail({ email, loading, onClose, onSwipeLeft, onSwipeRight, onReply }: Props) {
-  const formatDate = (iso: string) => {
-    return new Date(iso).toLocaleString('de-AT', {
-      day: '2-digit', month: '2-digit', year: 'numeric',
-      hour: '2-digit', minute: '2-digit',
-    });
-  };
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiResponse, setAiResponse] = useState<string | null>(null);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const promptRef = useRef<HTMLInputElement>(null);
+
+  const formatDate = (iso: string) => new Date(iso).toLocaleString('de-AT', {
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  });
 
   const formatSize = (bytes: number) => {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
     return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+  };
+
+  const runIgor = async (question: string) => {
+    if (!email) return;
+    setAiLoading(true);
+    setAiResponse(null);
+    try {
+      const answer = await askIgor({
+        question,
+        emailBody: email.body || email.preview,
+        emailSubject: email.subject,
+      });
+      setAiResponse(answer);
+    } catch (err) {
+      setAiResponse(`Fehler: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const handleCustomPrompt = () => {
+    const q = aiPrompt.trim();
+    if (!q) return;
+    setAiPrompt('');
+    runIgor(q);
+  };
+
+  const handleInsertIntoReply = () => {
+    if (!email || !aiResponse) return;
+    onReply?.(email, aiResponse);
+    onClose();
+  };
+
+  const handleToggleAi = () => {
+    setAiOpen(o => !o);
+    setAiResponse(null);
   };
 
   return (
@@ -52,6 +94,13 @@ export function EmailDetail({ email, loading, onClose, onSwipeLeft, onSwipeRight
               </button>
               <button className="detail-action reply" onClick={() => { onReply?.(email); onClose(); }}>
                 ↩ Antworten
+              </button>
+              <button
+                className={`detail-action ai ${aiOpen ? 'ai-active' : ''}`}
+                onClick={handleToggleAi}
+                title="KI-Assistent"
+              >
+                🤖 KI
               </button>
               <div style={{ flex: 1 }} />
               <button className="detail-close" onClick={onClose}>✕</button>
@@ -101,6 +150,71 @@ export function EmailDetail({ email, loading, onClose, onSwipeLeft, onSwipeRight
                 ))}
               </div>
             )}
+
+            {/* ── AI Panel ── */}
+            <AnimatePresence>
+              {aiOpen && (
+                <motion.div
+                  className="ai-panel"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <div className="ai-panel-title">🤖 Igor KI-Assistent</div>
+
+                  <div className="ai-quick-actions">
+                    <button className="ai-chip" onClick={() => runIgor(IGOR_PROMPTS.summarize)} disabled={aiLoading}>
+                      Zusammenfassen
+                    </button>
+                    <button className="ai-chip" onClick={() => runIgor(IGOR_PROMPTS.translate)} disabled={aiLoading}>
+                      Übersetzen (DE)
+                    </button>
+                    <button className="ai-chip" onClick={() => runIgor(IGOR_PROMPTS.tasks)} disabled={aiLoading}>
+                      Aufgaben
+                    </button>
+                    <button className="ai-chip" onClick={() => runIgor(IGOR_PROMPTS.draftReply)} disabled={aiLoading}>
+                      Antwort entwerfen
+                    </button>
+                  </div>
+
+                  <div className="ai-input-row">
+                    <input
+                      ref={promptRef}
+                      className="ai-input"
+                      value={aiPrompt}
+                      onChange={e => setAiPrompt(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && handleCustomPrompt()}
+                      placeholder="Eigene Anfrage an Igor…"
+                      disabled={aiLoading}
+                    />
+                    <button className="ai-send-btn" onClick={handleCustomPrompt} disabled={aiLoading || !aiPrompt.trim()}>
+                      ▶
+                    </button>
+                  </div>
+
+                  {aiLoading && (
+                    <div className="ai-loading">
+                      <span className="ai-loading-dot" />
+                      <span className="ai-loading-dot" />
+                      <span className="ai-loading-dot" />
+                      Igor denkt…
+                    </div>
+                  )}
+
+                  {aiResponse && !aiLoading && (
+                    <div className="ai-response">
+                      <div className="ai-response-text">{aiResponse}</div>
+                      {onReply && (
+                        <button className="ai-insert-btn" onClick={handleInsertIntoReply}>
+                          ↩ In Antwort einfügen
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         </motion.div>
       )}
