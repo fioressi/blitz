@@ -11,16 +11,17 @@ interface Props {
   onClick: (email: Email) => void;
   onDragStart?: () => void;
   onDragEnd?: () => void;
+  showReplyHandle?: boolean;
 }
 
-export function EmailCard({ email, onSwipeLeft, onSwipeRight, onClick, onDragStart, onDragEnd: onDragEndProp }: Props) {
+export function EmailCard({ email, onSwipeLeft, onSwipeRight, onClick, onDragStart, onDragEnd: onDragEndProp, showReplyHandle = true }: Props) {
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const controls = useAnimation();
 
   const { setNodeRef: setDropRef, isOver } = useDroppable({ id: `email-${email.id}` });
 
-  const { attributes, listeners, setNodeRef: setDragRef, transform, isDragging } = useDraggable({
+  const { attributes, listeners, setNodeRef: setDragRef, transform, isDragging: isDndDragging } = useDraggable({
     id: `drag-email-${email.id}`,
     data: { emailId: email.id, isEmail: true },
   });
@@ -62,10 +63,10 @@ export function EmailCard({ email, onSwipeLeft, onSwipeRight, onClick, onDragSta
       </motion.div>
 
       <motion.div
-        className={`email-card ${isOver ? 'drag-over' : ''} ${isDragging ? 'is-dragging' : ''}`}
+        className={`email-card ${isOver ? 'drag-over' : ''} ${isDndDragging ? 'is-dragging' : ''}`}
         style={{ x, y, rotate, opacity: cardOpacity }}
         animate={controls}
-        drag
+        drag={isDndDragging ? false : true}
         dragConstraints={false}
         dragElastic={1}
         dragMomentum={false}
@@ -99,17 +100,19 @@ export function EmailCard({ email, onSwipeLeft, onSwipeRight, onClick, onDragSta
 
         {isOver && <div className="drop-hint">Hier ablegen zum Verknüpfen</div>}
 
-        {/* Drag handle for reply tray */}
-        <div
-          ref={setDragRef}
-          className="reply-drag-handle"
-          style={{ transform: CSS.Translate.toString(transform) }}
-          {...listeners}
-          {...attributes}
-          onClick={(e) => e.stopPropagation()}
-        >
-          ↓ Zu beantworten
-        </div>
+        {showReplyHandle && (
+          <div
+            ref={setDragRef}
+            className="reply-drag-handle"
+            style={{ transform: CSS.Translate.toString(transform) }}
+            {...listeners}
+            {...attributes}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
+          >
+            ↩ Zu beantworten ziehen
+          </div>
+        )}
       </motion.div>
     </div>
   );

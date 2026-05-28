@@ -15,12 +15,31 @@ import { CreateModal } from './components/CreateModal/CreateModal';
 import { AuthGuard } from './auth/AuthGuard';
 import './App.css';
 
+// ── localStorage helpers ──────────────────────────────────────────────────────
+
+const LS_DISMISSED = 'blitz_dismissed';
+const LS_READ      = 'blitz_read';
+
+function getStoredIds(key: string): Set<string> {
+  try { return new Set(JSON.parse(localStorage.getItem(key) || '[]')); }
+  catch { return new Set(); }
+}
+
+function addStoredId(key: string, id: string) {
+  const next = [...getStoredIds(key), id].slice(-2000);
+  localStorage.setItem(key, JSON.stringify(next));
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+type Tab = 'inbox' | 'read' | 'reply';
+
 export default function App() {
   const { instance, accounts } = useMsal();
   const user = accounts[0];
 
   const sensors = useSensors(useSensor(PointerSensor, {
-    activationConstraint: { distance: 8 },
+    activationConstraint: { distance: 6 },
   }));
 
   const [emails, setEmails] = useState<Email[]>([]);
@@ -31,13 +50,22 @@ export default function App() {
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [attributeGroups, setAttributeGroups] = useState<AttributeGroup[]>(mockAttributeGroups);
   const [isDraggingCard, setIsDraggingCard] = useState(false);
+  const [isDraggingEmailForReply, setIsDraggingEmailForReply] = useState(false);
   const [activeAttribute, setActiveAttribute] = useState<Attribute | null>(null);
   const [drawerOpen, setDrawerOpen] = useState<'left' | 'right' | null>(null);
   const [createModal, setCreateModal] = useState<'task' | 'project' | null>(null);
+  const [activeTab, setActiveTab] = useState<Tab>('inbox');
 
   const leftGroups = attributeGroups.filter(g => g.side === 'left');
   const rightGroups = attributeGroups.filter(g => g.side === 'right');
-  const activeEmails = emails.filter(e => e.status === 'unread' || e.status === 'to-reply');
+
+  const inboxEmails = emails.filter(e => e.status === 'unread');
+  const readEmails  = emails.filter(e => e.status === 'read');
+  const toReply     = emails.filter(e => e.status === 'to-reply');
+
+  const tabEmails = activeTab === 'inbox' ? inboxEmails
+    : activeTab === 'read'  ? readEmails
+    : toReply;
 
   const loadEmails = useCallback(async () => {
     if (!user) return;
@@ -45,7 +73,14 @@ export default function App() {
     setLoadError(null);
     try {
       const msgs = await getInboxMessages(instance, user);
-      setEmails(msgs);
+      const dismissed = getStoredIds(LS_DISMISSED);
+      const readIds   = getStoredIds(LS_READ);
+      const filtered = msgs
+        .filter(m => !dismissed.has(m.id))
+        .map(m => readIds.has(m.id) ? { ...m, status: 'read' as const } : m);
+      setEmails(filtered);
+      // restore reply tray from local state
+      setReplyEmails(filtered.filter(e => e.status === 'to-reply'));
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error('Fehler beim Laden der Emails:', err);
@@ -87,23 +122,29 @@ export default function App() {
   };
 
   const handleSwipeLeft = (id: string) => {
-    setEmails(prev => prev.map(e => e.id === id ? { ...e, status: 'deleted' } : e));
+    addStoredId(LS_DISMISSED, id);
+    setEmails(prev => prev.filter(e => e.id !== id));
     setReplyEmails(prev => prev.filter(e => e.id !== id));
   };
 
   const handleSwipeRight = (id: string) => {
+    addStoredId(LS_READ, id);
     setEmails(prev => prev.map(e => e.id === id ? { ...e, status: 'read' } : e));
+    setReplyEmails(prev => prev.filter(e => e.id !== id));
   };
 
   const handleDndDragStart = (event: DragStartEvent) => {
     const data = event.active.data.current;
-    if (data && !data.isEmail) {
+    if (data?.isEmail) {
+      setIsDraggingEmailForReply(true);
+    } else if (data && !data.isEmail) {
       setActiveAttribute(data as Attribute);
     }
   };
 
   const handleDndDragEnd = (event: DragEndEvent) => {
     setActiveAttribute(null);
+    setIsDraggingEmailForReply(false);
     const { active, over } = event;
     if (!over) return;
 
@@ -166,7 +207,6 @@ export default function App() {
           <div className="app-logo">⚡ BLITZ</div>
           <div className="app-header-right">
             {user && <span className="app-user">{user.name}</span>}
-            <span className="app-stats">{activeEmails.length} ungelesen</span>
             <button className="app-refresh" onClick={loadEmails} title="Aktualisieren">↻</button>
             <button className="app-drawer-btn" onClick={() => setDrawerOpen(d => d === 'right' ? null : 'right')}>📋</button>
             <button className="app-logout" onClick={() => instance.logoutRedirect()}>Abmelden</button>
@@ -180,18 +220,43 @@ export default function App() {
           </aside>
 
           <main className="inbox">
-            <div className="inbox-header">
-              <span className="inbox-title">Posteingang</span>
+            <div className="inbox-tabs">
+              <button
+                className={`inbox-tab ${activeTab === 'inbox' ? 'active' : ''}`}
+                onClick={() => setActiveTab('inbox')}
+              >
+                Posteingang
+                {inboxEmails.length > 0 && <span className="inbox-tab-count">{inboxEmails.length}</span>}
+              </button>
+              <button
+                className={`inbox-tab ${activeTab === 'read' ? 'active' : ''}`}
+                onClick={() => setActiveTab('read')}
+              >
+                Gelesen
+                {readEmails.length > 0 && <span className="inbox-tab-count inbox-tab-count--muted">{readEmails.length}</span>}
+              </button>
+              <button
+                className={`inbox-tab ${activeTab === 'reply' ? 'active' : ''}`}
+                onClick={() => setActiveTab('reply')}
+              >
+                Beantworten
+                {toReply.length > 0 && <span className="inbox-tab-count inbox-tab-count--reply">{toReply.length}</span>}
+              </button>
             </div>
+
             <div className="inbox-list">
               {loading ? (
                 <div className="inbox-loading">Emails werden geladen…</div>
               ) : loadError ? (
                 <div className="inbox-error">Fehler: {loadError}</div>
-              ) : activeEmails.length === 0 ? (
-                <div className="inbox-empty">Posteingang leer ✓</div>
+              ) : tabEmails.length === 0 ? (
+                <div className="inbox-empty">
+                  {activeTab === 'inbox' ? 'Posteingang leer ✓'
+                    : activeTab === 'read' ? 'Keine gelesenen Emails'
+                    : 'Keine offenen Antworten'}
+                </div>
               ) : (
-                activeEmails.map(email => (
+                tabEmails.map(email => (
                   <EmailCard
                     key={email.id}
                     email={email}
@@ -200,6 +265,7 @@ export default function App() {
                     onClick={handleOpenEmail}
                     onDragStart={() => setIsDraggingCard(true)}
                     onDragEnd={() => setIsDraggingCard(false)}
+                    showReplyHandle={activeTab === 'inbox'}
                   />
                 ))
               )}
@@ -214,6 +280,7 @@ export default function App() {
         <ReplyTray
           emails={replyEmails}
           onRemove={handleRemoveFromReplyTray}
+          isEmailDragging={isDraggingEmailForReply}
         />
 
         <EmailDetail

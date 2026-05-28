@@ -108,17 +108,60 @@
   padding: 0 12px;
 }
 
-.inbox-header {
-  padding: 14px 4px 10px;
+/* ── Tabs ── */
+.inbox-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 10px 0 6px;
   flex-shrink: 0;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 10px;
 }
 
-.inbox-title {
-  font-size: 11px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+.inbox-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 7px;
   color: var(--muted);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.inbox-tab:hover {
+  background: var(--panel);
+  color: var(--text);
+}
+
+.inbox-tab.active {
+  background: var(--panel);
+  border-color: var(--line);
+  color: var(--text);
+}
+
+.inbox-tab-count {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 99px;
+  background: rgba(102,217,239,.2);
+  color: var(--accent);
+}
+
+.inbox-tab-count--muted {
+  background: rgba(255,255,255,.1);
+  color: var(--muted);
+}
+
+.inbox-tab-count--reply {
+  background: rgba(248,113,113,.2);
+  color: var(--red);
 }
 
 .inbox-list {
