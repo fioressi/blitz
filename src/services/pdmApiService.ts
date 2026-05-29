@@ -588,6 +588,7 @@ export async function loadBrettPurchaseOrders(filter?: {
 export async function loadBrettObjects(filter?: {
   projectId?: number; orderId?: number; taskId?: number;
   messageId?: string; attachmentId?: number;
+  rfqId?: number; bomId?: number;
 }): Promise<BrettItem[]> {
   try {
     const url = buildQuery('/pdm-objects', { top: 200, ...filter });
