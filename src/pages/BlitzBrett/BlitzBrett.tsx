@@ -8,6 +8,7 @@ import {
   loadBrettInvoices,
   loadBrettRfqPackages,
   loadBrettBom,
+  loadBrettProdOrders,
   loadBrettSuppliers,
   loadBrettContacts,
   loadBrettWorkInstructions,
@@ -62,6 +63,7 @@ const LANES = [
   { id: 'FILE',    title: 'Dateien',         icon: '📎', color: '#14b8a6' },
   { id: 'RFQ',      title: 'Anfragen',           icon: '📨', color: '#f97316' },
   { id: 'BOM',      title: 'Stückliste',         icon: '🔧', color: '#84cc16' },
+  { id: 'PROD',     title: 'Aufträge',             icon: '🏗️', color: '#d97706' },
   { id: 'SUPPLIER', title: 'Lieferanten',         icon: '🏭', color: '#0891b2' },
   { id: 'CONTACT',  title: 'Kontakte',            icon: '👤', color: '#7c3aed' },
   { id: 'WI',       title: 'Arbeitsanweisungen',  icon: '📜', color: '#be185d' },
@@ -217,9 +219,10 @@ export function BlitzBrett({ emails }: Props) {
         Promise.resolve([]).then(items => setLane('FILE', { items, loading: false })),
         loadBrettRfqPackages().then(items => setLane('RFQ', { items, loading: false })),
         Promise.resolve([]).then(items => setLane('BOM',      { items, loading: false })),
-        loadBrettSuppliers().then(items => setLane('SUPPLIER', { items, loading: false })),
-        Promise.resolve([]).then(items => setLane('CONTACT',  { items, loading: false })),
-        Promise.resolve([]).then(items => setLane('WI',       { items, loading: false })),
+        loadBrettProdOrders().then(items => setLane('PROD',     { items, loading: false })),
+        loadBrettSuppliers().then(items  => setLane('SUPPLIER', { items, loading: false })),
+        Promise.resolve([]).then(items   => setLane('CONTACT',  { items, loading: false })),
+        Promise.resolve([]).then(items   => setLane('WI',       { items, loading: false })),
       ]);
     }
     init();
@@ -320,6 +323,21 @@ export function BlitzBrett({ emails }: Props) {
       jobs.push(['PROJECT', () => loadBrettProjects({ rfqId: eid })]);
     if (et === 'BOM' && !jobs.find(j => j[0] === 'PROJECT'))
       jobs.push(['PROJECT', () => loadBrettProjects({ bomId: eid })]);
+
+    // ── PROD (Aufträge) lane ──────────────────────────────────────────────────
+    if (et !== 'PROD') {
+      if (et === 'PROJECT') jobs.push(['PROD', () => loadBrettProdOrders({ projectId: eid })]);
+      if (et === 'OBJECT')  jobs.push(['PROD', () => loadBrettProdOrders({ objectId: eid })]);
+      if (et === 'RFQ')     jobs.push(['PROD', () => loadBrettProdOrders({ rfqId: eid })]);
+      if (et === 'ORDER')   jobs.push(['PROD', () => loadBrettProdOrders({ orderId: eid })]);
+    }
+    if (et === 'PROD') {
+      if (!jobs.find(j => j[0] === 'PROJECT'))
+        jobs.push(['PROJECT', () => loadBrettProjects({ productionOrderId: eid })]);
+      if (!jobs.find(j => j[0] === 'OBJECT'))
+        jobs.push(['OBJECT', () => loadBrettObjects({ productionOrderId: eid })]);
+      jobs.push(['RFQ', () => loadBrettRfqPackages({ productionOrderId: eid })]);
+    }
 
     // ── SUPPLIER lane ─────────────────────────────────────────────────────────
     if (et !== 'SUPPLIER') {
