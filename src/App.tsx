@@ -520,10 +520,12 @@ export default function App() {
               <div>
                 <p className="pdm-shell-kicker">HERPERT</p>
                 <h1>PDM-Bereiche</h1>
-                <p>Die ehemals separaten web-probe Seiten laufen jetzt innerhalb von Blitz unter <code>/pdm/*</code>.</p>
+                <p>Ein gemeinsamer Bereich für Engineering, Planung, Einkauf, Lager, Prozesse und Administration.</p>
               </div>
               <div className="pdm-shell-actions">
-                <a className="pdm-shell-link" href={activePdmItem.path.split('?')[0]} target="_blank" rel="noreferrer">Seite direkt öffnen</a>
+                {pdmPath !== '/pdm/index.html' && (
+                  <a className="pdm-shell-link" href={activePdmItem.path.split('?')[0]} target="_blank" rel="noreferrer">Seite direkt öffnen</a>
+                )}
               </div>
             </section>
             {pdmPath !== '/pdm/index.html' && (

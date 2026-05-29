@@ -368,21 +368,23 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 18px 20px;
+  padding: 14px 18px;
   border: 1px solid var(--line);
-  border-radius: 18px;
-  background: rgba(255,255,255,.05);
-  box-shadow: 0 12px 34px rgba(0,0,0,.22);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.03));
+  box-shadow: 0 10px 28px rgba(0,0,0,.18);
 }
 
 .pdm-shell-hero h1 {
-  margin: 2px 0 8px;
-  font-size: 28px;
+  margin: 2px 0 4px;
+  font-size: 24px;
 }
 
 .pdm-shell-hero p {
   margin: 0;
   color: var(--muted);
+  max-width: 780px;
+  line-height: 1.45;
 }
 
 .pdm-shell-kicker {
@@ -398,6 +400,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  min-height: 40px;
 }
 
 .pdm-frame {
