@@ -7,42 +7,126 @@ function stripHtml(html: string): string {
     .replace(/<[^>]+>/g, ' ')
     .replace(/\s{2,}/g, ' ')
     .trim()
-    .slice(0, 8000); // cap context length
+    .slice(0, 8000);
 }
+
+// ── /api/igor-translate — fast path, kein OpenClaw ───────────────────────────
+
+type TranslateKind = 'translate' | 'summarize' | 'extract' | 'classify' | 'transform';
+
+interface TranslateRequest {
+  kind: TranslateKind;
+  instruction: string;
+  input: Record<string, unknown>;
+  context?: Record<string, unknown>;
+  responseSchema?: Record<string, unknown>;
+  async?: false;
+}
+
+interface TranslateResponse {
+  status: 'ok' | 'error';
+  result: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
+}
+
+async function callIgorTranslate(body: TranslateRequest): Promise<TranslateResponse> {
+  const res = await fetch(`${PDM_API}/igor-translate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`Igor Translate ${res.status}: ${text}`);
+  }
+  return res.json();
+}
+
+// Returns the plain text from result.text (for all prose-output operations)
+async function igorFastText(
+  kind: TranslateKind,
+  instruction: string,
+  inputText: string,
+  contextData?: Record<string, unknown>,
+): Promise<string> {
+  const data = await callIgorTranslate({
+    kind,
+    instruction,
+    input: { text: inputText },
+    ...(contextData ? { context: contextData } : {}),
+    responseSchema: { type: 'object', properties: { text: { type: 'string' } } },
+  });
+  return String(data.result?.text ?? '').trim();
+}
+
+// ── /api/igor-agent — agent path, OpenClaw, isolated session ─────────────────
+
+interface AgentRequest {
+  instruction: string;
+  input?: Record<string, unknown>;
+  context?: Record<string, unknown>;
+  callback?: { url: string; method: string; headers: Record<string, string> };
+}
+
+export async function callIgorAgent(body: AgentRequest): Promise<{ status: string; result?: unknown }> {
+  const res = await fetch(`${PDM_API}/igor-agent`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`Igor Agent ${res.status}: ${text}`);
+  }
+  return res.json();
+}
+
+// ── Public: email/compose operations (fast path) ─────────────────────────────
 
 export async function askIgor(opts: {
   question: string;
   emailBody?: string;
   emailSubject?: string;
-  context?: string;   // explicit context override (takes precedence over emailSubject)
-  input?: string;     // generic plain-text input (alternative to emailBody)
+  context?: string;
+  input?: string;
 }): Promise<string> {
-  const context = opts.context
-    ?? (opts.emailSubject ? `Betreff: ${opts.emailSubject}` : undefined);
-  const input = opts.input ?? (opts.emailBody ? stripHtml(opts.emailBody) : undefined);
-
-  const res = await fetch(`${PDM_API}/igor-ask`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      question: opts.question,
-      ...(context ? { context } : {}),
-      ...(input   ? { input }   : {}),
-    }),
-  });
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`Igor ${res.status}: ${text}`);
-  }
-  const data = await res.json();
-  const answer = (data.answer || '').trim();
-  const suggested = (data.suggestedAction || '').trim();
-  return suggested ? `${answer}\n\n💡 ${suggested}` : answer;
+  const inputText = opts.input ?? (opts.emailBody ? stripHtml(opts.emailBody) : '');
+  const contextData = opts.context
+    ? { instructions: opts.context }
+    : opts.emailSubject
+    ? { subject: `Betreff: ${opts.emailSubject}` }
+    : undefined;
+  return igorFastText('transform', opts.question, inputText, contextData);
 }
 
+// ── Public: BlitzBrett board analysis ────────────────────────────────────────
+
+export async function askIgorBoard(opts: {
+  question: string;
+  systemContext: string;
+  boardData: string;
+}): Promise<string> {
+  return igorFastText('summarize', opts.question, opts.boardData, {
+    system: opts.systemContext,
+  });
+}
+
+// ── Public: structured translation (tasks, multi-language fields) ─────────────
+
+export async function igorTranslate(opts: {
+  instruction: string;
+  input: Record<string, unknown>;
+  context?: Record<string, unknown>;
+  responseSchema?: Record<string, unknown>;
+}): Promise<Record<string, unknown>> {
+  const data = await callIgorTranslate({ kind: 'translate', ...opts });
+  return data.result;
+}
+
+// ── Public: entity suggestion ─────────────────────────────────────────────────
+
 export interface EntitySuggestion {
-  type: string;   // PROJECT | ORDER | TASK
+  type: string;
   id: number;
   label: string;
   subLabel?: string;
@@ -71,43 +155,38 @@ export async function suggestEntityLinks(opts: {
 }): Promise<EntitySuggestion[]> {
   if (opts.entities.length === 0) return [];
 
-  const question = `Analysiere die folgende Email und finde heraus, welche PDM-Entitäten aus der bereitgestellten Liste inhaltlich relevant sind.
-
-Relevanzkriterien — mindestens eines muss zutreffen:
-• Eine Projektnummer, Projektcode oder Projektname wird direkt erwähnt oder klar impliziert
-• Eine Bestellnummer (z.B. PO-...) oder ein Auftragsname kommt vor
-• Der Inhalt passt thematisch eindeutig zu einem konkreten Projekt oder Auftrag
-• Eine Aufgabe wird erwähnt, die einem offenen Task aus der Liste entspricht
-
-Antwortformat: AUSSCHLIESSLICH ein gültiges JSON-Array, kein Text davor oder danach.
+  const instruction = `Analysiere die Email und finde PDM-Entitäten aus der bereitgestellten Liste die inhaltlich relevant sind.
+Relevanzkriterien: Projektnummer/Name erwähnt, Bestellnummer (PO-...) vorkommt, Inhalt passt thematisch zu einem Projekt/Auftrag, Task aus der Liste wird erwähnt.
+Antwortformat: AUSSCHLIESSLICH ein gültiges JSON-Array.
 Beispiel: [{"type":"PROJECT","id":42,"label":"H26001"},{"type":"ORDER","id":101,"label":"PO-26000079"}]
-Regeln:
-• Nur Entitäten verwenden die exakt in der bereitgestellten Liste vorkommen (gleiche id)
-• Maximal 5 Vorschläge, nur bei echter Relevanz
-• Leeres Array [] wenn keine eindeutige Übereinstimmung erkennbar ist`;
+Regeln: Nur Entitäten aus der Liste (gleiche id). Maximal 5. Leeres Array [] wenn keine Übereinstimmung.`;
 
-  const context = `Betreff: ${opts.emailSubject}\n\n${buildEntityContext(opts.entities)}`;
-
-  const raw = await askIgor({
-    question,
-    emailBody: opts.emailBody,
-    context,
+  const data = await callIgorTranslate({
+    kind: 'extract',
+    instruction,
+    input: { text: stripHtml(opts.emailBody) },
+    context: { subject: opts.emailSubject, entities: buildEntityContext(opts.entities) },
+    responseSchema: { type: 'array' },
   });
 
-  // Igor sometimes wraps the array in text — extract the first JSON array found
-  const match = raw.match(/\[[\s\S]*?\]/);
-  if (!match) return [];
-  try {
-    const parsed = JSON.parse(match[0]) as Array<{ type: string; id: number; label: string }>;
-    if (!Array.isArray(parsed)) return [];
-    const known = new Map(opts.entities.map(e => [`${e.type}:${e.id}`, e]));
-    return parsed
-      .filter(s => s && known.has(`${s.type}:${s.id}`))
-      .map(s => known.get(`${s.type}:${s.id}`)!);
-  } catch {
-    return [];
+  // result may be an array directly, or a string we need to parse
+  let parsed: Array<{ type: string; id: number; label: string }> = [];
+  if (Array.isArray(data.result)) {
+    parsed = data.result as typeof parsed;
+  } else {
+    const raw = String(data.result ?? '');
+    const match = raw.match(/\[[\s\S]*?\]/);
+    if (!match) return [];
+    try { parsed = JSON.parse(match[0]); } catch { return []; }
   }
+
+  const known = new Map(opts.entities.map(e => [`${e.type}:${e.id}`, e]));
+  return parsed
+    .filter(s => s && known.has(`${s.type}:${s.id}`))
+    .map(s => known.get(`${s.type}:${s.id}`)!);
 }
+
+// ── Prompts ───────────────────────────────────────────────────────────────────
 
 export const IGOR_PROMPTS = {
   summarize: `Fasse die folgende Email prägnant zusammen.

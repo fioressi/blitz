@@ -10,7 +10,7 @@ import {
   loadEmailsForEntity,
   type BrettItem,
 } from '../../services/pdmApiService';
-import { askIgor } from '../../services/igorService';
+import { askIgorBoard } from '../../services/igorService';
 import './BlitzBrett.css';
 
 interface Props {
@@ -236,10 +236,10 @@ export function BlitzBrett({ emails }: Props) {
     setIgorLoading(true);
     setIgorAnswer('');
     try {
-      const answer = await askIgor({
+      const answer = await askIgorBoard({
         question: prompt,
-        context: BRETT_IGOR_SYSTEM,
-        input: buildBrettContext(selection, lanes),
+        systemContext: BRETT_IGOR_SYSTEM,
+        boardData: buildBrettContext(selection, lanes),
       });
       setIgorAnswer(answer);
     } catch (e: unknown) {
