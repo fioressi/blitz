@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { IPublicClientApplication, AccountInfo } from '@azure/msal-browser';
 import type { Email } from '../../types/email';
 import { sendMail } from '../../services/graphService';
-import { askIgor, IGOR_PROMPTS } from '../../services/igorService';
+import { askIgor, IGOR_PROMPTS, translateTextToGerman } from '../../services/igorService';
 import './ComposeModal.css';
 
 interface Props {
@@ -106,11 +106,17 @@ export function ComposeModal({ mode, originalEmail, initialBody, instance, accou
       const emailBody = source === 'current'
         ? body
         : (originalEmail ? (originalEmail.body || originalEmail.preview) : body);
-      const answer = await askIgor({
-        question,
-        emailBody,
-        emailSubject: originalEmail?.subject,
-      });
+      const isTranslatePrompt = question === IGOR_PROMPTS.translate;
+      const answer = isTranslatePrompt
+        ? await translateTextToGerman({
+            text: emailBody,
+            subject: originalEmail?.subject,
+          })
+        : await askIgor({
+            question,
+            emailBody,
+            emailSubject: originalEmail?.subject,
+          });
       setBody(answer);
       bodyRef.current?.focus();
     } catch (err) {

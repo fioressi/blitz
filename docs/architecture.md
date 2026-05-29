@@ -147,16 +147,19 @@ und rufen pdm-api fire-and-forget auf (async, Fehler werden nur geloggt).
 
 ```
 Frontend (igorService.ts)
-  → POST /api/igor-ask
+  → Translate-Funktionen: POST /api/translate
+    { kind: "translate", instruction, input, context?, async?: false }
+  → Agent-Funktionen: POST /api/igor-ask
     { question: string, context?: string, input?: string }
   
-  pdm-api (function_app.py: igor_ask)
-    → liest IGOR_API_KEY aus Azure Application Settings
-    → POST https://igor.fioresi.cloud/api/igor/ask
-      { question, user: "blitz", input?, context?, sessionTarget: "blitz" }
-    → timeout: 45s
+  pdm-api
+    → Translate-Proxy liest serverseitigen API-Key und ruft
+      POST https://igor.fioresi.cloud/api/translate
+    → Agent-Proxy ruft für komplexe Igor-Aufgaben weiterhin
+      POST https://igor.fioresi.cloud/api/igor/ask
   
-  ← { answer: string }
+  ← Translate: { status, result, metadata }
+  ← Agent: { answer: string }
 ```
 
 **Sicherheit:**
@@ -254,7 +257,8 @@ Löschen = Status-Eintrag entfernen = zurück auf 'unread'.
 | `GET` | `/api/email-states?user={localAccountId}` | Alle Triage-States eines Users |
 | `POST` | `/api/email-states` | Status setzen/aktualisieren (UPSERT) |
 | `DELETE` | `/api/email-states` | Status-Eintrag löschen (= unread) |
-| `POST` | `/api/igor-ask` | Igor KI-Proxy (API-Key server-seitig, timeout 45s) |
+| `POST` | `/api/translate` | Fast-Path für Übersetzungen/strukturierte Transformationen |
+| `POST` | `/api/igor-ask` | Agent-/Igor-Proxy für komplexere KI-Aufgaben |
 
 **Base URL:** `https://pdm-api.azurewebsites.net`
 **Auth:** `SKIP_AUTH=1` in Azure → kein Bearer Token nötig (Phase 1)

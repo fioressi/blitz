@@ -1,5 +1,7 @@
 const PDM_API = 'https://pdm-api.azurewebsites.net/api';
 
+type TranslateKind = 'translate' | 'classify' | 'extract' | 'summarize' | 'transform';
+
 function stripHtml(html: string): string {
   return html
     .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
@@ -8,6 +10,11 @@ function stripHtml(html: string): string {
     .replace(/\s{2,}/g, ' ')
     .trim()
     .slice(0, 8000); // cap context length
+}
+
+function normalizeTextInput(input?: string): string | undefined {
+  if (!input) return undefined;
+  return input.trim() || undefined;
 }
 
 export async function askIgor(opts: {
@@ -39,6 +46,62 @@ export async function askIgor(opts: {
   const answer = (data.answer || '').trim();
   const suggested = (data.suggestedAction || '').trim();
   return suggested ? `${answer}\n\n💡 ${suggested}` : answer;
+}
+
+export async function runIgorTranslate(opts: {
+  instruction: string;
+  input: Record<string, unknown>;
+  context?: Record<string, unknown>;
+  async?: boolean;
+}): Promise<Record<string, unknown>> {
+  const res = await fetch(`${PDM_API}/translate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      kind: 'translate' satisfies TranslateKind,
+      instruction: opts.instruction,
+      input: opts.input,
+      ...(opts.context ? { context: opts.context } : {}),
+      async: opts.async ?? false,
+      responseSchema: { type: 'object' },
+    }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`Igor translate ${res.status}: ${text}`);
+  }
+
+  const data = await res.json();
+  const result = data?.result;
+  if (!result || typeof result !== 'object' || Array.isArray(result)) {
+    throw new Error('Igor translate returned no object result');
+  }
+  return result as Record<string, unknown>;
+}
+
+export async function translateTextToGerman(opts: {
+  text: string;
+  subject?: string;
+}): Promise<string> {
+  const result = await runIgorTranslate({
+    instruction: 'Übersetze den bereitgestellten Inhalt vollständig und sauber ins Deutsche. Behalte Sinn, Ton und Struktur bei. Liefere nur das Feld translatedText zurück.',
+    input: {
+      subject: normalizeTextInput(opts.subject),
+      text: opts.text,
+      targetLanguage: 'de',
+    },
+    context: {
+      source: 'blitz',
+      feature: 'email-translation',
+    },
+  });
+
+  const translated = result.translatedText;
+  if (typeof translated !== 'string' || !translated.trim()) {
+    throw new Error('Igor translate returned no translatedText');
+  }
+  return translated.trim();
 }
 
 export interface EntitySuggestion {
