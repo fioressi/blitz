@@ -1,6 +1,49 @@
 window.HERPERT_PAGE_DATA = {
   "pages": [
     {
+      "key": "objects",
+      "file": "objects.html",
+      "section": "engineering",
+      "form": "Form_PdmObjekte",
+      "titles": {
+        "de": "Objekte",
+        "en": "Objects",
+        "hu": "Objektumok"
+      },
+      "summary": {
+        "de": "PDM-Stammdaten: Objekte nach ID, Status, Klasse und Typ filtern, Revisionen und Make/Buy verwalten.",
+        "en": "PDM master data: filter objects by ID, status, class and type, manage revisions and make/buy.",
+        "hu": "PDM torzssadatok: objektumok szurese ID, statusz, osztaly es tipus alapjan, revizio es make/buy kezeles."
+      },
+      "filters": [
+        "Part-ID",
+        "Status",
+        "Klasse",
+        "Typ"
+      ],
+      "fields": [
+        "Object-ID",
+        "Part-ID",
+        "Status",
+        "Klasse",
+        "Typ",
+        "Bezeichnung",
+        "Revision",
+        "Make/Buy",
+        "Descr DE",
+        "Descr EN",
+        "Descr HU",
+        "Lieferanten"
+      ],
+      "actions": [
+        "Neu",
+        "Speichern",
+        "Loeschen",
+        "Excel Export",
+        "Teile-Eigenschaften"
+      ]
+    },
+    {
       "key": "bom",
       "file": "bom.html",
       "section": "engineering",
@@ -129,6 +172,42 @@ window.HERPERT_PAGE_DATA = {
         "Material reservieren",
         "PO-Zuordnung",
         "Readiness-Check"
+      ]
+    },
+    {
+      "key": "production-dashboard",
+      "file": "production-dashboard.html",
+      "section": "planung",
+      "form": "Form_ProduktionsDashboard",
+      "titles": {
+        "de": "Produktionsubersicht",
+        "en": "Production Dashboard",
+        "hu": "Gyartasi attekintes"
+      },
+      "summary": {
+        "de": "Live-Ubersicht laufender Fertigungsauftrage: Status, Material-Verfugbarkeit und Fortschritt.",
+        "en": "Live overview of running production orders: status, material availability and progress.",
+        "hu": "Futó gyártási megbizások elo attekintese: statusz, anyag-elerhetoseg es haladas."
+      },
+      "filters": [
+        "Status",
+        "Produktionsauftrag"
+      ],
+      "fields": [
+        "Auftragsnr.",
+        "Titel",
+        "Menge",
+        "Status",
+        "Planstart",
+        "Planende",
+        "Fortschritt",
+        "Material",
+        "Notizen"
+      ],
+      "actions": [
+        "Aktualisieren",
+        "Status aendern",
+        "Excel Export"
       ]
     },
     {
@@ -640,6 +719,7 @@ window.HERPERT_PAGE_DATA = {
   "i18n": {
     "de": {
       "home": "Hauptmenu",
+      "intro": "Web-Einstieg entlang der Access-Startseite: Entwicklung, Planung, Einkauf, Lager und Admin.",
       "source": "Access-Quelle",
       "filters": "Filter",
       "details": "Details",
@@ -657,6 +737,7 @@ window.HERPERT_PAGE_DATA = {
     },
     "en": {
       "home": "Main Menu",
+      "intro": "Web entry following the Access start form: Engineering, Planning, Purchasing, Warehouse, and Admin.",
       "source": "Access source",
       "filters": "Filters",
       "details": "Details",
@@ -674,6 +755,7 @@ window.HERPERT_PAGE_DATA = {
     },
     "hu": {
       "home": "Fomenu",
+      "intro": "Webes belepes az Access kezdolap szerint: fejlesztes, tervezes, beszerzes, raktar es admin.",
       "source": "Access forras",
       "filters": "Szurok",
       "details": "Reszletek",
