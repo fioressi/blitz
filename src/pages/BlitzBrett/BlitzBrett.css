@@ -225,6 +225,21 @@
   border-top: 3px solid transparent;
   background: rgba(255, 255, 255, 0.03);
   flex-shrink: 0;
+  cursor: grab;
+  user-select: none;
+}
+
+.brett-lane-header:active { cursor: grabbing; }
+
+.brett-lane--dragging {
+  opacity: 0.45;
+  transform: scale(0.98);
+}
+
+.brett-lane--drop-target {
+  outline: 2px solid rgba(102, 217, 239, 0.5);
+  outline-offset: -2px;
+  border-radius: 12px;
 }
 
 .brett-lane-icon {

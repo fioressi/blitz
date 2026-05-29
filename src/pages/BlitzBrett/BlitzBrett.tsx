@@ -142,6 +142,56 @@ export function BlitzBrett({ emails }: Props) {
   const [igorInput, setIgorInput]     = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // ── Lane ordering ─────────────────────────────────────────────────────────
+  const LS_LANE_ORDER = 'blitz_brett_lane_order';
+  const [laneOrder, setLaneOrder] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem(LS_LANE_ORDER);
+      if (saved) {
+        const parsed: string[] = JSON.parse(saved);
+        // merge: add any new lanes not yet in saved order
+        const all = LANES.map(l => l.id);
+        return [...parsed.filter(id => all.includes(id)), ...all.filter(id => !parsed.includes(id))];
+      }
+    } catch { /* ignore */ }
+    return LANES.map(l => l.id);
+  });
+  const [draggingLaneId, setDraggingLaneId] = useState<string | null>(null);
+  const [overLaneId, setOverLaneId]         = useState<string | null>(null);
+
+  const orderedLanes = laneOrder
+    .map(id => LANES.find(l => l.id === id))
+    .filter((l): l is typeof LANES[number] => l !== undefined);
+
+  const handleLaneDragStart = useCallback((id: string, e: React.DragEvent) => {
+    setDraggingLaneId(id);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', id);
+    e.stopPropagation();
+  }, []);
+
+  const handleLaneDragEnter = useCallback((targetId: string) => {
+    setOverLaneId(targetId);
+    setLaneOrder(prev => {
+      const from = prev.indexOf(draggingLaneId!);
+      const to   = prev.indexOf(targetId);
+      if (from === -1 || to === -1 || from === to) return prev;
+      const next = [...prev];
+      next.splice(from, 1);
+      next.splice(to, 0, draggingLaneId!);
+      return next;
+    });
+  }, [draggingLaneId]);
+
+  const handleLaneDragEnd = useCallback(() => {
+    setDraggingLaneId(null);
+    setOverLaneId(null);
+    setLaneOrder(prev => {
+      localStorage.setItem(LS_LANE_ORDER, JSON.stringify(prev));
+      return prev;
+    });
+  }, []);
+
   const setLane = useCallback((id: string, update: Partial<LaneState>) => {
     setLanes(prev => ({ ...prev, [id]: { ...prev[id], ...update } }));
   }, []);
@@ -426,11 +476,28 @@ export function BlitzBrett({ emails }: Props) {
       )}
 
       <div className="brett-board">
-        {LANES.map(lane => {
+        {orderedLanes.map(lane => {
           const state = lanes[lane.id];
+          const isBeingDragged = draggingLaneId === lane.id;
+          const isDropTarget   = overLaneId === lane.id && draggingLaneId !== lane.id;
           return (
-            <div key={lane.id} className="brett-lane">
-              <div className="brett-lane-header" style={{ borderTopColor: lane.color }}>
+            <div
+              key={lane.id}
+              className={[
+                'brett-lane',
+                isBeingDragged ? 'brett-lane--dragging' : '',
+                isDropTarget   ? 'brett-lane--drop-target' : '',
+              ].filter(Boolean).join(' ')}
+              onDragEnter={() => draggingLaneId && handleLaneDragEnter(lane.id)}
+              onDragOver={e => { if (draggingLaneId) e.preventDefault(); }}
+            >
+              <div
+                className="brett-lane-header"
+                style={{ borderTopColor: lane.color }}
+                draggable
+                onDragStart={e => handleLaneDragStart(lane.id, e)}
+                onDragEnd={handleLaneDragEnd}
+              >
                 <span className="brett-lane-icon">{lane.icon}</span>
                 <span className="brett-lane-title">{lane.title}</span>
                 {!state.loading && (
