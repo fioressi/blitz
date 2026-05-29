@@ -460,15 +460,15 @@ export function BlitzBrett({ emails }: Props) {
                           {feedback === 'success' && <div className="brett-card-feedback">✓ Verknüpft</div>}
                           {feedback === 'error'   && <div className="brett-card-feedback brett-card-feedback--error">✗ Fehler</div>}
                         </div>
-                        <button
+                        <div
                           className="brett-card-open"
+                          role="button"
                           title="Details öffnen"
-                          draggable={false}
                           onPointerDown={e => e.stopPropagation()}
                           onClick={e => { e.stopPropagation(); setDetailItem(item); }}
                         >
                           ↗
-                        </button>
+                        </div>
                       </button>
                     );
                   })
