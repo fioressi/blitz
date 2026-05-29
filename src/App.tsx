@@ -526,6 +526,17 @@ export default function App() {
                 <a className="pdm-shell-link" href={activePdmItem.path.split('?')[0]} target="_blank" rel="noreferrer">Seite direkt öffnen</a>
               </div>
             </section>
+            {pdmPath === '/pdm/index.html' && (
+              <section className="pdm-legacy-embed">
+                <div className="pdm-legacy-card">
+                  <iframe
+                    className="pdm-legacy-frame"
+                    title="HERPERT legacy index"
+                    src="/pdm/index.html"
+                  />
+                </div>
+              </section>
+            )}
             <iframe
               key={pdmPath}
               className="pdm-frame"
