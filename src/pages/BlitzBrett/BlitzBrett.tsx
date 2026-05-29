@@ -64,11 +64,48 @@ DATEIEN: Technische Dokumente — Zeichnungen, Spezifikationen, Zertifikate, Mes
 
 EMAILS: Microsoft-365-Emails, manuell oder automatisch mit PDM-Entitäten verknüpft. Bilden die Kommunikationshistorie rund um Projekte, Lieferantenanfragen, Reklamationen und Freigaben.
 
-## Wie dein Input aufgebaut ist
+## Exaktes Input-Format
 
-Zuerst steht das ausgewählte Element (Typ, Name, optionaler Untertitel).
-Dann folgen die verknüpften Einträge, gegliedert nach Lane (max. 6 Einträge je Kategorie, mit Titel, Untertitel in eckigen Klammern, Metainfo in runden Klammern).
-Die Daten sind aktuell und kommen direkt aus der Azure SQL Datenbank.
+Der Input ist plain text, kein JSON. Er hat immer diese Struktur:
+
+Zeile 1:   Ausgewähltes Element: <Typ> — "<Titel>"
+Zeile 2:   (optional, eingerückt mit 2 Leerzeichen) <Untertitel z.B. Firmenname>
+Dann leer.
+Dann:      Verknüpfte Elemente im Board:
+Pro Kategorie ein Block:
+           <Kategoriename> (<Anzahl>):
+             - <Titel> [<Untertitel in eckigen Klammern>] (<Meta in runden Klammern>)
+           ... und X weitere    ← wenn mehr als 6 Einträge
+
+Untertitel und Meta können fehlen. Fehlende Dateien/Emails bedeuten keine Verknüpfungen vorhanden.
+Maximal 6 Einträge je Kategorie werden angezeigt. Die Daten kommen direkt aus Azure SQL, sind aktuell.
+
+Konkretes Beispiel für einen ausgewählten Auftrag:
+
+Ausgewähltes Element: Bestellungen — "PO-26000079"
+  Festo GmbH
+
+Verknüpfte Elemente im Board:
+
+Projekte (1):
+  - H26001 — Pneumatiksteuerung Linie 3 [aktiv]
+
+Emails (2):
+  - Auftragsbestätigung PO-26000079 [bestellungen@festo.com] (14.05.2026)
+  - AW: Liefertermin Ventile [thomas.maier@firma.at] (21.05.2026)
+
+Tasks (1):
+  - Wareneingang prüfen und buchen [offen]
+
+Objekte (2):
+  - 🔩 Magnetventil MFH-5-1/4 [Festo] (H26-001)
+  - 🔩 Zylinder DNC-32-100-PPV [Festo] (H26-001)
+
+Rechnungen (1):
+  - RE-2026-4891 [Festo GmbH] (offen) (1.840,00 EUR)
+
+Dateien (1):
+  - 📄 Lieferschein_PO26000079.pdf [Lieferschein]
 
 ## Verhaltensregeln
 
