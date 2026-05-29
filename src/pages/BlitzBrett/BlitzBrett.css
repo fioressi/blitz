@@ -306,7 +306,7 @@
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--line);
   border-radius: 8px;
-  padding: 9px 11px;
+  padding: 9px 32px 9px 11px;
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
   color: var(--text);
@@ -341,28 +341,27 @@
   right: 6px;
   width: 22px;
   height: 22px;
-  display: none;
+  display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(102, 217, 239, 0.12);
-  border: 1px solid rgba(102, 217, 239, 0.35);
+  background: rgba(102, 217, 239, 0.08);
+  border: 1px solid rgba(102, 217, 239, 0.2);
   border-radius: 5px;
   color: var(--accent);
   font-size: 11px;
-  font-family: inherit;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  transition: background 0.15s, border-color 0.15s, opacity 0.15s;
   padding: 0;
   line-height: 1;
+  opacity: 0.45;
+  flex-shrink: 0;
 }
 
-.brett-card:hover .brett-card-open {
-  display: flex;
-}
-
+.brett-card:hover .brett-card-open,
 .brett-card-open:hover {
-  background: rgba(102, 217, 239, 0.25);
-  border-color: rgba(102, 217, 239, 0.65);
+  opacity: 1;
+  background: rgba(102, 217, 239, 0.18);
+  border-color: rgba(102, 217, 239, 0.55);
 }
 
 .brett-card[draggable='true'] {
