@@ -223,13 +223,13 @@ function ObjectDetail({ d }: { d: Record<string, unknown> }) {
         </div>
       )}
       <div className="bdp-row">
-        {obj.ClassCode && (
+        {!!obj.ClassCode && (
           <div className="bdp-field">
             <span className="bdp-label">Klasse</span>
             <span className="bdp-value">{String(obj.ClassCode)}</span>
           </div>
         )}
-        {obj.file_name && (
+        {!!obj.file_name && (
           <div className="bdp-field">
             <span className="bdp-label">CAD-Datei</span>
             <span className="bdp-value">🔩 {String(obj.file_name)}</span>
