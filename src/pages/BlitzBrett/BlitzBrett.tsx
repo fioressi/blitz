@@ -12,6 +12,7 @@ import {
   type BrettItem,
 } from '../../services/pdmApiService';
 import { askIgorBoard } from '../../services/igorService';
+import { BrettDetailPanel } from './BrettDetailPanel';
 import './BlitzBrett.css';
 
 // ── Drag & Drop helpers ───────────────────────────────────────────────────────
@@ -130,6 +131,7 @@ export function BlitzBrett({ emails }: Props) {
   const [igorLoading, setIgorLoading] = useState(false);
   const [igorAnswer, setIgorAnswer]   = useState('');
 
+  const [detailItem, setDetailItem] = useState<BrettItem | null>(null);
   const [dragging, setDragging]   = useState<BrettItem | null>(null);
   const [overItemId, setOverItemId] = useState<string | null>(null);
   const [linkFeedback, setLinkFeedback] = useState<Record<string, 'success' | 'error'>>({});
@@ -451,11 +453,22 @@ export function BlitzBrett({ emails }: Props) {
                         onDragLeave={() => setOverItemId(null)}
                         onDrop={e => handleDrop(item, e)}
                       >
-                        <div className="brett-card-title">{item.title}</div>
-                        {item.subtitle && <div className="brett-card-sub">{item.subtitle}</div>}
-                        {item.meta && <div className="brett-card-meta">{item.meta}</div>}
-                        {feedback === 'success' && <div className="brett-card-feedback">✓ Verknüpft</div>}
-                        {feedback === 'error'   && <div className="brett-card-feedback brett-card-feedback--error">✗ Fehler</div>}
+                        <div className="brett-card-inner">
+                          <div className="brett-card-title">{item.title}</div>
+                          {item.subtitle && <div className="brett-card-sub">{item.subtitle}</div>}
+                          {item.meta && <div className="brett-card-meta">{item.meta}</div>}
+                          {feedback === 'success' && <div className="brett-card-feedback">✓ Verknüpft</div>}
+                          {feedback === 'error'   && <div className="brett-card-feedback brett-card-feedback--error">✗ Fehler</div>}
+                        </div>
+                        <button
+                          className="brett-card-open"
+                          title="Details öffnen"
+                          draggable={false}
+                          onPointerDown={e => e.stopPropagation()}
+                          onClick={e => { e.stopPropagation(); setDetailItem(item); }}
+                        >
+                          ↗
+                        </button>
                       </button>
                     );
                   })
@@ -465,6 +478,21 @@ export function BlitzBrett({ emails }: Props) {
           );
         })}
       </div>
+
+      {detailItem && (
+        <BrettDetailPanel
+          item={detailItem}
+          onClose={() => setDetailItem(null)}
+          onDeleted={deleted => {
+            setDetailItem(null);
+            setLanes(prev => {
+              const lane = deleted.entityType;
+              if (!prev[lane]) return prev;
+              return { ...prev, [lane]: { ...prev[lane], items: prev[lane].items.filter(i => i.id !== deleted.id) } };
+            });
+          }}
+        />
+      )}
     </div>
   );
 }

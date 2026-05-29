@@ -325,6 +325,31 @@ export interface BrettItem {
   entityId: number;
 }
 
+// ── Brett entity detail / update / delete ────────────────────────────────────
+
+export async function fetchBrettEntityDetail(entityType: string, entityId: number): Promise<Record<string, unknown> | null> {
+  const seg: Record<string, string> = {
+    PROJECT: 'projects', TASK: 'tasks', ORDER: 'purchase-orders', OBJECT: 'pdm-objects',
+  };
+  const path = seg[entityType];
+  if (!path) return null;
+  try {
+    return await pdmFetch<Record<string, unknown>>(`/${path}/${entityId}`);
+  } catch { return null; }
+}
+
+export async function updateBrettEntity(entityType: string, entityId: number, fields: Record<string, unknown>): Promise<void> {
+  const seg: Record<string, string> = { PROJECT: 'projects', TASK: 'tasks' };
+  const path = seg[entityType];
+  if (!path) throw new Error(`Update nicht unterstützt für ${entityType}`);
+  await pdmFetch(`/${path}/${entityId}`, { method: 'PATCH', body: JSON.stringify(fields) });
+}
+
+export async function deleteBrettEntity(entityType: string, entityId: number): Promise<void> {
+  if (entityType !== 'TASK') throw new Error(`Löschen nicht unterstützt für ${entityType}`);
+  await pdmFetch(`/tasks/${entityId}`, { method: 'DELETE' });
+}
+
 // ── Brett Drag & Drop link creation ──────────────────────────────────────────
 
 export async function createBrettLink(
