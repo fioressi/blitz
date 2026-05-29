@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { ContactSelect } from '../../components/ContactSelect/ContactSelect';
 import type { BrettItem } from '../../services/pdmApiService';
 
 const PDM_API = 'https://pdm-api.azurewebsites.net/api';
@@ -141,7 +142,7 @@ function TaskDetail({ d, editing, form, set }: {
       <div className="bdp-field">
         <span className="bdp-label">Zugewiesen an</span>
         {editing
-          ? <input className="bdp-input" value={form.assignedTo ?? ''} onChange={e => set('assignedTo', e.target.value)} />
+          ? <ContactSelect className="bdp-select" value={form.assignedTo ?? ''} onChange={v => set('assignedTo', v)} />
           : <span className="bdp-value">{String(d.AssignedTo || '—')}</span>}
       </div>
       {(editing || d.DescriptionDe || d.Description) && (

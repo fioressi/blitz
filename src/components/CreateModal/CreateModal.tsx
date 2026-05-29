@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createTask, createProject } from '../../services/pdmApiService';
+import { ContactSelect } from '../ContactSelect/ContactSelect';
 import './CreateModal.css';
 
 interface Props {
@@ -132,12 +133,10 @@ export function CreateModal({ type, onClose, onCreated }: Props) {
                 <div className="cm-row">
                   <label className="cm-label">
                     Zugewiesen an
-                    <input
+                    <ContactSelect
                       className="cm-input"
-                      type="text"
                       value={assignedTo}
-                      onChange={e => setAssignedTo(e.target.value)}
-                      placeholder="Name"
+                      onChange={setAssignedTo}
                     />
                   </label>
                   <label className="cm-label">

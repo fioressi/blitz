@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import type { Attribute } from '../../types/email';
-import { fetchAttributeDetail, updateAttributeDetail, loadContacts } from '../../services/pdmApiService';
-import type { AttributeDetailData, CrmContact } from '../../services/pdmApiService';
+import { fetchAttributeDetail, updateAttributeDetail } from '../../services/pdmApiService';
+import type { AttributeDetailData } from '../../services/pdmApiService';
+import { ContactSelect as SharedContactSelect } from '../ContactSelect/ContactSelect';
 import './AttributeDetail.css';
 
 interface Props {
@@ -218,29 +219,10 @@ function EditForm({ type, form, onChange, onSave, onCancel, saving, error }: Edi
 }
 
 function ContactSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const [contacts, setContacts] = useState<CrmContact[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    loadContacts().then(c => { setContacts(c); setLoading(false); });
-  }, []);
-
   return (
     <div className="attr-form-field">
       <label className="attr-form-label">Zugewiesen</label>
-      <select
-        className="attr-form-input"
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        disabled={loading}
-      >
-        <option value="">{loading ? 'Lädt…' : '— wählen —'}</option>
-        {contacts.map(c => (
-          <option key={c.id} value={c.label} title={c.subLabel}>
-            {c.label}{c.subLabel ? ` · ${c.subLabel}` : ''}
-          </option>
-        ))}
-      </select>
+      <SharedContactSelect className="attr-form-input" value={value} onChange={onChange} />
     </div>
   );
 }
