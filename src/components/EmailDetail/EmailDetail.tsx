@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { IPublicClientApplication, AccountInfo } from '@azure/msal-browser';
 import type { Email, Attachment, AttributeGroup, EmailLink } from '../../types/email';
-import { askIgor, IGOR_PROMPTS, suggestEntityLinks, type EntitySuggestion } from '../../services/igorService';
+import { askIgor, IGOR_PROMPTS, suggestEntityLinks, translateTextToGerman, type EntitySuggestion } from '../../services/igorService';
 import { downloadAttachment } from '../../services/graphService';
 import './EmailDetail.css';
 
@@ -47,11 +47,17 @@ export function EmailDetail({ email, loading, instance, account, onClose, onSwip
     setAiLoading(true);
     setAiResponse(null);
     try {
-      const answer = await askIgor({
-        question,
-        emailBody: email.body || email.preview,
-        emailSubject: email.subject,
-      });
+      const isTranslatePrompt = question === IGOR_PROMPTS.translate;
+      const answer = isTranslatePrompt
+        ? await translateTextToGerman({
+            text: email.body || email.preview,
+            subject: email.subject,
+          })
+        : await askIgor({
+            question,
+            emailBody: email.body || email.preview,
+            emailSubject: email.subject,
+          });
       setAiResponse(answer);
     } catch (err) {
       setAiResponse(`Fehler: ${err instanceof Error ? err.message : String(err)}`);

@@ -186,6 +186,19 @@ Regeln: Nur Entitäten aus der Liste (gleiche id). Maximal 5. Leeres Array [] we
     .map(s => known.get(`${s.type}:${s.id}`)!);
 }
 
+// Convenience wrapper used by ComposeModal / EmailDetail
+export async function translateTextToGerman(opts: {
+  text: string;
+  subject?: string;
+}): Promise<string> {
+  return igorFastText(
+    'translate',
+    'Übersetze den folgenden Text vollständig und sauber ins Deutsche. Behalte Sinn, Ton und Struktur bei. Liefere nur die Übersetzung.',
+    opts.text,
+    opts.subject ? { subject: opts.subject } : undefined,
+  );
+}
+
 // ── Prompts ───────────────────────────────────────────────────────────────────
 
 export const IGOR_PROMPTS = {
