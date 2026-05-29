@@ -480,6 +480,8 @@ export async function loadBrettInvoices(filter?: {
 const ATT_TYPE_LABELS: Record<string, string> = {
   CAD:           'CAD-Datei',
   DRAWING:       'Zeichnung',
+  STP:           'STEP / 3D',
+  DXF:           'DXF',
   SPEC:          'Spezifikation',
   QUOTE:         'Angebot',
   OFFER:         'Angebot',
@@ -509,10 +511,12 @@ export async function loadAttachmentsForEntity(entityType: string, entityId: num
   try {
     const data = await pdmFetch<Array<{
       AttachmentId: number | null;
+      FileId?: number | null;
       FileName: string;
       FileSize?: number;
       MimeType?: string;
       AttachmentType?: string;
+      LinkSource?: string;
     }>>(
       `/attachments?entityType=${encodeURIComponent(entityType)}&entityId=${entityId}`,
     );
@@ -521,8 +525,13 @@ export async function loadAttachmentsForEntity(entityType: string, entityId: num
       const typeLabel = r.AttachmentType ? (ATT_TYPE_LABELS[r.AttachmentType] ?? r.AttachmentType) : undefined;
       const sizeLabel = r.FileSize != null ? `${Math.round(r.FileSize / 1024)} KB` : undefined;
       const attId = r.AttachmentId ?? 0;
+      const fileId = r.FileId ?? 0;
+      let id: string;
+      if (attId > 0)       id = `FILE:${attId}`;
+      else if (fileId > 0) id = `FILE:OBJ:${fileId}`;
+      else                 id = `FILE:CAD:${entityId}`;
       return {
-        id: attId > 0 ? `FILE:${attId}` : `FILE:CAD:${entityId}`,
+        id,
         title: `${icon} ${r.FileName}`,
         subtitle: typeLabel,
         meta: sizeLabel,
