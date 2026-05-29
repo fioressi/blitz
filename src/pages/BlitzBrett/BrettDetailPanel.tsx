@@ -1,5 +1,15 @@
 import { useState, useEffect } from 'react';
 import type { BrettItem } from '../../services/pdmApiService';
+
+const PDM_API = 'https://pdm-api.azurewebsites.net/api';
+
+function fileDownloadUrl(item: BrettItem): string | null {
+  if (item.entityType !== 'FILE') return null;
+  if (item.entityId > 0) return `${PDM_API}/attachments/${item.entityId}/download`;
+  const m = item.id.match(/^FILE:OBJ:(\d+)$/);
+  if (m) return `${PDM_API}/object-files/${m[1]}/download`;
+  return null;
+}
 import {
   fetchBrettEntityDetail,
   updateBrettEntity,
@@ -388,6 +398,23 @@ export function BrettDetailPanel({ item, onClose, onDeleted }: Props) {
                   <span className="bdp-value">{item.meta}</span>
                 </div>
               )}
+              {item.entityType === 'FILE' && (() => {
+                const dl = fileDownloadUrl(item);
+                return dl ? (
+                  <a
+                    href={dl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bdp-btn bdp-btn--primary bdp-download-btn"
+                  >
+                    ⬇ Öffnen / Download
+                  </a>
+                ) : (
+                  <div className="bdp-value bdp-value--muted" style={{ fontSize: 12 }}>
+                    Kein direkter Download verfügbar — Datei im PDM-System öffnen.
+                  </div>
+                );
+              })()}
               {item.entityType === 'INVOICE' && (
                 <div className="bdp-field">
                   <span className="bdp-label">Status</span>
