@@ -6,6 +6,8 @@ import {
   loadBrettPurchaseOrders,
   loadBrettObjects,
   loadBrettInvoices,
+  loadBrettRfqPackages,
+  loadBrettBom,
   loadAttachmentsForEntity,
   loadEmailsForEntity,
   createBrettLink,
@@ -55,6 +57,8 @@ const LANES = [
   { id: 'OFFER',   title: 'Angebote',        icon: '📄', color: '#ec4899' },
   { id: 'OBJECT',  title: 'Objekte',         icon: '⚙️', color: '#6366f1' },
   { id: 'FILE',    title: 'Dateien',         icon: '📎', color: '#14b8a6' },
+  { id: 'RFQ',     title: 'Anfragen',        icon: '📨', color: '#f97316' },
+  { id: 'BOM',     title: 'Stückliste',      icon: '🔧', color: '#84cc16' },
 ];
 
 function emailsToBrettItems(emails: Email[]): BrettItem[] {
@@ -155,6 +159,8 @@ export function BlitzBrett({ emails }: Props) {
         Promise.resolve([]).then(items => setLane('OFFER', { items, loading: false })),
         loadBrettObjects().then(items => setLane('OBJECT', { items, loading: false })),
         Promise.resolve([]).then(items => setLane('FILE', { items, loading: false })),
+        loadBrettRfqPackages().then(items => setLane('RFQ', { items, loading: false })),
+        Promise.resolve([]).then(items => setLane('BOM', { items, loading: false })),
       ]);
     }
     init();
@@ -235,6 +241,27 @@ export function BlitzBrett({ emails }: Props) {
       }
     }
 
+    // ── RFQ lane ──────────────────────────────────────────────────────────────
+    if (et !== 'RFQ') {
+      if (et === 'OBJECT')  jobs.push(['RFQ', () => loadBrettRfqPackages({ objectId: eid })]);
+      if (et === 'PROJECT') jobs.push(['RFQ', () => loadBrettRfqPackages({ projectId: eid })]);
+      if (et === 'RFQ')     jobs.push(['RFQ', () => loadBrettRfqPackages({ rfqId: eid })]);
+    }
+
+    // ── BOM lane ──────────────────────────────────────────────────────────────
+    if (et !== 'BOM') {
+      if (et === 'OBJECT')  jobs.push(['BOM', () => loadBrettBom({ objectId: eid })]);
+      if (et === 'PROJECT') jobs.push(['BOM', () => loadBrettBom({ projectId: eid })]);
+      if (et === 'RFQ')     jobs.push(['OBJECT', () => loadBrettObjects({ rfqId: eid })]);
+      if (et === 'BOM')     jobs.push(['OBJECT', () => loadBrettObjects({ bomId: eid })]);
+    }
+
+    // ── RFQ/BOM → PROJECT reverse lookup ─────────────────────────────────────
+    if (et === 'RFQ' && !jobs.find(j => j[0] === 'PROJECT'))
+      jobs.push(['PROJECT', () => loadBrettProjects({ rfqId: eid })]);
+    if (et === 'BOM' && !jobs.find(j => j[0] === 'PROJECT'))
+      jobs.push(['PROJECT', () => loadBrettProjects({ bomId: eid })]);
+
     // Mark loading, then run all in parallel
     jobs.forEach(([id]) => setLane(id, { loading: true }));
     await Promise.all(
@@ -252,11 +279,13 @@ export function BlitzBrett({ emails }: Props) {
     setIgorInput('');
     setLane('EMAIL',   { items: emailsToBrettItems(emails), loading: false });
     setLane('FILE',    { items: [], loading: false });
+    setLane('BOM',     { items: [], loading: false });
     loadBrettProjects().then(items => setLane('PROJECT', { items, loading: false }));
     loadBrettTasks().then(items => setLane('TASK', { items, loading: false }));
     loadBrettPurchaseOrders().then(items => setLane('ORDER', { items, loading: false }));
     loadBrettObjects().then(items => setLane('OBJECT', { items, loading: false }));
     loadBrettInvoices().then(items => setLane('INVOICE', { items, loading: false }));
+    loadBrettRfqPackages().then(items => setLane('RFQ', { items, loading: false }));
   }, [emails, setLane]);
 
   const handleIgorAsk = useCallback(async (prompt: string) => {
@@ -422,6 +451,8 @@ export function BlitzBrett({ emails }: Props) {
                   <div className="brett-placeholder">Demnächst verfügbar</div>
                 ) : lane.id === 'FILE' && !selection && state.items.length === 0 ? (
                   <div className="brett-placeholder">Karte auswählen um Dateien zu laden</div>
+                ) : lane.id === 'BOM' && !selection && state.items.length === 0 ? (
+                  <div className="brett-placeholder">Projekt oder Objekt auswählen</div>
                 ) : state.items.length === 0 ? (
                   <div className="brett-empty">
                     {selection ? 'Keine Einträge für diese Auswahl' : 'Keine Einträge'}

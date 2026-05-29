@@ -448,6 +448,28 @@ interface InvoiceRow {
   InvoiceDate?: string;
 }
 
+interface RfqRow {
+  RfqId: number;
+  Status?: string;
+  SupplierName?: string;
+  LineCount?: number;
+  ReplyDueDate?: string;
+  CreatedAt?: string;
+}
+
+interface BomRow {
+  BomId: number;
+  ProjectCode?: string;
+  ParentObjectId: number;
+  ParentPartId?: string;
+  ParentName?: string;
+  ChildObjectId: number;
+  ChildPartId?: string;
+  ChildName?: string;
+  Quantity?: number;
+  Position?: number;
+}
+
 // ── Row → BrettItem converters ────────────────────────────────────────────────
 
 function taskToBrettItem(r: TaskRow): BrettItem {
@@ -504,11 +526,35 @@ function buildQuery(base: string, params: Record<string, string | number | undef
   return qs ? `${base}?${qs}` : base;
 }
 
+function rfqToBrettItem(r: RfqRow): BrettItem {
+  return {
+    id: `RFQ:${r.RfqId}`,
+    title: `RFQ-${r.RfqId}${r.SupplierName ? ` — ${r.SupplierName}` : ''}`,
+    subtitle: [r.Status, r.LineCount != null ? `${r.LineCount} Teile` : undefined].filter(Boolean).join(' · '),
+    meta: r.ReplyDueDate ? new Date(r.ReplyDueDate).toLocaleDateString('de-AT') : undefined,
+    entityType: 'RFQ',
+    entityId: r.RfqId,
+  };
+}
+
+function bomToBrettItem(r: BomRow): BrettItem {
+  const qty = r.Quantity != null ? `×${r.Quantity}` : '';
+  return {
+    id: `BOM:${r.BomId}`,
+    title: `${r.ParentPartId ?? '?'} → ${r.ChildPartId ?? '?'}`,
+    subtitle: [qty, r.ChildName || r.ParentName].filter(Boolean).join(' '),
+    meta: r.ProjectCode,
+    entityType: 'BOM',
+    entityId: r.BomId,
+  };
+}
+
 // ── Brett loaders — each returns BrettItem[] ──────────────────────────────────
 
 export async function loadBrettProjects(filter?: {
   orderId?: number; objectId?: number; taskId?: number;
   messageId?: string; attachmentId?: number;
+  rfqId?: number; bomId?: number;
 }): Promise<BrettItem[]> {
   try {
     const url = buildQuery('/search', { type: 'PROJECT', ...filter });
@@ -558,6 +604,27 @@ export async function loadBrettInvoices(filter?: {
     const url = buildQuery('/invoices', { top: 100, ...filter });
     const data = await pdmFetch<InvoiceRow[]>(url);
     return data.map(invoiceToBrettItem);
+  } catch { return []; }
+}
+
+export async function loadBrettRfqPackages(filter?: {
+  objectId?: number; projectId?: number; supplierId?: number; rfqId?: number;
+}): Promise<BrettItem[]> {
+  try {
+    const url = buildQuery('/rfq-packages', { top: 50, ...filter });
+    const data = await pdmFetch<RfqRow[]>(url);
+    return data.map(rfqToBrettItem);
+  } catch { return []; }
+}
+
+export async function loadBrettBom(filter?: {
+  projectId?: number; objectId?: number; bomId?: number;
+}): Promise<BrettItem[]> {
+  if (!filter || (!filter.projectId && !filter.objectId && !filter.bomId)) return [];
+  try {
+    const url = buildQuery('/bom', { top: 100, ...filter });
+    const data = await pdmFetch<BomRow[]>(url);
+    return data.map(bomToBrettItem);
   } catch { return []; }
 }
 
