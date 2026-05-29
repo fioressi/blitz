@@ -389,7 +389,7 @@ export default function App() {
         </header>
 
         {workspaceView === 'emails' && view === 'brett' ? (
-          <BlitzBrett emails={emails} />
+          <BlitzBrett emails={emails} onOpenEmail={handleOpenEmail} />
         ) : null}
 
         {workspaceView === 'emails' ? (

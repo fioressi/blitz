@@ -45,6 +45,7 @@ function isValidLink(source: BrettItem, target: BrettItem): boolean {
 
 interface Props {
   emails: Email[];
+  onOpenEmail: (email: Email) => void;
 }
 
 interface LaneState {
@@ -133,7 +134,7 @@ function buildBrettContext(selection: BrettItem, lanes: Record<string, LaneState
   return lines.filter(l => l !== '').join('\n');
 }
 
-export function BlitzBrett({ emails }: Props) {
+export function BlitzBrett({ emails, onOpenEmail }: Props) {
   const [lanes, setLanes] = useState<Record<string, LaneState>>(() =>
     Object.fromEntries(LANES.map(l => [l.id, { items: [], loading: true }])),
   );
@@ -625,7 +626,15 @@ export function BlitzBrett({ emails }: Props) {
                           role="button"
                           title="Details öffnen"
                           onPointerDown={e => e.stopPropagation()}
-                          onClick={e => { e.stopPropagation(); setDetailItem(item); }}
+                          onClick={e => {
+                            e.stopPropagation();
+                            if (item.entityType === 'EMAIL') {
+                              const email = emails.find(em => em.id === item.id);
+                              if (email) onOpenEmail(email);
+                            } else {
+                              setDetailItem(item);
+                            }
+                          }}
                         >
                           ↗
                         </div>
