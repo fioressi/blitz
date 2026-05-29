@@ -36,7 +36,9 @@ export async function askIgor(opts: {
     throw new Error(`Igor ${res.status}: ${text}`);
   }
   const data = await res.json();
-  return (data.answer || '').trim();
+  const answer = (data.answer || '').trim();
+  const suggested = (data.suggestedAction || '').trim();
+  return suggested ? `${answer}\n\n💡 ${suggested}` : answer;
 }
 
 export interface EntitySuggestion {

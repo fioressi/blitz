@@ -304,10 +304,10 @@ export function BlitzBrett({ emails }: Props) {
     setIgorLoading(true);
     setIgorAnswer('');
     try {
-      const boardData = buildBrettContext(selection, lanes);
       const answer = await askIgor({
-        question: `[ANWEISUNG]\n${BRETT_IGOR_SYSTEM}\n\n[FRAGE]\n${prompt}`,
-        input: boardData,
+        question: prompt,
+        context: BRETT_IGOR_SYSTEM,
+        input: buildBrettContext(selection, lanes),
       });
       setIgorAnswer(answer);
     } catch (e) {
