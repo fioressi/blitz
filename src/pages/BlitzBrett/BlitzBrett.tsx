@@ -242,8 +242,13 @@ export function BlitzBrett({ emails }: Props) {
         input: buildBrettContext(selection, lanes),
       });
       setIgorAnswer(answer);
-    } catch (e) {
-      setIgorAnswer('Igor ist gerade nicht erreichbar.');
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (msg.includes('504') || msg.includes('502') || msg.includes('Timeout')) {
+        setIgorAnswer('Igor hat länger gebraucht als erwartet — bitte nochmal versuchen.');
+      } else {
+        setIgorAnswer('Igor ist gerade nicht erreichbar.');
+      }
     } finally {
       setIgorLoading(false);
     }
