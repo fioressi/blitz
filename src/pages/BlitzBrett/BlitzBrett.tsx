@@ -8,6 +8,9 @@ import {
   loadBrettInvoices,
   loadBrettRfqPackages,
   loadBrettBom,
+  loadBrettSuppliers,
+  loadBrettContacts,
+  loadBrettWorkInstructions,
   loadAttachmentsForEntity,
   loadEmailsForEntity,
   createBrettLink,
@@ -57,8 +60,11 @@ const LANES = [
   { id: 'OFFER',   title: 'Angebote',        icon: '📄', color: '#ec4899' },
   { id: 'OBJECT',  title: 'Objekte',         icon: '⚙️', color: '#6366f1' },
   { id: 'FILE',    title: 'Dateien',         icon: '📎', color: '#14b8a6' },
-  { id: 'RFQ',     title: 'Anfragen',        icon: '📨', color: '#f97316' },
-  { id: 'BOM',     title: 'Stückliste',      icon: '🔧', color: '#84cc16' },
+  { id: 'RFQ',      title: 'Anfragen',           icon: '📨', color: '#f97316' },
+  { id: 'BOM',      title: 'Stückliste',         icon: '🔧', color: '#84cc16' },
+  { id: 'SUPPLIER', title: 'Lieferanten',         icon: '🏭', color: '#0891b2' },
+  { id: 'CONTACT',  title: 'Kontakte',            icon: '👤', color: '#7c3aed' },
+  { id: 'WI',       title: 'Arbeitsanweisungen',  icon: '📜', color: '#be185d' },
 ];
 
 function emailsToBrettItems(emails: Email[]): BrettItem[] {
@@ -210,7 +216,10 @@ export function BlitzBrett({ emails }: Props) {
         loadBrettObjects().then(items => setLane('OBJECT', { items, loading: false })),
         Promise.resolve([]).then(items => setLane('FILE', { items, loading: false })),
         loadBrettRfqPackages().then(items => setLane('RFQ', { items, loading: false })),
-        Promise.resolve([]).then(items => setLane('BOM', { items, loading: false })),
+        Promise.resolve([]).then(items => setLane('BOM',      { items, loading: false })),
+        loadBrettSuppliers().then(items => setLane('SUPPLIER', { items, loading: false })),
+        Promise.resolve([]).then(items => setLane('CONTACT',  { items, loading: false })),
+        Promise.resolve([]).then(items => setLane('WI',       { items, loading: false })),
       ]);
     }
     init();
@@ -312,6 +321,34 @@ export function BlitzBrett({ emails }: Props) {
     if (et === 'BOM' && !jobs.find(j => j[0] === 'PROJECT'))
       jobs.push(['PROJECT', () => loadBrettProjects({ bomId: eid })]);
 
+    // ── SUPPLIER lane ─────────────────────────────────────────────────────────
+    if (et !== 'SUPPLIER') {
+      if (et === 'ORDER')   jobs.push(['SUPPLIER', () => loadBrettSuppliers({ orderId: eid })]);
+      if (et === 'PROJECT') jobs.push(['SUPPLIER', () => loadBrettSuppliers({ projectId: eid })]);
+      if (et === 'OBJECT')  jobs.push(['SUPPLIER', () => loadBrettSuppliers({ objectId: eid })]);
+      if (et === 'RFQ')     jobs.push(['SUPPLIER', () => loadBrettSuppliers({ rfqId: eid })]);
+    }
+
+    // ── CONTACT lane ──────────────────────────────────────────────────────────
+    if (et !== 'CONTACT') {
+      if (et === 'SUPPLIER') jobs.push(['CONTACT', () => loadBrettContacts({ supplierId: eid })]);
+      if (et === 'PROJECT')  jobs.push(['CONTACT', () => loadBrettContacts({ projectId: eid })]);
+      if (et === 'ORDER')    jobs.push(['CONTACT', () => loadBrettSuppliers({ orderId: eid })
+        .then(sups => loadBrettContacts({ supplierId: sups[0]?.entityId }))]);
+    }
+
+    // ── WI (Arbeitsanweisungen) lane ──────────────────────────────────────────
+    if (et !== 'WI') {
+      if (et === 'PROJECT') jobs.push(['WI', () => loadBrettWorkInstructions({ projectId: eid })]);
+      if (et === 'OBJECT')  jobs.push(['WI', () => loadBrettWorkInstructions({ objectId: eid })]);
+    }
+    if (et === 'WI') {
+      if (!jobs.find(j => j[0] === 'PROJECT'))
+        jobs.push(['PROJECT', () => loadBrettProjects({ wiId: eid })]);
+      if (!jobs.find(j => j[0] === 'OBJECT'))
+        jobs.push(['OBJECT', () => loadBrettObjects({ wiId: eid })]);
+    }
+
     // Mark loading, then run all in parallel
     jobs.forEach(([id]) => setLane(id, { loading: true }));
     await Promise.all(
@@ -335,7 +372,10 @@ export function BlitzBrett({ emails }: Props) {
     loadBrettPurchaseOrders().then(items => setLane('ORDER', { items, loading: false }));
     loadBrettObjects().then(items => setLane('OBJECT', { items, loading: false }));
     loadBrettInvoices().then(items => setLane('INVOICE', { items, loading: false }));
-    loadBrettRfqPackages().then(items => setLane('RFQ', { items, loading: false }));
+    loadBrettRfqPackages().then(items => setLane('RFQ',  { items, loading: false }));
+    loadBrettSuppliers().then(items  => setLane('SUPPLIER', { items, loading: false }));
+    setLane('CONTACT', { items: [], loading: false });
+    setLane('WI',      { items: [], loading: false });
   }, [emails, setLane]);
 
   const handleIgorAsk = useCallback(async (prompt: string) => {
@@ -519,6 +559,10 @@ export function BlitzBrett({ emails }: Props) {
                 ) : lane.id === 'FILE' && !selection && state.items.length === 0 ? (
                   <div className="brett-placeholder">Karte auswählen um Dateien zu laden</div>
                 ) : lane.id === 'BOM' && !selection && state.items.length === 0 ? (
+                  <div className="brett-placeholder">Projekt oder Objekt auswählen</div>
+                ) : lane.id === 'CONTACT' && !selection && state.items.length === 0 ? (
+                  <div className="brett-placeholder">Lieferant oder Projekt auswählen</div>
+                ) : lane.id === 'WI' && !selection && state.items.length === 0 ? (
                   <div className="brett-placeholder">Projekt oder Objekt auswählen</div>
                 ) : state.items.length === 0 ? (
                   <div className="brett-empty">

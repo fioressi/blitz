@@ -448,6 +448,40 @@ interface InvoiceRow {
   InvoiceDate?: string;
 }
 
+interface SupplierRow {
+  CrmCompanyId: number;
+  CompanyName: string;
+  CompanyType?: string;
+  City?: string;
+  Country?: string;
+  Phone?: string;
+  Email?: string;
+}
+
+interface ContactRow {
+  ContactId: number;
+  CrmCompanyId: number;
+  CompanyName?: string;
+  FirstName: string;
+  LastName: string;
+  JobTitle?: string;
+  Email?: string;
+  Phone?: string;
+  Mobile?: string;
+}
+
+interface WiRow {
+  WorkInstructionId: number;
+  Title: string;
+  WiType?: string;
+  Status?: string;
+  Version?: string;
+  ProjectCode?: string;
+  PartId?: string;
+  PartName?: string;
+  StepCount?: number;
+}
+
 interface RfqRow {
   RfqId: number;
   Status?: string;
@@ -549,12 +583,45 @@ function bomToBrettItem(r: BomRow): BrettItem {
   };
 }
 
+function supplierToBrettItem(r: SupplierRow): BrettItem {
+  const loc = [r.City, r.Country].filter(Boolean).join(', ');
+  return {
+    id: `SUPPLIER:${r.CrmCompanyId}`,
+    title: r.CompanyName,
+    subtitle: [r.CompanyType, loc].filter(Boolean).join(' · '),
+    entityType: 'SUPPLIER',
+    entityId: r.CrmCompanyId,
+  };
+}
+
+function contactToBrettItem(r: ContactRow): BrettItem {
+  return {
+    id: `CONTACT:${r.ContactId}`,
+    title: `${r.FirstName} ${r.LastName}`,
+    subtitle: [r.JobTitle, r.CompanyName].filter(Boolean).join(' · '),
+    meta: r.Email || r.Phone || undefined,
+    entityType: 'CONTACT',
+    entityId: r.ContactId,
+  };
+}
+
+function wiToBrettItem(r: WiRow): BrettItem {
+  return {
+    id: `WI:${r.WorkInstructionId}`,
+    title: r.Title,
+    subtitle: [r.WiType, r.Status, r.Version ? `v${r.Version}` : undefined].filter(Boolean).join(' · '),
+    meta: [r.PartId, r.StepCount != null ? `${r.StepCount} Schritte` : undefined].filter(Boolean).join(' · '),
+    entityType: 'WI',
+    entityId: r.WorkInstructionId,
+  };
+}
+
 // ── Brett loaders — each returns BrettItem[] ──────────────────────────────────
 
 export async function loadBrettProjects(filter?: {
   orderId?: number; objectId?: number; taskId?: number;
   messageId?: string; attachmentId?: number;
-  rfqId?: number; bomId?: number;
+  rfqId?: number; bomId?: number; wiId?: number;
 }): Promise<BrettItem[]> {
   try {
     const url = buildQuery('/search', { type: 'PROJECT', ...filter });
@@ -588,7 +655,7 @@ export async function loadBrettPurchaseOrders(filter?: {
 export async function loadBrettObjects(filter?: {
   projectId?: number; orderId?: number; taskId?: number;
   messageId?: string; attachmentId?: number;
-  rfqId?: number; bomId?: number;
+  rfqId?: number; bomId?: number; wiId?: number;
 }): Promise<BrettItem[]> {
   try {
     const url = buildQuery('/pdm-objects', { top: 200, ...filter });
@@ -626,6 +693,38 @@ export async function loadBrettBom(filter?: {
     const url = buildQuery('/bom', { top: 100, ...filter });
     const data = await pdmFetch<BomRow[]>(url);
     return data.map(bomToBrettItem);
+  } catch { return []; }
+}
+
+export async function loadBrettSuppliers(filter?: {
+  orderId?: number; projectId?: number; objectId?: number; rfqId?: number;
+}): Promise<BrettItem[]> {
+  try {
+    const url = buildQuery('/suppliers', { top: 100, ...filter });
+    const data = await pdmFetch<SupplierRow[]>(url);
+    return data.map(supplierToBrettItem);
+  } catch { return []; }
+}
+
+export async function loadBrettContacts(filter?: {
+  supplierId?: number; projectId?: number;
+}): Promise<BrettItem[]> {
+  if (!filter || (!filter.supplierId && !filter.projectId)) return [];
+  try {
+    const url = buildQuery('/contacts', { top: 100, ...filter });
+    const data = await pdmFetch<ContactRow[]>(url);
+    return data.map(contactToBrettItem);
+  } catch { return []; }
+}
+
+export async function loadBrettWorkInstructions(filter?: {
+  projectId?: number; objectId?: number; wiId?: number;
+}): Promise<BrettItem[]> {
+  if (!filter || (!filter.projectId && !filter.objectId && !filter.wiId)) return [];
+  try {
+    const url = buildQuery('/work-instructions', { top: 50, ...filter });
+    const data = await pdmFetch<WiRow[]>(url);
+    return data.map(wiToBrettItem);
   } catch { return []; }
 }
 
