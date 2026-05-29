@@ -325,6 +325,50 @@
   box-shadow: 0 0 0 1px var(--lane-color, var(--accent));
 }
 
+.brett-card[draggable='true'] {
+  cursor: grab;
+}
+
+.brett-card[draggable='true']:active {
+  cursor: grabbing;
+}
+
+.brett-card--dragging {
+  opacity: 0.4;
+}
+
+.brett-card--drop-target {
+  border-color: rgba(102, 217, 239, 0.25);
+}
+
+.brett-card--drop-valid {
+  border-color: var(--green, #8ee28e) !important;
+  box-shadow: 0 0 0 2px var(--green, #8ee28e), inset 0 0 0 1px rgba(142, 226, 142, 0.15);
+  background: rgba(142, 226, 142, 0.08) !important;
+}
+
+.brett-card--link-success {
+  border-color: var(--green, #8ee28e) !important;
+  background: rgba(142, 226, 142, 0.12) !important;
+}
+
+.brett-card--link-error {
+  border-color: var(--red, #f87171) !important;
+  background: rgba(248, 113, 113, 0.1) !important;
+}
+
+.brett-card-feedback {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--green, #8ee28e);
+  margin-top: 4px;
+  letter-spacing: 0.02em;
+}
+
+.brett-card-feedback--error {
+  color: var(--red, #f87171);
+}
+
 .brett-card-title {
   font-size: 12px;
   font-weight: 600;

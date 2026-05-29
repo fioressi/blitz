@@ -8,10 +8,33 @@ import {
   loadBrettInvoices,
   loadAttachmentsForEntity,
   loadEmailsForEntity,
+  createBrettLink,
   type BrettItem,
 } from '../../services/pdmApiService';
 import { askIgorBoard } from '../../services/igorService';
 import './BlitzBrett.css';
+
+// ── Drag & Drop helpers ───────────────────────────────────────────────────────
+
+function isDraggable(et: string): boolean {
+  return ['EMAIL', 'TASK', 'OBJECT', 'PROJECT', 'ORDER', 'FILE'].includes(et);
+}
+
+function isValidLink(source: BrettItem, target: BrettItem): boolean {
+  if (source.id === target.id) return false;
+  if (source.entityType === target.entityType) return false;
+  const pair = new Set([source.entityType, target.entityType]);
+  if (pair.has('OFFER') || pair.has('INVOICE')) return false;
+  if (source.entityType === 'FILE' && source.entityId === 0) return false;
+  if (pair.has('EMAIL')) return true;
+  if (pair.has('TASK')) return ['OBJECT', 'ORDER', 'PROJECT', 'SUPPLIER'].some(t => pair.has(t));
+  if (pair.has('OBJECT') && pair.has('PROJECT')) return true;
+  if (pair.has('FILE')) {
+    const other = source.entityType === 'FILE' ? target.entityType : source.entityType;
+    return ['OBJECT', 'ORDER', 'PROJECT', 'TASK'].includes(other);
+  }
+  return false;
+}
 
 interface Props {
   emails: Email[];
@@ -106,6 +129,10 @@ export function BlitzBrett({ emails }: Props) {
   const [igorOpen, setIgorOpen]       = useState(false);
   const [igorLoading, setIgorLoading] = useState(false);
   const [igorAnswer, setIgorAnswer]   = useState('');
+
+  const [dragging, setDragging]   = useState<BrettItem | null>(null);
+  const [overItemId, setOverItemId] = useState<string | null>(null);
+  const [linkFeedback, setLinkFeedback] = useState<Record<string, 'success' | 'error'>>({});
   const [igorInput, setIgorInput]     = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -254,6 +281,41 @@ export function BlitzBrett({ emails }: Props) {
     }
   }, [selection, lanes, igorLoading]);
 
+  const handleDragStart = useCallback((item: BrettItem, e: React.DragEvent) => {
+    setDragging(item);
+    e.dataTransfer.effectAllowed = 'link';
+    e.dataTransfer.setData('text/plain', item.id);
+  }, []);
+
+  const handleDragEnd = useCallback(() => {
+    setDragging(null);
+    setOverItemId(null);
+  }, []);
+
+  const handleDragOver = useCallback((item: BrettItem, e: React.DragEvent) => {
+    if (!dragging || !isValidLink(dragging, item)) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'link';
+    setOverItemId(item.id);
+  }, [dragging]);
+
+  const handleDrop = useCallback((target: BrettItem, e: React.DragEvent) => {
+    e.preventDefault();
+    setOverItemId(null);
+    if (!dragging || !isValidLink(dragging, target)) return;
+    const src = dragging;
+    setDragging(null);
+    createBrettLink(src, target, emails)
+      .then(() => {
+        setLinkFeedback(prev => ({ ...prev, [target.id]: 'success' }));
+        setTimeout(() => setLinkFeedback(prev => { const n = { ...prev }; delete n[target.id]; return n; }), 2000);
+      })
+      .catch(() => {
+        setLinkFeedback(prev => ({ ...prev, [target.id]: 'error' }));
+        setTimeout(() => setLinkFeedback(prev => { const n = { ...prev }; delete n[target.id]; return n; }), 2000);
+      });
+  }, [dragging, emails]);
+
   return (
     <div className="brett-root">
       {selection && (
@@ -365,16 +427,35 @@ export function BlitzBrett({ emails }: Props) {
                 ) : (
                   state.items.map(item => {
                     const isSelected = selection?.id === item.id && selection?.entityType === item.entityType;
+                    const isDropValid  = dragging && dragging.id !== item.id && overItemId === item.id && isValidLink(dragging, item);
+                    const isDropTarget = dragging && dragging.id !== item.id && isValidLink(dragging, item);
+                    const feedback = linkFeedback[item.id];
                     return (
                       <button
                         key={item.id}
-                        className={`brett-card ${isSelected ? 'brett-card--selected' : ''}`}
+                        draggable={isDraggable(item.entityType)}
+                        className={[
+                          'brett-card',
+                          isSelected             ? 'brett-card--selected'    : '',
+                          isDropValid            ? 'brett-card--drop-valid'  : '',
+                          isDropTarget && !isDropValid ? 'brett-card--drop-target' : '',
+                          dragging && dragging.id === item.id ? 'brett-card--dragging' : '',
+                          feedback === 'success' ? 'brett-card--link-success' : '',
+                          feedback === 'error'   ? 'brett-card--link-error'   : '',
+                        ].filter(Boolean).join(' ')}
                         style={{ '--lane-color': lane.color } as React.CSSProperties}
                         onClick={() => handleSelect(item)}
+                        onDragStart={e => handleDragStart(item, e)}
+                        onDragEnd={handleDragEnd}
+                        onDragOver={e => handleDragOver(item, e)}
+                        onDragLeave={() => setOverItemId(null)}
+                        onDrop={e => handleDrop(item, e)}
                       >
                         <div className="brett-card-title">{item.title}</div>
                         {item.subtitle && <div className="brett-card-sub">{item.subtitle}</div>}
                         {item.meta && <div className="brett-card-meta">{item.meta}</div>}
+                        {feedback === 'success' && <div className="brett-card-feedback">✓ Verknüpft</div>}
+                        {feedback === 'error'   && <div className="brett-card-feedback brett-card-feedback--error">✗ Fehler</div>}
                       </button>
                     );
                   })

@@ -325,6 +325,65 @@ export interface BrettItem {
   entityId: number;
 }
 
+// ── Brett Drag & Drop link creation ──────────────────────────────────────────
+
+export async function createBrettLink(
+  source: BrettItem,
+  target: BrettItem,
+  emails?: import('../types/email').Email[],
+): Promise<void> {
+  const st = source.entityType;
+  const tt = target.entityType;
+
+  // EMAIL ↔ entity: use POST /emails (idempotent, creates DB record if needed)
+  if (st === 'EMAIL' || tt === 'EMAIL') {
+    const emailItem  = st === 'EMAIL' ? source : target;
+    const entityItem = st === 'EMAIL' ? target : source;
+    const email = emails?.find(e => e.id === emailItem.id);
+    if (!email) {
+      // Email already in DB (from cross-filter) — use entity-links endpoint
+      await pdmFetch('/entity-links', {
+        method: 'POST',
+        body: JSON.stringify({
+          sourceType: 'EMAIL',
+          sourceId: emailItem.id,
+          targetType: entityItem.entityType,
+          targetId: entityItem.entityId,
+        }),
+      });
+      return;
+    }
+    await saveEmailWithLink(email, entityItem.entityType, entityItem.entityId);
+    return;
+  }
+
+  // All other combinations → generic entity-links endpoint
+  await pdmFetch('/entity-links', {
+    method: 'POST',
+    body: JSON.stringify({
+      sourceType: st,
+      sourceId: source.entityId,
+      targetType: tt,
+      targetId: target.entityId,
+    }),
+  });
+}
+
+export async function deleteBrettLink(
+  source: BrettItem,
+  target: BrettItem,
+): Promise<void> {
+  await pdmFetch('/entity-links', {
+    method: 'DELETE',
+    body: JSON.stringify({
+      sourceType: source.entityType,
+      sourceId: source.entityType === 'EMAIL' ? source.id : source.entityId,
+      targetType: target.entityType,
+      targetId: target.entityId,
+    }),
+  });
+}
+
 // ── Internal row types ────────────────────────────────────────────────────────
 
 interface TaskRow {
