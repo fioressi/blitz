@@ -1,12 +1,22 @@
 import type { IPublicClientApplication, AccountInfo } from '@azure/msal-browser';
+import { InteractionRequiredAuthError } from '@azure/msal-browser';
 import { loginRequest } from '../auth/msalConfig';
 import type { Email, Attachment } from '../types/email';
 
 const GRAPH_BASE = 'https://graph.microsoft.com/v1.0';
 
 async function getToken(instance: IPublicClientApplication, account: AccountInfo): Promise<string> {
-  const result = await instance.acquireTokenSilent({ ...loginRequest, account });
-  return result.accessToken;
+  try {
+    const result = await instance.acquireTokenSilent({ ...loginRequest, account });
+    return result.accessToken;
+  } catch (err) {
+    if (err instanceof InteractionRequiredAuthError) {
+      // Silent refresh failed (Token abgelaufen, 3rd-party-Cookie blockiert) → Redirect
+      await instance.acquireTokenRedirect({ ...loginRequest, account });
+      throw err; // Redirect passiert, diese Zeile wird nie erreicht
+    }
+    throw err;
+  }
 }
 
 async function graphFetch<T>(

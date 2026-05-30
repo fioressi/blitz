@@ -7,7 +7,8 @@ export const msalConfig = {
     redirectUri: window.location.origin,
   },
   cache: {
-    cacheLocation: 'sessionStorage' as const,
+    cacheLocation: 'localStorage' as const,
+    storeAuthStateInCookie: true, // IE11 / Safari ITP Fallback
   },
 };
 
