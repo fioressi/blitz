@@ -4,12 +4,27 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Fertigungsauftrag | HERPERT</title>
-  <link rel="stylesheet" href="./form-page.css">
 </head>
 <body>
   <div id="app"></div>
-  <script src="./page-data.js"></script>
-  <script>window.HERPERT_PAGE_KEY = "production-order";</script>
-  <script src="./form-page.js"></script>
+  <script>
+  window.HERPERT_LIVE_CONFIG = {
+    title: { de: 'Fertigungsaufträge', en: 'Production Orders', hu: 'Gyártási megbízások' },
+    endpoint: '/production-orders?top=200',
+    searchKeys: ['PoNumber', 'Title', 'Status', 'ProjectCode', 'PartId', 'PartName'],
+    columns: [
+      { key: 'PoNumber',          label: { de: 'FA-Nr.',      en: 'PO-No.',      hu: 'FA-szám'    } },
+      { key: 'Title',             label: { de: 'Titel',       en: 'Title',       hu: 'Cím'        } },
+      { key: 'Status',            label: { de: 'Status',      en: 'Status',      hu: 'Státusz'    },
+        badge: { 'OPEN':'#66d9ef','IN_PROGRESS':'#ffd166','DONE':'#8ee28e','CANCELLED':'#f87171','*':'#aab8ca' } },
+      { key: 'ProjectCode',       label: { de: 'Projekt',     en: 'Project',     hu: 'Projekt'    } },
+      { key: 'PartId',            label: { de: 'Part-ID',     en: 'Part-ID',     hu: 'Part-ID'    } },
+      { key: 'PartName',          label: { de: 'Bezeichnung', en: 'Description', hu: 'Megnevezés' } },
+      { key: 'Quantity',          label: { de: 'Menge',       en: 'Qty',         hu: 'Mennyiség'  } },
+      { key: 'RequestedDelivery', label: { de: 'Termin',      en: 'Due Date',    hu: 'Határidő'   }, date: true },
+    ],
+  };
+  </script>
+  <script src="./live-table.js"></script>
 </body>
 </html>

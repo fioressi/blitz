@@ -4,12 +4,27 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Objekte | HERPERT</title>
-  <link rel="stylesheet" href="./form-page.css">
 </head>
 <body>
   <div id="app"></div>
-  <script src="./page-data.js"></script>
-  <script>window.HERPERT_PAGE_KEY = "objects";</script>
-  <script src="./form-page.js"></script>
+  <script>
+  window.HERPERT_LIVE_CONFIG = {
+    title: { de: 'PDM Objekte', en: 'PDM Objects', hu: 'PDM Objektumok' },
+    endpoint: '/pdm-objects?top=300',
+    searchKeys: ['PartId', 'part_name', 'Description', 'StatusCode', 'ClassCode'],
+    columns: [
+      { key: 'PartId',      label: { de: 'Part-ID',      en: 'Part-ID',     hu: 'Part-ID'    } },
+      { key: 'part_name',   label: { de: 'Name',          en: 'Name',        hu: 'Név'        } },
+      { key: 'StatusCode',  label: { de: 'Status',        en: 'Status',      hu: 'Státusz'    },
+        badge: { 'AP':'#8ee28e','DR':'#ffd166','OB':'#f87171','*':'#aab8ca' } },
+      { key: 'ClassCode',   label: { de: 'Klasse',        en: 'Class',       hu: 'Osztály'    } },
+      { key: 'type',        label: { de: 'Typ',           en: 'Type',        hu: 'Típus'      } },
+      { key: 'make_buy',    label: { de: 'Make/Buy',      en: 'Make/Buy',    hu: 'Make/Buy'   },
+        badge: { 'MAKE':'#66d9ef','BUY':'#ffd166','*':'#aab8ca' } },
+      { key: 'Description', label: { de: 'Beschreibung',  en: 'Description', hu: 'Leírás'     } },
+    ],
+  };
+  </script>
+  <script src="./live-table.js"></script>
 </body>
 </html>

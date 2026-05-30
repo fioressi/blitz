@@ -3,13 +3,26 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Anfragen | HERPERT</title>
-  <link rel="stylesheet" href="./form-page.css">
+  <title>Anfragen (RFQ) | HERPERT</title>
 </head>
 <body>
   <div id="app"></div>
-  <script src="./page-data.js"></script>
-  <script>window.HERPERT_PAGE_KEY = "rfq";</script>
-  <script src="./form-page.js"></script>
+  <script>
+  window.HERPERT_LIVE_CONFIG = {
+    title: { de: 'Anfragen (RFQ)', en: 'RFQ Management', hu: 'Ajánlatkérések' },
+    endpoint: '/rfq-packages?top=200',
+    searchKeys: ['RfqId', 'Status', 'SupplierName'],
+    columns: [
+      { key: 'RfqId',       label: { de: 'RFQ-ID',        en: 'RFQ-ID',       hu: 'RFQ-ID'      } },
+      { key: 'Status',      label: { de: 'Status',         en: 'Status',       hu: 'Státusz'     },
+        badge: { 'DRAFT':'#aab8ca','SENT':'#66d9ef','REPLIED':'#ffd166','AWARDED':'#8ee28e','CANCELLED':'#f87171','*':'#aab8ca' } },
+      { key: 'SupplierName',label: { de: 'Lieferant',      en: 'Supplier',     hu: 'Szállító'    } },
+      { key: 'LineCount',   label: { de: 'Positionen',     en: 'Lines',        hu: 'Tételek'     } },
+      { key: 'SentAt',      label: { de: 'Gesendet am',    en: 'Sent',         hu: 'Küldve'      }, date: true },
+      { key: 'ReplyDueDate',label: { de: 'Antwort bis',    en: 'Reply Due',    hu: 'Válasz határidő'}, date: true },
+    ],
+  };
+  </script>
+  <script src="./live-table.js"></script>
 </body>
 </html>

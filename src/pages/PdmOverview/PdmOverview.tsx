@@ -10,8 +10,8 @@ const PDM_GROUPS: PdmGroup[] = [
     key: 'engineering', icon: '⚙️',
     titles: { de: 'Entwicklung', en: 'Engineering', hu: 'Fejlesztés' },
     pages: [
-      { titles: { de: 'Objekte',        en: 'Objects',      hu: 'Objektumok'      }, file: 'objects.html',    form: 'Form_PdmObjekte' },
-      { titles: { de: 'Stückliste',     en: 'BOM',          hu: 'Darabjegyzék'    }, file: 'bom.html',        form: 'Form_BomVerwaltung' },
+      { titles: { de: 'Objekte',        en: 'Objects',      hu: 'Objektumok'      }, file: 'objects.html',    live: true },
+      { titles: { de: 'Stückliste',     en: 'BOM',          hu: 'Darabjegyzék'    }, file: 'bom.html',        live: true },
       { titles: { de: 'Objekt anlegen', en: 'Create Object', hu: 'Obj. létrehozás' }, file: 'new-object.html', live: true },
     ],
   },
@@ -19,10 +19,10 @@ const PDM_GROUPS: PdmGroup[] = [
     key: 'planung', icon: '📋',
     titles: { de: 'Planung', en: 'Planning', hu: 'Tervezés' },
     pages: [
-      { titles: { de: 'Fertigungsauftrag',        en: 'Production Order',   hu: 'Gyártási megbízás'   }, file: 'production-order.html',     form: 'Form_ProductionOrder' },
-      { titles: { de: 'Auftragsübersicht',         en: 'Order Overview',     hu: 'Rendelés áttekintés' }, file: 'orders.html',               form: 'Form_AuftragsVerwaltung' },
-      { titles: { de: 'Produktionsübersicht',      en: 'Production Dashboard', hu: 'Gyártási áttekintés' }, file: 'production-dashboard.html', form: 'Form_ProduktionsDashboard' },
-      { titles: { de: 'Beschaffungsvorbereitung',  en: 'Readiness Workbench', hu: 'Beszerzési előkészítés' }, file: 'readiness.html',          form: 'Form_ReadinessWorkbench' },
+      { titles: { de: 'Fertigungsauftrag',        en: 'Production Order',     hu: 'Gyártási megbízás'      }, file: 'production-order.html',     live: true },
+      { titles: { de: 'Auftragsübersicht',         en: 'Order Overview',       hu: 'Rendelés áttekintés'    }, file: 'orders.html',               form: 'Form_AuftragsVerwaltung' },
+      { titles: { de: 'Produktionsübersicht',      en: 'Production Dashboard', hu: 'Gyártási áttekintés'    }, file: 'production-dashboard.html', live: true },
+      { titles: { de: 'Beschaffungsvorbereitung',  en: 'Readiness Workbench',  hu: 'Beszerzési előkészítés' }, file: 'readiness.html',            form: 'Form_ReadinessWorkbench' },
     ],
   },
   {
@@ -30,9 +30,9 @@ const PDM_GROUPS: PdmGroup[] = [
     titles: { de: 'Einkauf', en: 'Purchasing', hu: 'Beszerzés' },
     pages: [
       { titles: { de: 'Bestellungen',      en: 'Purchase Orders',  hu: 'Rendelések'        }, file: 'purchase-order.html',    form: 'Form_PurchaseOrder' },
-      { titles: { de: 'Angebote',          en: 'Supplier Quotes',  hu: 'Ajánlatok'         }, file: 'supplier-quotes.html',   form: 'Form_SupplierQuotes' },
-      { titles: { de: 'Rechnungen',        en: 'Invoices',         hu: 'Számlák'           }, file: 'supplier-invoices.html', form: 'Form_SupplierInvoices' },
-      { titles: { de: 'Anfragen (RFQ)',    en: 'RFQ Management',   hu: 'Ajánlatkérések'    }, file: 'rfq.html',               form: 'Form_RfqVerwaltung' },
+      { titles: { de: 'Angebote',          en: 'Supplier Quotes',  hu: 'Ajánlatok'         }, file: 'supplier-quotes.html',   live: true },
+      { titles: { de: 'Rechnungen',        en: 'Invoices',         hu: 'Számlák'           }, file: 'supplier-invoices.html', live: true },
+      { titles: { de: 'Anfragen (RFQ)',    en: 'RFQ Management',   hu: 'Ajánlatkérések'    }, file: 'rfq.html',               live: true },
       { titles: { de: 'Bestellverfolgung', en: 'PO Tracking',      hu: 'Rendelés követés'  }, file: 'po-tracking.html',       live: true },
     ],
   },
@@ -56,7 +56,7 @@ const PDM_GROUPS: PdmGroup[] = [
     key: 'admin', icon: '🔧',
     titles: { de: 'Admin', en: 'Admin', hu: 'Admin' },
     pages: [
-      { titles: { de: 'Kontakte', en: 'Contacts', hu: 'Kapcsolatok' }, file: 'contacts.html', form: 'Form_CrmKontakte' },
+      { titles: { de: 'Kontakte', en: 'Contacts', hu: 'Kapcsolatok' }, file: 'contacts.html', live: true },
       { titles: { de: 'Projekte', en: 'Projects',  hu: 'Projektek'  }, file: 'projects.html', form: 'Form_ProjektVerwaltung' },
       { titles: { de: 'Aufgaben', en: 'Tasks',     hu: 'Feladatok'  }, file: 'tasks.html',    live: true },
     ],

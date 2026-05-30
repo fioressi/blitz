@@ -3,13 +3,190 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Produktionsubersicht | HERPERT</title>
-  <link rel="stylesheet" href="./form-page.css">
+  <title>Produktionsübersicht | HERPERT</title>
+  <style>
+    :root{--bg:#101928;--panel:rgba(255,255,255,.07);--line:rgba(255,255,255,.13);--text:#edf4ff;--muted:#aab8ca;--accent:#66d9ef;--green:#8ee28e;--yellow:#ffd166;--red:#f87171}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(circle at top,#1e3350,var(--bg) 65%);color:var(--text);min-height:100vh}
+    .topbar{display:flex;align-items:center;gap:14px;padding:13px 22px;background:rgba(255,255,255,.06);border-bottom:1px solid var(--line);backdrop-filter:blur(10px)}
+    .embedded .topbar{display:none}
+    .embedded body{background:transparent}
+    .embedded .wrap{padding-top:8px}
+    a.back{color:var(--muted);text-decoration:none;font-size:13px;font-weight:600;padding:5px 10px;border:1px solid var(--line);border-radius:7px}
+    a.back:hover{background:rgba(255,255,255,.08);color:var(--text)}
+    .brand{font-size:15px;font-weight:900;color:var(--accent);letter-spacing:.04em;margin-left:4px}
+    .spacer{flex:1}
+    select.lang{padding:5px 10px;font-size:12px;font-weight:900;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.22);border-radius:7px;color:var(--text);cursor:pointer;appearance:none;min-width:52px;text-align:center}
+    .wrap{width:min(1200px,94%);margin:0 auto;padding:24px 0 40px}
+    h1{margin:0 0 20px;font-size:26px;font-weight:900;color:var(--accent)}
+    .kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:24px}
+    .kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;text-align:center}
+    .kpi-val{font-size:28px;font-weight:900;margin-bottom:4px}
+    .kpi-lbl{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+    .kpi.red .kpi-val{color:var(--red)}
+    .kpi.yellow .kpi-val{color:var(--yellow)}
+    .kpi.green .kpi-val{color:var(--green)}
+    .filter-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+    .filter-btn{padding:7px 14px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--muted);font-weight:700;cursor:pointer;font-size:12px;transition:all .15s}
+    .filter-btn:hover,.filter-btn.active{background:rgba(102,217,239,.12);border-color:rgba(102,217,239,.4);color:var(--accent)}
+    .filter-btn.red.active{background:rgba(248,113,113,.12);border-color:rgba(248,113,113,.4);color:var(--red)}
+    .filter-btn.yellow.active{background:rgba(255,209,102,.12);border-color:rgba(255,209,102,.4);color:var(--yellow)}
+    .filter-btn.green.active{background:rgba(142,226,142,.12);border-color:rgba(142,226,142,.4);color:var(--green)}
+    .table-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--line)}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    thead{background:rgba(255,255,255,.05)}
+    th{padding:10px 14px;text-align:left;font-weight:700;color:var(--muted);font-size:11px;letter-spacing:.05em;text-transform:uppercase;border-bottom:1px solid var(--line);white-space:nowrap}
+    td{padding:9px 14px;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:middle}
+    tr:last-child td{border-bottom:none}
+    tr:hover td{background:rgba(255,255,255,.03)}
+    .ampel{width:10px;height:10px;border-radius:50%;display:inline-block}
+    .ampel.ROT{background:var(--red)}
+    .ampel.GELB{background:var(--yellow)}
+    .ampel.GRUEN{background:var(--green)}
+  </style>
 </head>
 <body>
-  <div id="app"></div>
-  <script src="./page-data.js"></script>
-  <script>window.HERPERT_PAGE_KEY = "production-dashboard";</script>
-  <script src="./form-page.js"></script>
+  <div class="topbar">
+    <a class="back" id="home-link" href="./index.html">← Hauptmenü</a>
+    <span class="brand">HERPERT</span>
+    <span class="spacer"></span>
+    <select class="lang" id="lang-sel" aria-label="Language">
+      <option value="de">DE</option>
+      <option value="en">EN</option>
+      <option value="hu">HU</option>
+    </select>
+  </div>
+  <div class="wrap">
+    <h1 id="page-title">Produktionsübersicht</h1>
+    <div class="kpis" id="kpi-area"></div>
+    <div class="filter-row" id="filter-row"></div>
+    <div class="table-wrap">
+      <table>
+        <thead id="dash-thead"></thead>
+        <tbody id="dash-tbody"><tr><td colspan="8" style="text-align:center;padding:40px;color:#aab8ca">…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+  <script>
+  (() => {
+    if (window.self !== window.top) document.documentElement.classList.add('embedded');
+    const API = 'https://pdm-api.azurewebsites.net/api';
+    const STORE = 'herpert-lang';
+    let lang = localStorage.getItem(STORE) || 'de';
+    let activeFilter = 'ALLE';
+    let allRows = [];
+
+    const L = {
+      de: { title:'Produktionsübersicht', home:'← Hauptmenü', loading:'Lade Daten…', empty:'Keine Aufträge', err:'Fehler',
+            all:'Alle', red:'Rot', yellow:'Gelb', green:'Grün', overdue:'Überfällig',
+            kpi_total:'Gesamt', kpi_red:'Kritisch', kpi_yellow:'In Arbeit', kpi_overdue:'Überfällig',
+            col_nr:'FA-Nr.', col_title:'Titel', col_proj:'Projekt', col_part:'Part-ID', col_qty:'Menge', col_status:'Status', col_due:'Termin', col_action:'Nächste Aktion' },
+      en: { title:'Production Dashboard', home:'← Main Menu', loading:'Loading…', empty:'No orders', err:'Error',
+            all:'All', red:'Red', yellow:'Yellow', green:'Green', overdue:'Overdue',
+            kpi_total:'Total', kpi_red:'Critical', kpi_yellow:'In Progress', kpi_overdue:'Overdue',
+            col_nr:'PO-No.', col_title:'Title', col_proj:'Project', col_part:'Part-ID', col_qty:'Qty', col_status:'Status', col_due:'Due', col_action:'Next Action' },
+      hu: { title:'Gyártási áttekintés', home:'← Főmenü', loading:'Betöltés…', empty:'Nincs megbízás', err:'Hiba',
+            all:'Mind', red:'Piros', yellow:'Sárga', green:'Zöld', overdue:'Késésben',
+            kpi_total:'Összesen', kpi_red:'Kritikus', kpi_yellow:'Folyamatban', kpi_overdue:'Késésben',
+            col_nr:'FA-szám', col_title:'Cím', col_proj:'Projekt', col_part:'Part-ID', col_qty:'Menny.', col_status:'Státusz', col_due:'Határidő', col_action:'Következő' },
+    };
+    const t = k => (L[lang]||L.de)[k];
+    const esc = v => String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const fmtDate = v => { try { return v ? new Date(v).toLocaleDateString(lang==='en'?'en-GB':lang==='hu'?'hu-HU':'de-DE') : '—'; } catch { return v||'—'; } };
+
+    const renderFilters = () => {
+      const filters = [
+        {k:'ALLE',lbl:t('all'),cls:''},
+        {k:'ROT',lbl:t('red'),cls:'red'},
+        {k:'GELB',lbl:t('yellow'),cls:'yellow'},
+        {k:'GRUEN',lbl:t('green'),cls:'green'},
+        {k:'OVERDUE',lbl:t('overdue'),cls:''},
+      ];
+      document.getElementById('filter-row').innerHTML = filters.map(f =>
+        `<button class="filter-btn ${f.cls}${activeFilter===f.k?' active':''}" data-f="${f.k}">${f.lbl}</button>`
+      ).join('');
+      document.getElementById('filter-row').querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          activeFilter = btn.dataset.f;
+          renderFilters();
+          renderRows();
+        });
+      });
+    };
+
+    const renderRows = () => {
+      const rows = activeFilter === 'ALLE' ? allRows
+        : activeFilter === 'OVERDUE' ? allRows.filter(r => r.IsOverdue)
+        : allRows.filter(r => r.Ampel === activeFilter);
+      const tbody = document.getElementById('dash-tbody');
+      if (!rows.length) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:32px;color:#aab8ca">${t('empty')}</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = rows.map(r => `<tr>
+        <td><span class="ampel ${esc(r.Ampel)}"></span></td>
+        <td>${esc(r.PrNumber)}</td>
+        <td>${esc(r.Title)}</td>
+        <td>${esc(r.ProjectCode)}</td>
+        <td>${esc(r.PartId||'')}</td>
+        <td>${esc(r.Quantity)}</td>
+        <td>${fmtDate(r.RequestedDelivery)}</td>
+        <td style="color:#aab8ca;font-size:12px">${esc(r.NextAction||'')}</td>
+      </tr>`).join('');
+    };
+
+    const applyLang = () => {
+      document.title = t('title') + ' | HERPERT';
+      document.getElementById('page-title').textContent = t('title');
+      document.getElementById('home-link').textContent = t('home');
+      document.getElementById('lang-sel').value = lang;
+      document.getElementById('dash-thead').innerHTML = `<tr>
+        <th></th>
+        <th>${t('col_nr')}</th><th>${t('col_title')}</th><th>${t('col_proj')}</th>
+        <th>${t('col_part')}</th><th>${t('col_qty')}</th>
+        <th>${t('col_due')}</th><th>${t('col_action')}</th>
+      </tr>`;
+      renderFilters();
+      renderRows();
+    };
+
+    const loadKpi = async () => {
+      try {
+        const res = await fetch(`${API}/production-dashboard/kpi`);
+        if (!res.ok) return;
+        const k = await res.json();
+        document.getElementById('kpi-area').innerHTML = [
+          {cls:'',val:k.Total??'—',lbl:t('kpi_total')},
+          {cls:'red',val:k.Red??k.ROT??'—',lbl:t('kpi_red')},
+          {cls:'yellow',val:k.Yellow??k.GELB??'—',lbl:t('kpi_yellow')},
+          {cls:'',val:k.Overdue??k.IsOverdue??'—',lbl:t('kpi_overdue')},
+        ].map(k => `<div class="kpi ${k.cls}"><div class="kpi-val">${k.val}</div><div class="kpi-lbl">${k.lbl}</div></div>`).join('');
+      } catch {}
+    };
+
+    const loadItems = async () => {
+      const tbody = document.getElementById('dash-tbody');
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:40px;color:#aab8ca">${t('loading')}</td></tr>`;
+      try {
+        const res = await fetch(`${API}/production-dashboard/items`);
+        if (!res.ok) throw new Error(res.status);
+        allRows = await res.json();
+        renderRows();
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:40px;color:#f87171">${t('err')}: ${e.message}</td></tr>`;
+      }
+    };
+
+    document.getElementById('lang-sel').addEventListener('change', e => {
+      lang = e.target.value;
+      localStorage.setItem(STORE, lang);
+      applyLang();
+    });
+
+    applyLang();
+    loadKpi();
+    loadItems();
+  })();
+  </script>
 </body>
 </html>

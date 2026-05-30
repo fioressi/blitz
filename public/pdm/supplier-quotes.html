@@ -4,12 +4,25 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Angebote | HERPERT</title>
-  <link rel="stylesheet" href="./form-page.css">
 </head>
 <body>
   <div id="app"></div>
-  <script src="./page-data.js"></script>
-  <script>window.HERPERT_PAGE_KEY = "supplier-quotes";</script>
-  <script src="./form-page.js"></script>
+  <script>
+  window.HERPERT_LIVE_CONFIG = {
+    title: { de: 'Lieferanten / Angebote', en: 'Suppliers / Quotes', hu: 'Szállítók / Ajánlatok' },
+    endpoint: '/suppliers?top=300',
+    searchKeys: ['CompanyName', 'CompanyType', 'City', 'Country', 'Email'],
+    columns: [
+      { key: 'CompanyName', label: { de: 'Firma',        en: 'Company',      hu: 'Cég'          } },
+      { key: 'CompanyType', label: { de: 'Typ',          en: 'Type',         hu: 'Típus'        },
+        badge: { 'SUPPLIER':'#66d9ef','CUSTOMER':'#8ee28e','SUBCONTRACTOR':'#ffd166','*':'#aab8ca' } },
+      { key: 'City',        label: { de: 'Stadt',        en: 'City',         hu: 'Város'        } },
+      { key: 'Country',     label: { de: 'Land',         en: 'Country',      hu: 'Ország'       } },
+      { key: 'Phone',       label: { de: 'Telefon',      en: 'Phone',        hu: 'Telefon'      } },
+      { key: 'Email',       label: { de: 'E-Mail',       en: 'Email',        hu: 'E-mail'       } },
+    ],
+  };
+  </script>
+  <script src="./live-table.js"></script>
 </body>
 </html>
