@@ -4,12 +4,28 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Beschaffungsvorbereitung | HERPERT</title>
-  <link rel="stylesheet" href="./form-page.css">
 </head>
 <body>
   <div id="app"></div>
-  <script src="./page-data.js"></script>
-  <script>window.HERPERT_PAGE_KEY = "readiness";</script>
-  <script src="./form-page.js"></script>
+  <script>
+  window.HERPERT_LIVE_CONFIG = {
+    title: { de: 'Beschaffungsvorbereitung', en: 'Readiness Workbench', hu: 'Beszerzési előkészítés' },
+    endpoint: '/production-dashboard/items',
+    searchKeys: ['PrNumber', 'Title', 'ProjectCode', 'Status', 'NextAction'],
+    filterRows: rows => rows.filter(r => r.ShortfallCount > 0 || r.OpenPoCount === 0),
+    columns: [
+      { key: 'PrNumber',          label: { de: 'FA-Nr.',      en: 'PO No.',     hu: 'FA-szám'    } },
+      { key: 'Title',             label: { de: 'Titel',       en: 'Title',      hu: 'Cím'        } },
+      { key: 'ProjectCode',       label: { de: 'Projekt',     en: 'Project',    hu: 'Projekt'    } },
+      { key: 'Status',            label: { de: 'Status',      en: 'Status',     hu: 'Státusz'    },
+        badge: { 'OPEN':'#66d9ef','IN_PROGRESS':'#ffd166','DONE':'#8ee28e','*':'#aab8ca' } },
+      { key: 'ShortfallCount',    label: { de: 'Fehlteile',   en: 'Shortfalls', hu: 'Hiányzó'    } },
+      { key: 'OpenPoCount',       label: { de: 'Offene POs',  en: 'Open POs',   hu: 'Nyitott PO' } },
+      { key: 'NextAction',        label: { de: 'Nächste Aktion', en: 'Next Action', hu: 'Következő' } },
+      { key: 'RequestedDelivery', label: { de: 'Termin',      en: 'Due',        hu: 'Határidő'   }, date: true },
+    ],
+  };
+  </script>
+  <script src="./live-table.js"></script>
 </body>
 </html>

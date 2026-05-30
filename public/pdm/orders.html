@@ -3,13 +3,26 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Auftragsubersicht | HERPERT</title>
-  <link rel="stylesheet" href="./form-page.css">
+  <title>Auftragsübersicht | HERPERT</title>
 </head>
 <body>
   <div id="app"></div>
-  <script src="./page-data.js"></script>
-  <script>window.HERPERT_PAGE_KEY = "orders";</script>
-  <script src="./form-page.js"></script>
+  <script>
+  window.HERPERT_LIVE_CONFIG = {
+    title: { de: 'Auftragsübersicht', en: 'Order Overview', hu: 'Rendelés áttekintés' },
+    endpoint: '/purchase-orders-tracking?top=400',
+    transform: d => d.orders || d,
+    searchKeys: ['PoNumber', 'OrderName', 'SupplierName', 'Status', 'Description'],
+    columns: [
+      { key: 'PoNumber',     label: { de: 'PO-Nr.',       en: 'PO No.',     hu: 'Rendelés-szám' } },
+      { key: 'OrderName',    label: { de: 'Bezeichnung',  en: 'Name',       hu: 'Megnevezés'    } },
+      { key: 'SupplierName', label: { de: 'Lieferant',    en: 'Supplier',   hu: 'Szállító'      } },
+      { key: 'Description',  label: { de: 'Beschreibung', en: 'Description',hu: 'Leírás'        } },
+      { key: 'Status',       label: { de: 'Status',       en: 'Status',     hu: 'Státusz'       },
+        badge: { 'DRAFT':'#aab8ca','VENDOR_ASSIGNED':'#66d9ef','QUOTED':'#ffd166','ORDERED':'#8ee28e','SHIPPING':'#66d9ef','ARRIVED':'#8ee28e','STOCKED':'#aab8ca','*':'#aab8ca' } },
+    ],
+  };
+  </script>
+  <script src="./live-table.js"></script>
 </body>
 </html>

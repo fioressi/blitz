@@ -20,16 +20,16 @@ const PDM_GROUPS: PdmGroup[] = [
     titles: { de: 'Planung', en: 'Planning', hu: 'Tervezés' },
     pages: [
       { titles: { de: 'Fertigungsauftrag',        en: 'Production Order',     hu: 'Gyártási megbízás'      }, file: 'production-order.html',     live: true },
-      { titles: { de: 'Auftragsübersicht',         en: 'Order Overview',       hu: 'Rendelés áttekintés'    }, file: 'orders.html',               form: 'Form_AuftragsVerwaltung' },
+      { titles: { de: 'Auftragsübersicht',         en: 'Order Overview',       hu: 'Rendelés áttekintés'    }, file: 'orders.html',               live: true },
       { titles: { de: 'Produktionsübersicht',      en: 'Production Dashboard', hu: 'Gyártási áttekintés'    }, file: 'production-dashboard.html', live: true },
-      { titles: { de: 'Beschaffungsvorbereitung',  en: 'Readiness Workbench',  hu: 'Beszerzési előkészítés' }, file: 'readiness.html',            form: 'Form_ReadinessWorkbench' },
+      { titles: { de: 'Beschaffungsvorbereitung',  en: 'Readiness Workbench',  hu: 'Beszerzési előkészítés' }, file: 'readiness.html',            live: true },
     ],
   },
   {
     key: 'einkauf', icon: '🛒',
     titles: { de: 'Einkauf', en: 'Purchasing', hu: 'Beszerzés' },
     pages: [
-      { titles: { de: 'Bestellungen',      en: 'Purchase Orders',  hu: 'Rendelések'        }, file: 'purchase-order.html',    form: 'Form_PurchaseOrder' },
+      { titles: { de: 'Bestellungen',      en: 'Purchase Orders',  hu: 'Rendelések'        }, file: 'purchase-order.html',    live: true },
       { titles: { de: 'Angebote',          en: 'Supplier Quotes',  hu: 'Ajánlatok'         }, file: 'supplier-quotes.html',   live: true },
       { titles: { de: 'Rechnungen',        en: 'Invoices',         hu: 'Számlák'           }, file: 'supplier-invoices.html', live: true },
       { titles: { de: 'Anfragen (RFQ)',    en: 'RFQ Management',   hu: 'Ajánlatkérések'    }, file: 'rfq.html',               live: true },
@@ -40,16 +40,16 @@ const PDM_GROUPS: PdmGroup[] = [
     key: 'lager', icon: '📦',
     titles: { de: 'Lager', en: 'Warehouse', hu: 'Raktár' },
     pages: [
-      { titles: { de: 'Wareneingang', en: 'Goods Receiving', hu: 'Áruátvétel'  }, file: 'receiving.html', form: 'Form_Wareneingang' },
-      { titles: { de: 'Prüfung & QS', en: 'Inspection & QC', hu: 'Ellenőrzés'  }, file: 'qc.html',        form: 'Form_InspektionQC' },
-      { titles: { de: 'Einlagern',    en: 'Putaway',         hu: 'Betárolás'   }, file: 'putaway.html',   form: 'Form_Einlagern' },
+      { titles: { de: 'Wareneingang', en: 'Goods Receiving', hu: 'Áruátvétel'  }, file: 'receiving.html', live: true },
+      { titles: { de: 'Prüfung & QS', en: 'Inspection & QC', hu: 'Ellenőrzés'  }, file: 'qc.html',        live: true },
+      { titles: { de: 'Einlagern',    en: 'Putaway',         hu: 'Betárolás'   }, file: 'putaway.html',   live: true },
     ],
   },
   {
     key: 'prozesse', icon: '🔄',
     titles: { de: 'Prozesse', en: 'Processes', hu: 'Folyamatok' },
     pages: [
-      { titles: { de: 'Firmen', en: 'Companies', hu: 'Cégek' }, file: 'companies.html', form: 'Form_CrmUnternehmen' },
+      { titles: { de: 'Firmen', en: 'Companies', hu: 'Cégek' }, file: 'companies.html', live: true },
     ],
   },
   {
@@ -57,7 +57,7 @@ const PDM_GROUPS: PdmGroup[] = [
     titles: { de: 'Admin', en: 'Admin', hu: 'Admin' },
     pages: [
       { titles: { de: 'Kontakte', en: 'Contacts', hu: 'Kapcsolatok' }, file: 'contacts.html', live: true },
-      { titles: { de: 'Projekte', en: 'Projects',  hu: 'Projektek'  }, file: 'projects.html', form: 'Form_ProjektVerwaltung' },
+      { titles: { de: 'Projekte', en: 'Projects',  hu: 'Projektek'  }, file: 'projects.html', live: true },
       { titles: { de: 'Aufgaben', en: 'Tasks',     hu: 'Feladatok'  }, file: 'tasks.html',    live: true },
     ],
   },

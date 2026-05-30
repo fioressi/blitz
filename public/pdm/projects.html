@@ -4,12 +4,21 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Projekte | HERPERT</title>
-  <link rel="stylesheet" href="./form-page.css">
 </head>
 <body>
   <div id="app"></div>
-  <script src="./page-data.js"></script>
-  <script>window.HERPERT_PAGE_KEY = "projects";</script>
-  <script src="./form-page.js"></script>
+  <script>
+  window.HERPERT_LIVE_CONFIG = {
+    title: { de: 'Projekte', en: 'Projects', hu: 'Projektek' },
+    endpoint: '/search?type=PROJECT',
+    transform: rows => rows.map(r => ({ id: r.id, label: r.label, subLabel: r.subLabel })),
+    searchKeys: ['label', 'subLabel'],
+    columns: [
+      { key: 'label',    label: { de: 'Projekt-Code', en: 'Project Code', hu: 'Projekt kód' } },
+      { key: 'subLabel', label: { de: 'Name',          en: 'Name',         hu: 'Név'         } },
+    ],
+  };
+  </script>
+  <script src="./live-table.js"></script>
 </body>
 </html>

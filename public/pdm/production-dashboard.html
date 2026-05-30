@@ -156,10 +156,10 @@
         if (!res.ok) return;
         const k = await res.json();
         document.getElementById('kpi-area').innerHTML = [
-          {cls:'',val:k.Total??'—',lbl:t('kpi_total')},
-          {cls:'red',val:k.Red??k.ROT??'—',lbl:t('kpi_red')},
-          {cls:'yellow',val:k.Yellow??k.GELB??'—',lbl:t('kpi_yellow')},
-          {cls:'',val:k.Overdue??k.IsOverdue??'—',lbl:t('kpi_overdue')},
+          {cls:'',val:k.ActivePrCount??'—',lbl:t('kpi_total')},
+          {cls:'red',val:k.RedCount??'—',lbl:t('kpi_red')},
+          {cls:'yellow',val:k.YellowCount??'—',lbl:t('kpi_yellow')},
+          {cls:'',val:k.OverdueCount??'—',lbl:t('kpi_overdue')},
         ].map(k => `<div class="kpi ${k.cls}"><div class="kpi-val">${k.val}</div><div class="kpi-lbl">${k.lbl}</div></div>`).join('');
       } catch {}
     };

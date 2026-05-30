@@ -68,8 +68,10 @@
     try {
       const res = await fetch(API_BASE + cfg.endpoint);
       if (!res.ok) throw new Error(res.status);
-      allRows = await res.json();
-      if (!Array.isArray(allRows)) allRows = allRows.items || allRows.data || [];
+      let data = await res.json();
+      if (cfg.transform) data = cfg.transform(data);
+      allRows = Array.isArray(data) ? data : (data.items || data.data || []);
+      if (cfg.filterRows) allRows = cfg.filterRows(allRows);
       renderTable();
       const countEl = document.getElementById('ht-count');
       if (countEl) countEl.textContent = `${allRows.length} ${ui('count')}`;

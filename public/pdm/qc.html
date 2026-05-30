@@ -3,13 +3,27 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Prufung und QS | HERPERT</title>
-  <link rel="stylesheet" href="./form-page.css">
+  <title>Prüfung & QS | HERPERT</title>
 </head>
 <body>
   <div id="app"></div>
-  <script src="./page-data.js"></script>
-  <script>window.HERPERT_PAGE_KEY = "qc";</script>
-  <script src="./form-page.js"></script>
+  <script>
+  window.HERPERT_LIVE_CONFIG = {
+    title: { de: 'Prüfung & QS', en: 'Inspection & QC', hu: 'Ellenőrzés & QS' },
+    endpoint: '/purchase-orders-tracking?top=400',
+    transform: d => d.orders || d,
+    filterRows: rows => rows.filter(r => ['ARRIVED','PENDING_INSPECTION','CLAIM_REPORTED','CLAIM_OPEN'].includes((r.Status||'').toUpperCase())),
+    searchKeys: ['PoNumber', 'SupplierName', 'PartId', 'Status'],
+    columns: [
+      { key: 'PoNumber',     label: { de: 'PO-Nr.',    en: 'PO No.',   hu: 'Rendelés-szám'  } },
+      { key: 'SupplierName', label: { de: 'Lieferant', en: 'Supplier', hu: 'Szállító'       } },
+      { key: 'PartId',       label: { de: 'Part-ID',   en: 'Part-ID',  hu: 'Part-ID'        } },
+      { key: 'OrderName',    label: { de: 'Artikel',   en: 'Article',  hu: 'Cikk'           } },
+      { key: 'Status',       label: { de: 'Status',    en: 'Status',   hu: 'Státusz'        },
+        badge: { 'ARRIVED':'#ffd166','PENDING_INSPECTION':'#ffd166','CLAIM_REPORTED':'#f87171','CLAIM_OPEN':'#f87171','*':'#aab8ca' } },
+    ],
+  };
+  </script>
+  <script src="./live-table.js"></script>
 </body>
 </html>
