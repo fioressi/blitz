@@ -1,0 +1,116 @@
+.pdm-overview {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  flex: 1;
+  padding-bottom: 16px;
+}
+
+.pdm-silo {
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 14px;
+  padding: 14px 16px 12px;
+}
+
+.pdm-silo-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.pdm-silo-icon {
+  font-size: 18px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.pdm-silo-title {
+  font-size: 14px;
+  font-weight: 900;
+  color: var(--text);
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+.pdm-silo-count {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  background: rgba(255,255,255,.08);
+  padding: 1px 7px;
+  border-radius: 99px;
+}
+
+.pdm-silo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+  gap: 7px;
+}
+
+.pdm-silo-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  padding: 9px 11px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.13s, border-color 0.13s;
+  color: var(--text);
+  min-height: 58px;
+}
+
+.pdm-silo-card:hover {
+  background: rgba(255,255,255,.09);
+  border-color: rgba(255,255,255,.18);
+}
+
+.pdm-silo-card--live {
+  border-color: rgba(142,226,142,.2);
+}
+
+.pdm-silo-card--live:hover {
+  border-color: rgba(142,226,142,.4);
+}
+
+.pdm-silo-card-title {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.pdm-silo-card-form {
+  font-size: 10px;
+  font-family: ui-monospace, monospace;
+  color: var(--muted);
+  margin-top: 1px;
+}
+
+.pdm-silo-badge {
+  font-size: 10px;
+  font-weight: 900;
+  padding: 1px 6px;
+  border-radius: 99px;
+  background: rgba(255,209,102,.15);
+  color: var(--yellow);
+  letter-spacing: 0.03em;
+  margin-top: 4px;
+}
+
+.pdm-silo-badge--live {
+  background: rgba(142,226,142,.15);
+  color: var(--green);
+}
+
+@media (max-width: 600px) {
+  .pdm-silo-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+}

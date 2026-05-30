@@ -18,6 +18,7 @@ import { AttributeDetail } from './components/AttributeDetail/AttributeDetail';
 import { ComposeModal } from './components/ComposeModal/ComposeModal';
 import { AuthGuard } from './auth/AuthGuard';
 import { BlitzBrett } from './pages/BlitzBrett/BlitzBrett';
+import { PdmOverview } from './pages/PdmOverview/PdmOverview';
 import './App.css';
 
 // ── localStorage helpers ──────────────────────────────────────────────────────
@@ -519,25 +520,26 @@ export default function App() {
         </div>
         ) : (
           <main className="pdm-shell">
-            <section className="pdm-shell-hero">
-              <div>
-                <p className="pdm-shell-kicker">HERPERT</p>
-                <h1>PDM-Bereiche</h1>
-                <p>Ein gemeinsamer Bereich für Engineering, Planung, Einkauf, Lager, Prozesse und Administration.</p>
-              </div>
-              <div className="pdm-shell-actions">
-                {pdmPath !== '/pdm/index.html' && (
-                  <a className="pdm-shell-link" href={activePdmItem.path.split('?')[0]} target="_blank" rel="noreferrer">Seite direkt öffnen</a>
-                )}
-              </div>
-            </section>
-            {pdmPath !== '/pdm/index.html' && (
-              <iframe
-                key={pdmPath}
-                className="pdm-frame"
-                title="HERPERT PDM"
-                src={pdmPath}
-              />
+            {pdmPath === '/pdm/index.html' ? (
+              <PdmOverview onNavigate={setPdmPath} />
+            ) : (
+              <>
+                <section className="pdm-shell-hero">
+                  <div>
+                    <p className="pdm-shell-kicker">HERPERT PDM</p>
+                    <h1>{activePdmItem.label}</h1>
+                  </div>
+                  <div className="pdm-shell-actions">
+                    <a className="pdm-shell-link" href={activePdmItem.path.split('?')[0]} target="_blank" rel="noreferrer">↗ Direkt öffnen</a>
+                  </div>
+                </section>
+                <iframe
+                  key={pdmPath}
+                  className="pdm-frame"
+                  title="HERPERT PDM"
+                  src={pdmPath}
+                />
+              </>
             )}
           </main>
         )}
