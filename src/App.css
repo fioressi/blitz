@@ -173,6 +173,15 @@
   color: var(--accent);
 }
 
+.app-version {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
+  opacity: 0.5;
+  letter-spacing: 0.04em;
+  font-family: ui-monospace, monospace;
+}
+
 .app-logout {
   padding: 5px 12px;
   font-size: 12px;

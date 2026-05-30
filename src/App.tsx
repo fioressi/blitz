@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
+
+declare const __APP_VERSION__: string;
 import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import type { Attribute } from './types/email';
@@ -366,6 +368,7 @@ export default function App() {
                 ? <button className="app-refresh" onClick={loadEmails} title="Aktualisieren">↻</button>
                 : <button className="app-refresh" onClick={() => setPdmPath(`${activePdmItem.path.split('?')[0]}?t=${Date.now()}`)} title="PDM neu laden">↻</button>}
               <button className="app-drawer-btn" onClick={() => setDrawerOpen(d => d === 'right' ? null : 'right')}>📋</button>
+              <span className="app-version" title="Build-Version">v{__APP_VERSION__}</span>
               <button className="app-logout" onClick={() => instance.logoutRedirect()}>Abmelden</button>
             </div>
           </div>
