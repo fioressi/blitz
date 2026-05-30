@@ -6,6 +6,7 @@ import { execSync } from 'child_process'
 const { version } = JSON.parse(readFileSync('./package.json', 'utf-8'));
 const [major, minor] = version.split('.');
 const patch = (() => {
+  if (process.env.GITHUB_RUN_NUMBER) return process.env.GITHUB_RUN_NUMBER;
   try { return execSync('git rev-list --count HEAD').toString().trim(); }
   catch { return '0'; }
 })();
