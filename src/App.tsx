@@ -508,7 +508,7 @@ export default function App() {
         ) : (
           <main className="pdm-shell">
             {pdmPath === '/pdm/index.html' ? (
-              <PdmOverview onNavigate={setPdmPath} />
+              <PdmOverview onNavigate={setPdmPath} lang={lang} />
             ) : (
               <>
                 <section className="pdm-shell-hero">

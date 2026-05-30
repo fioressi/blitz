@@ -1,83 +1,89 @@
+import type { Lang } from '../../components/Banner/Banner';
 import './PdmOverview.css';
 
-type PdmPage = {
-  title: string;
-  file: string;
-  form?: string;
-  live?: boolean;
-};
-
-type PdmGroup = {
-  key: string;
-  label: string;
-  icon: string;
-  pages: PdmPage[];
-};
+type I18n = { de: string; en: string; hu: string };
+type PdmPage = { titles: I18n; file: string; form?: string; live?: boolean };
+type PdmGroup = { key: string; titles: I18n; icon: string; pages: PdmPage[] };
 
 const PDM_GROUPS: PdmGroup[] = [
   {
-    key: 'engineering', label: 'Entwicklung', icon: '⚙️',
+    key: 'engineering', icon: '⚙️',
+    titles: { de: 'Entwicklung', en: 'Engineering', hu: 'Fejlesztés' },
     pages: [
-      { title: 'Objekte',        file: 'objects.html',    form: 'Form_PdmObjekte' },
-      { title: 'Stückliste',     file: 'bom.html',        form: 'Form_BomVerwaltung' },
-      { title: 'Objekt anlegen', file: 'new-object.html', live: true },
+      { titles: { de: 'Objekte',        en: 'Objects',      hu: 'Objektumok'      }, file: 'objects.html',    form: 'Form_PdmObjekte' },
+      { titles: { de: 'Stückliste',     en: 'BOM',          hu: 'Darabjegyzék'    }, file: 'bom.html',        form: 'Form_BomVerwaltung' },
+      { titles: { de: 'Objekt anlegen', en: 'Create Object', hu: 'Obj. létrehozás' }, file: 'new-object.html', live: true },
     ],
   },
   {
-    key: 'planung', label: 'Planung', icon: '📋',
+    key: 'planung', icon: '📋',
+    titles: { de: 'Planung', en: 'Planning', hu: 'Tervezés' },
     pages: [
-      { title: 'Fertigungsauftrag',       file: 'production-order.html',     form: 'Form_ProductionOrder' },
-      { title: 'Auftragsübersicht',       file: 'orders.html',               form: 'Form_AuftragsVerwaltung' },
-      { title: 'Produktionsübersicht',    file: 'production-dashboard.html', form: 'Form_ProduktionsDashboard' },
-      { title: 'Beschaffungsvorbereitung',file: 'readiness.html',            form: 'Form_ReadinessWorkbench' },
+      { titles: { de: 'Fertigungsauftrag',        en: 'Production Order',   hu: 'Gyártási megbízás'   }, file: 'production-order.html',     form: 'Form_ProductionOrder' },
+      { titles: { de: 'Auftragsübersicht',         en: 'Order Overview',     hu: 'Rendelés áttekintés' }, file: 'orders.html',               form: 'Form_AuftragsVerwaltung' },
+      { titles: { de: 'Produktionsübersicht',      en: 'Production Dashboard', hu: 'Gyártási áttekintés' }, file: 'production-dashboard.html', form: 'Form_ProduktionsDashboard' },
+      { titles: { de: 'Beschaffungsvorbereitung',  en: 'Readiness Workbench', hu: 'Beszerzési előkészítés' }, file: 'readiness.html',          form: 'Form_ReadinessWorkbench' },
     ],
   },
   {
-    key: 'einkauf', label: 'Einkauf', icon: '🛒',
+    key: 'einkauf', icon: '🛒',
+    titles: { de: 'Einkauf', en: 'Purchasing', hu: 'Beszerzés' },
     pages: [
-      { title: 'Bestellungen',       file: 'purchase-order.html',   form: 'Form_PurchaseOrder' },
-      { title: 'Angebote',           file: 'supplier-quotes.html',  form: 'Form_SupplierQuotes' },
-      { title: 'Rechnungen',         file: 'supplier-invoices.html',form: 'Form_SupplierInvoices' },
-      { title: 'Anfragen (RFQ)',     file: 'rfq.html',              form: 'Form_RfqVerwaltung' },
-      { title: 'Bestellverfolgung',  file: 'po-tracking.html',      live: true },
+      { titles: { de: 'Bestellungen',      en: 'Purchase Orders',  hu: 'Rendelések'        }, file: 'purchase-order.html',    form: 'Form_PurchaseOrder' },
+      { titles: { de: 'Angebote',          en: 'Supplier Quotes',  hu: 'Ajánlatok'         }, file: 'supplier-quotes.html',   form: 'Form_SupplierQuotes' },
+      { titles: { de: 'Rechnungen',        en: 'Invoices',         hu: 'Számlák'           }, file: 'supplier-invoices.html', form: 'Form_SupplierInvoices' },
+      { titles: { de: 'Anfragen (RFQ)',    en: 'RFQ Management',   hu: 'Ajánlatkérések'    }, file: 'rfq.html',               form: 'Form_RfqVerwaltung' },
+      { titles: { de: 'Bestellverfolgung', en: 'PO Tracking',      hu: 'Rendelés követés'  }, file: 'po-tracking.html',       live: true },
     ],
   },
   {
-    key: 'lager', label: 'Lager', icon: '📦',
+    key: 'lager', icon: '📦',
+    titles: { de: 'Lager', en: 'Warehouse', hu: 'Raktár' },
     pages: [
-      { title: 'Wareneingang', file: 'receiving.html', form: 'Form_Wareneingang' },
-      { title: 'Prüfung & QS', file: 'qc.html',        form: 'Form_InspektionQC' },
-      { title: 'Einlagern',    file: 'putaway.html',    form: 'Form_Einlagern' },
+      { titles: { de: 'Wareneingang', en: 'Goods Receiving', hu: 'Áruátvétel'  }, file: 'receiving.html', form: 'Form_Wareneingang' },
+      { titles: { de: 'Prüfung & QS', en: 'Inspection & QC', hu: 'Ellenőrzés'  }, file: 'qc.html',        form: 'Form_InspektionQC' },
+      { titles: { de: 'Einlagern',    en: 'Putaway',         hu: 'Betárolás'   }, file: 'putaway.html',   form: 'Form_Einlagern' },
     ],
   },
   {
-    key: 'prozesse', label: 'Prozesse', icon: '🔄',
+    key: 'prozesse', icon: '🔄',
+    titles: { de: 'Prozesse', en: 'Processes', hu: 'Folyamatok' },
     pages: [
-      { title: 'Firmen', file: 'companies.html', form: 'Form_CrmUnternehmen' },
+      { titles: { de: 'Firmen', en: 'Companies', hu: 'Cégek' }, file: 'companies.html', form: 'Form_CrmUnternehmen' },
     ],
   },
   {
-    key: 'admin', label: 'Admin', icon: '🔧',
+    key: 'admin', icon: '🔧',
+    titles: { de: 'Admin', en: 'Admin', hu: 'Admin' },
     pages: [
-      { title: 'Kontakte', file: 'contacts.html', form: 'Form_CrmKontakte' },
-      { title: 'Projekte', file: 'projects.html', form: 'Form_ProjektVerwaltung' },
-      { title: 'Aufgaben', file: 'tasks.html',    live: true },
+      { titles: { de: 'Kontakte', en: 'Contacts', hu: 'Kapcsolatok' }, file: 'contacts.html', form: 'Form_CrmKontakte' },
+      { titles: { de: 'Projekte', en: 'Projects',  hu: 'Projektek'  }, file: 'projects.html', form: 'Form_ProjektVerwaltung' },
+      { titles: { de: 'Aufgaben', en: 'Tasks',     hu: 'Feladatok'  }, file: 'tasks.html',    live: true },
     ],
   },
 ];
 
+const BADGE: Record<Lang, { live: string; prep: string }> = {
+  de: { live: 'Live', prep: 'Vor' },
+  en: { live: 'Live', prep: 'Prep' },
+  hu: { live: 'Élő',  prep: 'Előkész' },
+};
+
 interface Props {
   onNavigate: (path: string) => void;
+  lang: Lang;
 }
 
-export function PdmOverview({ onNavigate }: Props) {
+export function PdmOverview({ onNavigate, lang }: Props) {
+  const t = (i: I18n) => i[lang] || i.de;
+
   return (
     <div className="pdm-overview">
       {PDM_GROUPS.map(group => (
         <section key={group.key} className="pdm-silo">
           <div className="pdm-silo-head">
             <span className="pdm-silo-icon">{group.icon}</span>
-            <h2 className="pdm-silo-title">{group.label}</h2>
+            <h2 className="pdm-silo-title">{t(group.titles)}</h2>
             <span className="pdm-silo-count">{group.pages.length}</span>
           </div>
           <div className="pdm-silo-grid">
@@ -88,11 +94,11 @@ export function PdmOverview({ onNavigate }: Props) {
                 onClick={() => onNavigate(`/pdm/${page.file}`)}
               >
                 <div className="pdm-silo-card-body">
-                  <span className="pdm-silo-card-title">{page.title}</span>
+                  <span className="pdm-silo-card-title">{t(page.titles)}</span>
                   {page.form && <span className="pdm-silo-card-form">{page.form}</span>}
                 </div>
                 <span className={`pdm-silo-badge ${page.live ? 'pdm-silo-badge--live' : ''}`}>
-                  {page.live ? 'Live' : 'Vor'}
+                  {page.live ? BADGE[lang].live : BADGE[lang].prep}
                 </span>
               </button>
             ))}
