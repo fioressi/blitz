@@ -8,10 +8,14 @@ export type BannerNavItem = {
   path: string;
 };
 
+export type Lang = 'de' | 'en' | 'hu';
+
 interface Props {
   user?: AccountInfo;
   userId?: string;
   version: string;
+  lang: Lang;
+  onLang: (l: Lang) => void;
   workspaceView: WorkspaceView;
   onWorkspace: (w: WorkspaceView) => void;
   emailView: 'inbox' | 'brett';
@@ -26,7 +30,7 @@ interface Props {
 }
 
 export function Banner({
-  user, userId, version,
+  user, userId, version, lang, onLang,
   workspaceView, onWorkspace,
   emailView, onEmailViewToggle,
   pdmNavItems, activePdmPath, onPdmNav,
@@ -64,6 +68,17 @@ export function Banner({
           )}
 
           <button className="banner-btn" onClick={onRefresh} title="Aktualisieren">↻</button>
+
+          <select
+            className="banner-lang"
+            value={lang}
+            onChange={e => onLang(e.target.value as Lang)}
+            aria-label="Sprache"
+          >
+            <option value="de">DE</option>
+            <option value="en">EN</option>
+            <option value="hu">HU</option>
+          </select>
 
           <button className="banner-drawer" onClick={() => onDrawer('right')}>📋</button>
           <span className="banner-version" title="Build-Version">v{version}</span>

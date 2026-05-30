@@ -20,6 +20,7 @@ import { AuthGuard } from './auth/AuthGuard';
 import { BlitzBrett } from './pages/BlitzBrett/BlitzBrett';
 import { PdmOverview } from './pages/PdmOverview/PdmOverview';
 import { Banner } from './components/Banner/Banner';
+import type { Lang } from './components/Banner/Banner';
 import './App.css';
 
 // ── localStorage helpers ──────────────────────────────────────────────────────
@@ -117,6 +118,18 @@ export default function App() {
   } | null>(null);
   const [workspaceView, setWorkspaceView] = useState<WorkspaceView>('emails');
   const [pdmPath, setPdmPath] = useState('/pdm/index.html');
+  const [lang, setLang] = useState<Lang>(() =>
+    (localStorage.getItem('herpert-lang') as Lang) || 'de'
+  );
+
+  const handleLang = (l: Lang) => {
+    setLang(l);
+    localStorage.setItem('herpert-lang', l);
+    // Reload iframe so PDM static pages pick up the new language
+    if (workspaceView === 'pdm' && pdmPath !== '/pdm/index.html') {
+      setPdmPath(p => `${p.split('?')[0]}?t=${Date.now()}`);
+    }
+  };
 
   const leftGroups = attributeGroups.filter(g => g.side === 'left');
   const rightGroups = attributeGroups.filter(g => g.side === 'right');
@@ -349,6 +362,8 @@ export default function App() {
           user={user}
           userId={userId}
           version={__APP_VERSION__}
+          lang={lang}
+          onLang={handleLang}
           workspaceView={workspaceView}
           onWorkspace={setWorkspaceView}
           emailView={view}
