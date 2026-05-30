@@ -1,6 +1,7 @@
 .pdm-overview {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  align-items: start;
   gap: 10px;
   overflow-y: auto;
   flex: 1;
@@ -11,60 +12,63 @@
   background: rgba(255,255,255,.05);
   border: 1px solid rgba(255,255,255,.1);
   border-radius: 14px;
-  padding: 14px 16px 12px;
+  padding: 14px 14px 12px;
 }
 
 .pdm-silo-head {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
 }
 
 .pdm-silo-icon {
-  font-size: 18px;
+  font-size: 16px;
   line-height: 1;
   flex-shrink: 0;
 }
 
 .pdm-silo-title {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 900;
   color: var(--text);
   margin: 0;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
 }
 
 .pdm-silo-count {
   margin-left: auto;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   color: var(--muted);
   background: rgba(255,255,255,.08);
-  padding: 1px 7px;
+  padding: 1px 6px;
   border-radius: 99px;
 }
 
 .pdm-silo-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
-  gap: 7px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
 }
 
 .pdm-silo-card {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 3px;
-  padding: 9px 11px;
-  background: rgba(255,255,255,.04);
-  border: 1px solid rgba(255,255,255,.09);
-  border-radius: 8px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 7px;
   cursor: pointer;
   text-align: left;
   transition: background 0.13s, border-color 0.13s;
   color: var(--text);
-  min-height: 58px;
+  width: 100%;
 }
 
 .pdm-silo-card:hover {
@@ -73,35 +77,45 @@
 }
 
 .pdm-silo-card--live {
-  border-color: rgba(142,226,142,.2);
+  border-color: rgba(142,226,142,.18);
 }
 
 .pdm-silo-card--live:hover {
-  border-color: rgba(142,226,142,.4);
+  border-color: rgba(142,226,142,.38);
+}
+
+.pdm-silo-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 
 .pdm-silo-card-title {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .pdm-silo-card-form {
   font-size: 10px;
   font-family: ui-monospace, monospace;
   color: var(--muted);
-  margin-top: 1px;
 }
 
 .pdm-silo-badge {
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 900;
-  padding: 1px 6px;
+  padding: 1px 5px;
   border-radius: 99px;
   background: rgba(255,209,102,.15);
   color: var(--yellow);
   letter-spacing: 0.03em;
-  margin-top: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .pdm-silo-badge--live {
@@ -109,8 +123,14 @@
   color: var(--green);
 }
 
+@media (max-width: 900px) {
+  .pdm-overview {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
+}
+
 @media (max-width: 600px) {
-  .pdm-silo-grid {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  .pdm-overview {
+    grid-template-columns: 1fr 1fr;
   }
 }

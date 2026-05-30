@@ -1,4 +1,5 @@
 (() => {
+  if (window.self !== window.top) document.documentElement.classList.add('embedded');
   const data = window.HERPERT_PAGE_DATA;
   const key = window.HERPERT_PAGE_KEY;
   const page = data.pages.find((item) => item.key === key);

@@ -87,10 +87,12 @@ export function PdmOverview({ onNavigate }: Props) {
                 className={`pdm-silo-card ${page.live ? 'pdm-silo-card--live' : ''}`}
                 onClick={() => onNavigate(`/pdm/${page.file}`)}
               >
-                <span className="pdm-silo-card-title">{page.title}</span>
-                {page.form && <span className="pdm-silo-card-form">{page.form}</span>}
+                <div className="pdm-silo-card-body">
+                  <span className="pdm-silo-card-title">{page.title}</span>
+                  {page.form && <span className="pdm-silo-card-form">{page.form}</span>}
+                </div>
                 <span className={`pdm-silo-badge ${page.live ? 'pdm-silo-badge--live' : ''}`}>
-                  {page.live ? 'Live' : 'Vorbereitet'}
+                  {page.live ? 'Live' : 'Vor'}
                 </span>
               </button>
             ))}
