@@ -1,14 +1,14 @@
 import type { AccountInfo } from '@azure/msal-browser';
+import { t } from '../../i18n';
 import './Banner.css';
 
 export type WorkspaceView = 'emails' | 'pdm';
+export type Lang = 'de' | 'en' | 'hu';
 
 export type BannerNavItem = {
   label: string;
   path: string;
 };
-
-export type Lang = 'de' | 'en' | 'hu';
 
 interface Props {
   user?: AccountInfo;
@@ -45,7 +45,7 @@ export function Banner({
           <img className="banner-logo" src="/pdm/herpert-logo-final-white-erp.png" alt="HERPERT" />
           <div className="banner-name">
             <span className="banner-title">HERPERT / BLITZ</span>
-            <span className="banner-sub">One front-end for emails and PDM</span>
+            <span className="banner-sub">{t(lang, 'appSub')}</span>
           </div>
         </div>
 
@@ -57,17 +57,17 @@ export function Banner({
               className={`banner-btn ${emailView === 'brett' ? 'banner-btn--active' : ''}`}
               onClick={onEmailViewToggle}
             >
-              BlitzBrett
+              {t(lang, 'brett')}
             </button>
           )}
 
           {workspaceView === 'emails' && (
             <button className="banner-btn banner-btn--compose" onClick={onCompose}>
-              ✉ Neue E-Mail
+              {t(lang, 'compose')}
             </button>
           )}
 
-          <button className="banner-btn" onClick={onRefresh} title="Aktualisieren">↻</button>
+          <button className="banner-btn" onClick={onRefresh} title={t(lang, 'refresh')}>↻</button>
 
           <select
             className="banner-lang"
@@ -82,22 +82,22 @@ export function Banner({
 
           <button className="banner-drawer" onClick={() => onDrawer('right')}>📋</button>
           <span className="banner-version" title="Build-Version">v{version}</span>
-          <button className="banner-btn banner-btn--logout" onClick={onLogout}>Abmelden</button>
+          <button className="banner-btn banner-btn--logout" onClick={onLogout}>{t(lang, 'logout')}</button>
         </div>
       </div>
 
-      <div className="banner-tabs" role="tablist" aria-label="Arbeitsbereich">
+      <div className="banner-tabs" role="tablist">
         <button
           className={`banner-tab ${workspaceView === 'emails' ? 'banner-tab--active' : ''}`}
           onClick={() => onWorkspace('emails')}
         >
-          ✉ Emails
+          {t(lang, 'wsEmails')}
         </button>
         <button
           className={`banner-tab ${workspaceView === 'pdm' ? 'banner-tab--active' : ''}`}
           onClick={() => onWorkspace('pdm')}
         >
-          HERPERT PDM
+          {t(lang, 'wsPdm')}
         </button>
       </div>
 

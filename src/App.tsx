@@ -21,6 +21,7 @@ import { BlitzBrett } from './pages/BlitzBrett/BlitzBrett';
 import { PdmOverview } from './pages/PdmOverview/PdmOverview';
 import { Banner } from './components/Banner/Banner';
 import type { Lang } from './components/Banner/Banner';
+import { t } from './i18n';
 import './App.css';
 
 // ── localStorage helpers ──────────────────────────────────────────────────────
@@ -71,13 +72,13 @@ type PdmNavItem = {
   section: PdmSection;
 };
 
-const PDM_NAV_ITEMS: PdmNavItem[] = [
-  { label: 'Hauptmenü', path: '/pdm/index.html', section: 'overview' },
-  { label: 'Entwicklung', path: '/pdm/bom.html', section: 'engineering' },
-  { label: 'Planung', path: '/pdm/production-order.html', section: 'planung' },
-  { label: 'Einkauf', path: '/pdm/po-tracking.html', section: 'einkauf' },
-  { label: 'Lager', path: '/pdm/receiving.html', section: 'lager' },
-  { label: 'Admin', path: '/pdm/projects.html', section: 'admin' },
+const PDM_NAV_PATHS: { path: string; section: PdmSection; labelKey: 'pdmHome'|'pdmEng'|'pdmPlan'|'pdmBuy'|'pdmWh'|'pdmAdmin' }[] = [
+  { path: '/pdm/index.html',            section: 'overview',     labelKey: 'pdmHome' },
+  { path: '/pdm/bom.html',              section: 'engineering',  labelKey: 'pdmEng' },
+  { path: '/pdm/production-order.html', section: 'planung',      labelKey: 'pdmPlan' },
+  { path: '/pdm/po-tracking.html',      section: 'einkauf',      labelKey: 'pdmBuy' },
+  { path: '/pdm/receiving.html',        section: 'lager',        labelKey: 'pdmWh' },
+  { path: '/pdm/projects.html',         section: 'admin',        labelKey: 'pdmAdmin' },
 ];
 
 export default function App() {
@@ -133,7 +134,9 @@ export default function App() {
 
   const leftGroups = attributeGroups.filter(g => g.side === 'left');
   const rightGroups = attributeGroups.filter(g => g.side === 'right');
-  const activePdmItem = PDM_NAV_ITEMS.find(item => item.path === pdmPath) || PDM_NAV_ITEMS[0];
+
+  const PDM_NAV_ITEMS: PdmNavItem[] = PDM_NAV_PATHS.map(p => ({ ...p, label: t(lang, p.labelKey) }));
+  const activePdmItem = PDM_NAV_ITEMS.find(item => item.path.split('?')[0] === pdmPath.split('?')[0]) || PDM_NAV_ITEMS[0];
 
   const inboxEmails = emails.filter(e => e.status === 'unread');
   const readEmails  = emails.filter(e => e.status === 'read');
@@ -396,35 +399,35 @@ export default function App() {
                 className={`inbox-tab ${activeTab === 'inbox' ? 'active' : ''}`}
                 onClick={() => handleSelectTab('inbox')}
               >
-                Posteingang
+                {t(lang, 'tabInbox')}
                 {inboxEmails.length > 0 && <span className="inbox-tab-count">{inboxEmails.length}</span>}
               </button>
               <button
                 className={`inbox-tab ${activeTab === 'read' ? 'active' : ''}`}
                 onClick={() => handleSelectTab('read')}
               >
-                Gelesen
+                {t(lang, 'tabRead')}
                 {readEmails.length > 0 && <span className="inbox-tab-count inbox-tab-count--muted">{readEmails.length}</span>}
               </button>
               <button
                 className={`inbox-tab ${activeTab === 'reply' ? 'active' : ''}`}
                 onClick={() => handleSelectTab('reply')}
               >
-                Beantworten
+                {t(lang, 'tabReply')}
                 {toReply.length > 0 && <span className="inbox-tab-count inbox-tab-count--reply">{toReply.length}</span>}
               </button>
               <button
                 className={`inbox-tab ${activeTab === 'saved' ? 'active' : ''}`}
                 onClick={() => handleSelectTab('saved')}
               >
-                Merken
+                {t(lang, 'tabSaved')}
                 {savedEmails.length > 0 && <span className="inbox-tab-count inbox-tab-count--saved">{savedEmails.length}</span>}
               </button>
               <button
                 className={`inbox-tab ${activeTab === 'sent' ? 'active' : ''}`}
                 onClick={() => handleSelectTab('sent')}
               >
-                Gesendet
+                {t(lang, 'tabSent')}
               </button>
             </div>
 
@@ -445,10 +448,10 @@ export default function App() {
 
             <div className="inbox-list">
               {entityFilter?.loading ? (
-                <div className="inbox-loading">Emails werden gefiltert…</div>
+                <div className="inbox-loading">{t(lang, 'filtering')}</div>
               ) : entityFilter ? (
                 entityFilter.emails.length === 0 ? (
-                  <div className="inbox-empty">Keine verknüpften Emails gefunden</div>
+                  <div className="inbox-empty">{t(lang, 'noLinked')}</div>
                 ) : (
                   entityFilter.emails.map(email => (
                     <EmailCard
@@ -464,16 +467,16 @@ export default function App() {
                   ))
                 )
               ) : (loading && activeTab !== 'sent') || (sentLoading && activeTab === 'sent') ? (
-                <div className="inbox-loading">Emails werden geladen…</div>
+                <div className="inbox-loading">{t(lang, 'loading')}</div>
               ) : loadError && activeTab !== 'sent' ? (
-                <div className="inbox-error">Fehler: {loadError}</div>
+                <div className="inbox-error">{t(lang, 'error')}: {loadError}</div>
               ) : tabEmails.length === 0 ? (
                 <div className="inbox-empty">
-                  {activeTab === 'inbox' ? 'Posteingang leer ✓'
-                    : activeTab === 'read'  ? 'Keine gelesenen Emails'
-                    : activeTab === 'reply' ? 'Keine offenen Antworten'
-                    : activeTab === 'saved' ? 'Keine gemerkten Emails'
-                    : 'Keine gesendeten Emails'}
+                  {activeTab === 'inbox' ? t(lang, 'emptyInbox')
+                    : activeTab === 'read'  ? t(lang, 'emptyRead')
+                    : activeTab === 'reply' ? t(lang, 'emptyReply')
+                    : activeTab === 'saved' ? t(lang, 'emptySaved')
+                    : t(lang, 'emptySent')}
                 </div>
               ) : (
                 tabEmails.map(email => (
@@ -517,7 +520,7 @@ export default function App() {
                     <h1>{activePdmItem.label}</h1>
                   </div>
                   <div className="pdm-shell-actions">
-                    <a className="pdm-shell-link" href={activePdmItem.path.split('?')[0]} target="_blank" rel="noreferrer">↗ Direkt öffnen</a>
+                    <a className="pdm-shell-link" href={activePdmItem.path.split('?')[0]} target="_blank" rel="noreferrer">{t(lang, 'openDirect')}</a>
                   </div>
                 </section>
                 <iframe
