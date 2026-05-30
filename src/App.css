@@ -5,199 +5,6 @@
   overflow: hidden;
 }
 
-.app-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 20px;
-  background: rgba(255,255,255,.06);
-  border-bottom: 1px solid var(--line);
-  backdrop-filter: blur(12px);
-  flex-shrink: 0;
-}
-
-.app-header--stacked {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 12px;
-}
-
-.app-header-main {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.app-logo-wrap {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  min-width: 0;
-}
-
-.app-logo-mark {
-  width: 52px;
-  height: 52px;
-  object-fit: contain;
-  flex-shrink: 0;
-}
-
-.app-logo-block {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.app-logo {
-  font-size: 17px;
-  font-weight: 900;
-  color: var(--accent);
-  letter-spacing: 0.04em;
-}
-
-.app-logo-sub {
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.workspace-switcher {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.workspace-tab,
-.pdm-topnav-item,
-.pdm-shell-link {
-  padding: 8px 14px;
-  border-radius: 10px;
-  border: 1px solid var(--line);
-  background: rgba(255,255,255,.04);
-  color: var(--muted);
-  font-weight: 700;
-  text-decoration: none;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.15s;
-}
-
-.workspace-tab:hover,
-.pdm-topnav-item:hover,
-.pdm-shell-link:hover {
-  background: var(--panel-hover);
-  color: var(--text);
-}
-
-.workspace-tab.active,
-.pdm-topnav-item.active {
-  background: rgba(102,217,239,.14);
-  color: var(--accent);
-  border-color: rgba(102,217,239,.4);
-}
-
-.pdm-topnav {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.app-header-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.app-user {
-  font-size: 12px;
-  color: var(--muted);
-  font-weight: 600;
-}
-
-.app-stats {
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.app-refresh,
-.app-compose-btn {
-  padding: 5px 9px;
-  font-size: 14px;
-  background: transparent;
-  border: 1px solid var(--line);
-  border-radius: 7px;
-  color: var(--muted);
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-}
-
-.app-refresh:hover,
-.app-compose-btn:hover {
-  background: var(--panel-hover);
-  color: var(--text);
-}
-
-.app-compose-btn {
-  color: var(--accent);
-  border-color: rgba(102, 217, 239, .35);
-  font-weight: 600;
-  letter-spacing: 0.01em;
-}
-.app-compose-btn:hover {
-  background: rgba(102, 217, 239, .12);
-  color: var(--accent);
-  border-color: rgba(102, 217, 239, .6);
-}
-
-.app-nav-btn {
-  padding: 5px 12px;
-  font-size: 12px;
-  font-weight: 700;
-  background: transparent;
-  border: 1px solid var(--line);
-  border-radius: 7px;
-  color: var(--muted);
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-  letter-spacing: 0.02em;
-}
-
-.app-nav-btn:hover {
-  background: var(--panel-hover);
-  color: var(--text);
-}
-
-.app-nav-btn.active {
-  background: rgba(102, 217, 239, 0.12);
-  border-color: rgba(102, 217, 239, 0.45);
-  color: var(--accent);
-}
-
-.app-version {
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--muted);
-  opacity: 0.5;
-  letter-spacing: 0.04em;
-  font-family: ui-monospace, monospace;
-}
-
-.app-logout {
-  padding: 5px 12px;
-  font-size: 12px;
-  font-weight: 600;
-  background: transparent;
-  border: 1px solid var(--line);
-  border-radius: 7px;
-  color: var(--muted);
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-}
-
-.app-logout:hover {
-  background: var(--panel-hover);
-  color: var(--text);
-}
 
 .app-body {
   display: flex;
@@ -412,6 +219,23 @@
   min-height: 40px;
 }
 
+.pdm-shell-link {
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,.04);
+  color: var(--muted);
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.pdm-shell-link:hover {
+  background: var(--panel-hover);
+  color: var(--text);
+}
+
 .pdm-frame {
   flex: 1;
   width: 100%;
@@ -419,28 +243,6 @@
   border: 1px solid var(--line);
   border-radius: 18px;
   background: rgba(255,255,255,.04);
-}
-
-/* ── Drawer toggle buttons (nur auf Mobile sichtbar) ── */
-.app-drawer-btn {
-  display: none;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  background: transparent;
-  border: 1px solid var(--line);
-  border-radius: 7px;
-  color: var(--muted);
-  cursor: pointer;
-  font-size: 15px;
-  flex-shrink: 0;
-  transition: background 0.15s, color 0.15s;
-}
-
-.app-drawer-btn:hover {
-  background: var(--panel-hover);
-  color: var(--text);
 }
 
 /* ── Drawer Overlay ── */
@@ -454,45 +256,6 @@
 
 /* ── Mobile Layout ── */
 @media (max-width: 768px) {
-  .app-drawer-btn { display: flex; }
-
-  .app-header {
-    padding: 12px;
-  }
-
-  .app-header-main {
-    gap: 10px;
-  }
-
-  .app-logo-wrap {
-    gap: 10px;
-  }
-
-  .app-logo-mark {
-    width: 40px;
-    height: 40px;
-  }
-
-  .app-logo {
-    font-size: 15px;
-  }
-
-  .app-logo-sub {
-    font-size: 11px;
-  }
-
-  .workspace-switcher,
-  .pdm-topnav {
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    padding-bottom: 2px;
-  }
-
-  .workspace-tab,
-  .pdm-topnav-item {
-    white-space: nowrap;
-  }
-
   .panel-left,
   .panel-right {
     position: fixed;
@@ -519,20 +282,9 @@
   .panel-left.drawer-open  { transform: translateX(0); }
   .panel-right.drawer-open { transform: translateX(0); }
 
-  .app-user {
-    max-width: 100px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .app-stats { display: none; }
-
   .inbox { padding: 0 8px; }
 
-  .pdm-shell {
-    padding: 10px;
-  }
+  .pdm-shell { padding: 10px; }
 
   .pdm-shell-hero {
     flex-direction: column;
@@ -541,20 +293,9 @@
     border-radius: 14px;
   }
 
-  .pdm-shell-hero h1 {
-    font-size: 22px;
-  }
+  .pdm-shell-hero h1 { font-size: 22px; }
 
-  .pdm-shell-actions {
-    width: 100%;
-  }
+  .pdm-shell-actions { width: 100%; }
 
-  .pdm-shell-link {
-    width: 100%;
-    text-align: center;
-  }
-
-  .pdm-frame {
-    border-radius: 14px;
-  }
+  .pdm-frame { border-radius: 14px; }
 }

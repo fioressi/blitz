@@ -19,6 +19,7 @@ import { ComposeModal } from './components/ComposeModal/ComposeModal';
 import { AuthGuard } from './auth/AuthGuard';
 import { BlitzBrett } from './pages/BlitzBrett/BlitzBrett';
 import { PdmOverview } from './pages/PdmOverview/PdmOverview';
+import { Banner } from './components/Banner/Banner';
 import './App.css';
 
 // ── localStorage helpers ──────────────────────────────────────────────────────
@@ -344,53 +345,24 @@ export default function App() {
     <AuthGuard>
       <DndContext sensors={sensors} onDragStart={handleDndDragStart} onDragEnd={handleDndDragEnd}>
       <div className="app">
-        <header className="app-header app-header--stacked">
-          <div className="app-header-main">
-            <button className="app-drawer-btn" onClick={() => setDrawerOpen(d => d === 'left' ? null : 'left')}>📁</button>
-            <div className="app-logo-wrap">
-              <img className="app-logo-mark" src="/pdm/herpert-logo-final-white-erp.png" alt="HERPERT" />
-              <div className="app-logo-block">
-                <div className="app-logo">HERPERT / BLITZ</div>
-                <div className="app-logo-sub">One front-end for emails and PDM</div>
-              </div>
-            </div>
-            <div className="app-header-right">
-              {user && <span className="app-user" title={`id: ${userId}`}>{user.name}</span>}
-              {workspaceView === 'emails' && (
-                <button
-                  className={`app-nav-btn ${view === 'brett' ? 'active' : ''}`}
-                  onClick={() => setView(v => v === 'brett' ? 'inbox' : 'brett')}
-                >
-                  BlitzBrett
-                </button>
-              )}
-              {workspaceView === 'emails' && <button className="app-compose-btn" onClick={() => setComposeState({ mode: 'new' })}>✉ Neue E-Mail</button>}
-              {workspaceView === 'emails'
-                ? <button className="app-refresh" onClick={loadEmails} title="Aktualisieren">↻</button>
-                : <button className="app-refresh" onClick={() => setPdmPath(`${activePdmItem.path.split('?')[0]}?t=${Date.now()}`)} title="PDM neu laden">↻</button>}
-              <button className="app-drawer-btn" onClick={() => setDrawerOpen(d => d === 'right' ? null : 'right')}>📋</button>
-              <span className="app-version" title="Build-Version">v{__APP_VERSION__}</span>
-              <button className="app-logout" onClick={() => instance.logoutRedirect()}>Abmelden</button>
-            </div>
-          </div>
-          <div className="workspace-switcher" role="tablist" aria-label="Arbeitsbereich wählen">
-            <button className={`workspace-tab ${workspaceView === 'emails' ? 'active' : ''}`} onClick={() => setWorkspaceView('emails')}>✉ Emails</button>
-            <button className={`workspace-tab ${workspaceView === 'pdm' ? 'active' : ''}`} onClick={() => setWorkspaceView('pdm')}>HERPERT PDM</button>
-          </div>
-          {workspaceView === 'pdm' && (
-            <div className="pdm-topnav">
-              {PDM_NAV_ITEMS.map(item => (
-                <button
-                  key={item.path}
-                  className={`pdm-topnav-item ${activePdmItem.path.split('?')[0] === item.path ? 'active' : ''}`}
-                  onClick={() => setPdmPath(item.path)}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-          )}
-        </header>
+        <Banner
+          user={user}
+          userId={userId}
+          version={__APP_VERSION__}
+          workspaceView={workspaceView}
+          onWorkspace={setWorkspaceView}
+          emailView={view}
+          onEmailViewToggle={() => setView(v => v === 'brett' ? 'inbox' : 'brett')}
+          pdmNavItems={PDM_NAV_ITEMS}
+          activePdmPath={pdmPath}
+          onPdmNav={setPdmPath}
+          onCompose={() => setComposeState({ mode: 'new' })}
+          onRefresh={workspaceView === 'emails'
+            ? loadEmails
+            : () => setPdmPath(`${activePdmItem.path.split('?')[0]}?t=${Date.now()}`)}
+          onLogout={() => instance.logoutRedirect()}
+          onDrawer={side => setDrawerOpen(d => d === side ? null : side)}
+        />
 
         {workspaceView === 'emails' && view === 'brett' ? (
           <BlitzBrett emails={emails} onOpenEmail={handleOpenEmail} />
