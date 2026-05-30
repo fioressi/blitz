@@ -336,3 +336,7 @@ Konsistent mit `web-probe` (group-pdm): `#101928` Hintergrund, radial-gradient,
 glassmorphism Panels, Inter Font, Cyan `#66d9ef` als Accent.
 Igor/KI-Elemente verwenden `#ffd166` Gelb zur visuellen Unterscheidung.
 Alle CSS-Variablen in `src/index.css`.
+
+---
+
+Weitere Doku: [backend-api.md](backend-api.md) — pdm-api Endpunkte, Igor-Integration, Azure-Konfiguration.
