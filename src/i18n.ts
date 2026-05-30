@@ -2,7 +2,7 @@ import type { Lang } from './components/Banner/Banner';
 
 const T = {
   de: {
-    appSub:       'One front-end for emails and PDM',
+    appSub:       'Eine Oberfläche für Emails und PDM',
     compose:      '✉ Neue E-Mail',
     refresh:      'Aktualisieren',
     logout:       'Abmelden',
